@@ -3,8 +3,11 @@
 --  Guild bank tabs, readable only while the guild bank is open. The server
 --  sends tab contents on request; this collector walks the viewable tabs one
 --  at a time, driven purely by GUILDBANKBAGSLOTS_CHANGED (no timers):
---      open -> query tab 1 -> event -> scan tab 1, query tab 2 -> ... -> done
---  After the walk every further event rescans the tab the player is viewing.
+--      open -> query tab 1 -> event -> scan, query tab 2 -> ... -> done
+--  The event does not say which tab arrived (Blizzard's own UI queries tabs
+--  too), so every event rescans all tabs requested so far this visit: tab
+--  data stays cached once received, so an early scan of a tab that had not
+--  arrived yet is simply corrected by the next event.
 -------------------------------------------------------------------------------
 local _, ns = ...
 
@@ -14,7 +17,7 @@ local GUILD_BANKER = Enum.PlayerInteractionType.GuildBanker
 
 local isOpen = false
 local queue = {}      -- tabs still to be requested this visit
-local awaiting        -- tab whose data was last requested
+local requested = {}  -- tabs requested (or viewed) this visit -> true
 local feature
 
 local function ScanTab(guildKey, g, tab)
@@ -45,20 +48,23 @@ local function CurrentGuild()
 end
 
 local function RequestNext()
-    awaiting = table.remove(queue, 1)
-    if awaiting then QueryGuildBankTab(awaiting) end
+    local tab = table.remove(queue, 1)
+    if tab then
+        requested[tab] = true
+        QueryGuildBankTab(tab)
+    end
 end
 
 local function OnSlotsChanged()
     local guildKey, g = CurrentGuild()
     if not guildKey then return end
-    local changed = false
-    if awaiting then
-        if ScanTab(guildKey, g, awaiting) then changed = true end
-        RequestNext()
-    end
     local current = GetCurrentGuildBankTab()
-    if current and current > 0 and ScanTab(guildKey, g, current) then changed = true end
+    if current and current > 0 then requested[current] = true end
+    local changed = false
+    for tab in pairs(requested) do
+        if ScanTab(guildKey, g, tab) then changed = true end
+    end
+    RequestNext()
     g.money = GetGuildBankMoney()
     g.scannedAt = time()
     if changed then ns.Fire("GUILD_UPDATED", guildKey) end
@@ -70,6 +76,7 @@ local function OnOpened()
     if not guildKey then return end
     isOpen = true
     wipe(queue)
+    wipe(requested)
     local numTabs = GetNumGuildBankTabs() or 0
     for tab = 1, numTabs do
         local _, _, isViewable = GetGuildBankTabInfo(tab)
@@ -93,8 +100,8 @@ end
 local function OnClosed()
     if not isOpen then return end
     isOpen = false
-    awaiting = nil
     wipe(queue)
+    wipe(requested)
     ns.UnregisterEvent(feature, "GUILDBANKBAGSLOTS_CHANGED")
     ns.UnregisterEvent(feature, "GUILDBANK_UPDATE_MONEY")
 end
@@ -112,7 +119,7 @@ feature = ns.RegisterFeature({
     end,
     OnDisable = function()
         isOpen = false
-        awaiting = nil
         wipe(queue)
+        wipe(requested)
     end,
 })

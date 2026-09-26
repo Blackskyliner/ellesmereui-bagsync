@@ -331,4 +331,28 @@ describe("Guild bank collector (opt-in)", function()
         assert.is_false(ns.IsEventRegistered(ns.featureByKey.guildbank, "GUILDBANKBAGSLOTS_CHANGED"))
         assert.are.same({}, env.__errors)
     end)
+
+    it("recovers when a foreign slots event arrives before the requested tab's data", function()
+        local env, ns = wow.boot(guildState())
+        ns.db.settings.collect.guildbank = true
+        ns.SettingsChanged()
+        env.FireEvent("PLAYER_INTERACTION_MANAGER_FRAME_SHOW", 10)
+        -- Blizzard's UI fires the event before our query for tab 1 is answered
+        env.FireEvent("GUILDBANKBAGSLOTS_CHANGED")
+        env.ProcessQueue()
+        local g = ns.db.guilds["Knights-Blackhand"]
+        assert.are.equal("2589,100", g.tabs[1].items[1])
+        assert.are.equal("212345,40", g.tabs[3].items[3])
+    end)
+
+    it("keeps following moves in the viewed tab after the walk", function()
+        local env, ns = wow.boot(guildState())
+        ns.db.settings.collect.guildbank = true
+        ns.SettingsChanged()
+        env.FireEvent("PLAYER_INTERACTION_MANAGER_FRAME_SHOW", 10)
+        env.ProcessQueue()
+        env.__state.guild.tabs[1].slots[1] = nil
+        env.FireEvent("GUILDBANKBAGSLOTS_CHANGED")
+        assert.is_nil(ns.db.guilds["Knights-Blackhand"].tabs[1].items[1])
+    end)
 end)
