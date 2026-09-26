@@ -151,7 +151,15 @@ scripts/test.sh
 4. **wow-ui-sim** (`sim/`): Das Addon läuft im Headless-Simulator mit Blizzards
    echtem FrameXML 12.1 und echtem EllesmereUI. Es gibt drei Durchläufe: mit
    EUI, ohne EUI und mit gepatchtem EUI (Upstream-API). Jeder Lua-Fehler aus dem
-   Addon lässt den Lauf scheitern.
+   Addon lässt den Lauf scheitern. `08_secure_combat.lua` ruft jeden Addon-Pfad
+   im Kampf als unsicheren Code auf. Der Simulator erzwingt geschützte Frames,
+   und jeder Treffer würde `ADDON_ACTION_BLOCKED` auslösen. Eine Positivkontrolle
+   in jedem Lauf beweist, dass die Sperre aktiv ist. Dazu prüft der Test, dass
+   kein eigener Frame geschützt ist und dass der Taint des Addons auf keinem
+   fremden globalen oder Blizzard/EUI-Tabellen-Slot liegt.
+   **Nicht abgedeckt:** Taint, der zur Laufzeit in Event-Handlern entsteht und
+   sich in Blizzards sicheren Code ausbreitet. Der Simulator verwirft ihn, das
+   deckt nur der Ingame-Schritt 9 mit `taint.log` ab.
 
 Struktur: `EllesmereUIBags_Alts/` (Addon), `spec/` (busted), `sim/`
 (Simulator-Tests), `upstream/` (Vorschlag für EllesmereUI), `scripts/`

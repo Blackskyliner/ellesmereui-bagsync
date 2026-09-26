@@ -55,7 +55,7 @@ Code style: Lua 5.1, ASCII only, EUI house tooltip (`ShowWidgetTooltip`).
 - `scripts/sim-test.sh upstream`: the **real** EllesmereUI Bags module, patched
   with this file, runs in wow-ui-sim with Blizzard's 12.1 FrameXML. The header
   button comes from the native API on the real header, and item buttons are
-  skinned natively (23/23 simulator tests).
+  skinned natively (27/27 simulator tests, incl. the combat/protected-frame and taint checks).
 
 ## Companion side
 
