@@ -31,7 +31,7 @@ und nicht muttersprachlich geprüft. Korrekturen sind willkommen, der Test
 ## Installation
 
 1. Den Ordner `EllesmereUIBags_Alts` (oder den Inhalt von
-   `dist/EllesmereUIBags_Alts-0.1.0.zip`) nach
+   `dist/EllesmereUIBags_Alts-0.1.1.zip`) nach
    `World of Warcraft/_retail_/Interface/AddOns/` kopieren.
 2. Im Charakterauswahl-Bildschirm unter „AddOns“ prüfen, dass
    „EllesmereUI Bags: Alts“ aktiv ist.
