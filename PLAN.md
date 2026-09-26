@@ -1,5 +1,18 @@
 # EUI BagSync: Plan
 
+> **Umsetzungsstand (2026-09-26):** umgesetzt als `EllesmereUIBags_Alts` (Version 0.1.0).
+> Details, Installation und Ingame-Testplan stehen in [README.md](README.md), die Arbeits-Checkliste in [TODO.md](TODO.md).
+>
+> Abweichungen vom ursprünglichen Plan:
+> - **Name:** `EllesmereUIBags_Alts` (Titel „EllesmereUI Bags: Alts“), SavedVariable `EllesmereUIBagsAltsDB`.
+> - **Umfang:** ohne Auktionen und ohne LDB/Minimap-Button. Header-Button und Gildenbank sind drin (beide Opt-in).
+> - **Erststart-Frage:** Mit EUI kommt sie erst beim ersten Öffnen der Tasche. EUI zeigt beim Login eigene Popups über denselben Dialog.
+> - **Settings-Button:** öffnet den Browser über dem Settings-Panel und schließt das Panel nicht (kein `HideUIPanel` aus Addon-Code, wegen Taint-Gefahr).
+> - **Gildenbank:** Jedes Slots-Event liest alle bisher angefragten Fächer neu, weil das Event nicht sagt, welches Fach geantwortet hat.
+> - **Tooltip:** nur `GameTooltip` und `ItemRefTooltip`, keine Vergleichs-Tooltips. Die Item-ID kommt aus `data.id`, sonst aus Hyperlink oder GUID.
+> - **Zusätzlich:** öffentliche API `EllesmereUIBagsAlts`, In-Game-Selbsttest `/alts selftest`, Upstream-Drop-in `upstream/EllesmereUIBags_ExtAPI.lua` samt Patch.
+> - **Tests:** projektlokale Toolchain mit busted-Mock und API-Check gegen Blizzards 12.1-Quellen, dazu der Headless-Simulator [wow-ui-sim](https://github.com/Osso/wow-ui-sim) mit echtem FrameXML und echtem EllesmereUI.
+
 Ein eigenständiges Companion-Addon für **EllesmereUI Bags**. Es sammelt Inventardaten über alle Charaktere, speichert sie accountweit, zeigt sie optional im Item-Tooltip und bietet ein Browser-Fenster über alle Charaktere, ähnlich wie Baganator.
 
 Stand der Analyse: EllesmereUI `main`, Bags-Modul v9.2.9 (Interface 120000–120100, Midnight 12.1+).

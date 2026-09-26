@@ -19,45 +19,55 @@ Header-Button + Gildenbank. Keine Auktionen, kein LDB/Minimap.
 - [x] TooltipDataProcessor, Settings API, ItemButton, issecretvalue
 
 ## 2. Addon-Kern
-- [ ] TOC, Init/Event-Dispatcher, Feature-Registry (lazy enable/disable)
-- [ ] DB + Defaults + Schema/Migration
-- [ ] Keys (Char-Key, Realm-Scope, Item-Kodierung)
+- [x] TOC, Init/Event-Dispatcher, Feature-Registry (lazy enable/disable)
+- [x] DB + Defaults + Schema/Migration
+- [x] Keys (Char-Key, Realm-Scope, Item-Kodierung)
 
 ## 3. Collector
-- [ ] Taschen (Dirty-Scan), Ausrüstung, Gold, Char-Meta
-- [ ] Charakter-Bank + Warband-Bank
-- [ ] Post (Posteingang + versendete Post an eigene Alts)
-- [ ] Währungen
-- [ ] Gildenbank
+- [x] Taschen (Dirty-Scan), Ausrüstung, Gold, Char-Meta
+- [x] Charakter-Bank + Warband-Bank
+- [x] Post (Posteingang + versendete Post an eigene Alts)
+- [x] Währungen
+- [x] Gildenbank
 
 ## 4. Index + Tooltip
-- [ ] ItemIndex inkrementell
-- [ ] Tooltip-Hook, Zeilen-Cache, Modifier, Realm-Scope, Live-Count
+- [x] ItemIndex inkrementell
+- [x] Tooltip-Hook, Zeilen-Cache, Modifier, Realm-Scope, Live-Count
 
 ## 5. Connector / Erweiterungs-API (upstream-fähig)
-- [ ] EUIBagsExt-Schicht: Skin, Fonts, Akzent, Tooltip-/Popup-Helper, SkinItemButton, ClassifyItem
-- [ ] RegisterHeaderButton (Shim + Upstream-Form)
+- [x] EUIBagsExt-Schicht: Skin, Fonts, Akzent, Tooltip-/Popup-Helper, SkinItemButton, ClassifyItem
+- [x] RegisterHeaderButton (Shim + Upstream-Form)
 
 ## 6. UI
-- [ ] Browser-Fenster, Char-Sidebar, Tabs
-- [ ] Item-Grid (Pool, nicht secure), Item-Daten nachladen
-- [ ] Suche über alle Chars + Ergebnisansicht
-- [ ] Header-Button
+- [x] Browser-Fenster, Char-Sidebar, Tabs
+- [x] Item-Grid (Pool, nicht secure), Item-Daten nachladen
+- [x] Suche über alle Chars + Ergebnisansicht
+- [x] Header-Button
 
 ## 7. Optionen + Opt-in
-- [ ] Settings-Seite, Slash-Commands, Erststart-Popup, Daten löschen
-- [ ] Lokalisierung enUS/deDE (ASCII-escaped)
+- [x] Settings-Seite, Slash-Commands, Erststart-Popup, Daten löschen
+- [x] Lokalisierung enUS/deDE (ASCII-escaped)
 
 ## 8. Tests
-- [ ] WoW-API-Mock-Umgebung (Frames, Events, APIs)
-- [ ] Unit-Tests Keys/DB/Index
-- [ ] Integrationstests Collector, Tooltip, UI, Optionen
-- [ ] Kriterien-Tests (keine Events/Frames im Aus-Zustand, kein OnUpdate/C_Timer)
-- [ ] Contract-Tests gegen echten EllesmereUI-Quellcode
-- [ ] luacheck, ASCII-Check, Lua-5.1-Syntax
-- [ ] In-Game-Selbsttest (/alts selftest)
+- [x] WoW-API-Mock-Umgebung (Frames, Events, APIs)
+- [x] Unit-Tests Keys/DB/Index
+- [x] Integrationstests Collector, Tooltip, UI, Optionen
+- [x] Kriterien-Tests (keine Events/Frames im Aus-Zustand, kein OnUpdate/C_Timer)
+- [x] Contract-Tests gegen echten EllesmereUI-Quellcode
+- [x] luacheck, ASCII-Check, Lua-5.1-Syntax
+- [x] In-Game-Selbsttest (/alts selftest)
 
 ## 9. Abschluss
-- [ ] README (Installation, Ingame-Testanleitung)
-- [ ] Paket-Zip
-- [ ] PLAN.md aktualisieren
+- [x] README (Installation, Ingame-Testanleitung)
+- [x] Paket-Zip
+- [x] PLAN.md aktualisieren
+
+## 10. Zusätzlich erledigt
+- [x] Öffentliche API `EllesmereUIBagsAlts` (GetItemCount, GetCharacters, ...)
+- [x] wow-ui-sim-Integrationstests: mit EUI, ohne EUI und mit gepatchtem EUI (Upstream-API)
+- [x] Upstream-Vorschlag `upstream/` (Drop-in-Datei, Patch, Begründung gegen die fünf Kriterien)
+- [x] Härtung: Gildenbank-Fremdevents, Erststart ohne Popup-Kollision, kein HideUIPanel, Tooltip-ID-Fallback
+- [x] Layout-Prüfung über den dump-tree des Simulators (echter Anker-Solver)
+
+## Offen (braucht den echten Client)
+- [ ] Ingame-Testplan aus README.md durchgehen (Bank, Post, Gildenbank, Kampf/Instanz, taint.log)
