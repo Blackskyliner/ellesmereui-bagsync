@@ -1,0 +1,167 @@
+-------------------------------------------------------------------------------
+--  UI/ItemGrid.lua
+--  Offline item grid: a pool of plain ItemButton frames (the intrinsic, NOT
+--  the secure ContainerFrameItemButtonTemplate), laid out in titled sections.
+--
+--  The buttons only display: tooltip on hover, shift/ctrl-click through
+--  HandleModifiedItemClick (chat link / dressing room). They never use,
+--  move or pick up items, so there is nothing protected to taint.
+-------------------------------------------------------------------------------
+local _, ns = ...
+local W = ns.W
+local Ext = _G.EllesmereUIBagsExt
+
+local SLOT, GAP, HEADER_H = 34, 4, 20
+
+local Grid = {}
+Grid.__index = Grid
+ns.ItemGrid = Grid
+
+local function ResolveLink(ref)
+    if not ref then return nil end
+    if ref:find("|H", 1, true) then return ref end
+    local _, link = C_Item.GetItemInfo(ref)
+    return link
+end
+
+local function Button_OnEnter(self)
+    if not self.ref then return end
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    if self.ref:find("battlepet:", 1, true) and BattlePetToolTip_ShowLink then
+        GameTooltip:Hide()
+        BattlePetToolTip_ShowLink(self.ref)
+        return
+    end
+    GameTooltip:SetHyperlink(self.ref)
+    GameTooltip:Show()
+end
+
+local function Button_OnLeave()
+    GameTooltip:Hide()
+    if BattlePetTooltip then BattlePetTooltip:Hide() end
+end
+
+local function Button_OnClick(self)
+    if not IsModifiedClick() then return end
+    local link = ResolveLink(self.ref)
+    if link then HandleModifiedItemClick(link) end
+end
+
+function ns.NewItemGrid(parent)
+    local g = setmetatable({ parent = parent, buttons = {}, headers = {}, used = 0, usedHeaders = 0,
+        byItem = {} }, Grid)
+    return g
+end
+
+function Grid:AcquireButton()
+    self.used = self.used + 1
+    local b = self.buttons[self.used]
+    if not b then
+        b = CreateFrame("ItemButton", nil, self.parent)
+        b:SetSize(SLOT, SLOT)
+        b.euiSkinned = Ext:SkinItemButton(b)
+        b:SetSize(SLOT, SLOT)
+        b:SetScript("OnEnter", Button_OnEnter)
+        b:SetScript("OnLeave", Button_OnLeave)
+        b:SetScript("OnClick", Button_OnClick)
+        self.buttons[self.used] = b
+    end
+    b:Show()
+    return b
+end
+
+function Grid:AcquireHeader()
+    self.usedHeaders = self.usedHeaders + 1
+    local h = self.headers[self.usedHeaders]
+    if not h then
+        h = W.Text(self.parent, 12)
+        self.headers[self.usedHeaders] = h
+    end
+    h:Show()
+    return h
+end
+
+function Grid:Reset()
+    for i = 1, self.used do
+        local b = self.buttons[i]
+        b:Hide()
+        b.ref, b.itemID = nil, nil
+    end
+    for i = 1, self.usedHeaders do self.headers[i]:Hide() end
+    self.used, self.usedHeaders = 0, 0
+    wipe(self.byItem)
+end
+
+-- Paints one button from an encoded stack.
+function Grid:Paint(b, enc)
+    local id, count, link = ns.DecodeItem(enc)
+    b.itemID = id
+    b.ref = link or ("item:" .. id)
+    local _, _, _, _, icon = C_Item.GetItemInfoInstant(id)
+    SetItemButtonTexture(b, icon or 134400)
+    SetItemButtonCount(b, count)
+    local quality = C_Item.GetItemQualityByID(link or id)
+    if b.euiSkinned then
+        local r, g, bb = 0.25, 0.25, 0.25
+        if quality and quality > 1 then
+            local c = ITEM_QUALITY_COLORS and ITEM_QUALITY_COLORS[quality]
+            if c then r, g, bb = c.r, c.g, c.b end
+        end
+        Ext:SetItemBorderColor(b, r, g, bb, 1)
+    else
+        SetItemButtonQuality(b, quality, link or id)
+    end
+    local list = self.byItem[id]
+    if not list then
+        list = {}
+        self.byItem[id] = list
+    end
+    list[#list + 1] = b
+    if not quality then C_Item.RequestLoadItemDataByID(id) end
+end
+
+-- Called when item data arrives: repaint only the affected buttons.
+function Grid:OnItemLoaded(itemID)
+    local list = self.byItem[itemID]
+    if not list then return end
+    for i = 1, #list do
+        local b = list[i]
+        local quality = C_Item.GetItemQualityByID(b.ref)
+        if b.euiSkinned then
+            local c = quality and quality > 1 and ITEM_QUALITY_COLORS and ITEM_QUALITY_COLORS[quality]
+            if c then Ext:SetItemBorderColor(b, c.r, c.g, c.b, 1) end
+        else
+            SetItemButtonQuality(b, quality, b.ref)
+        end
+    end
+end
+
+-- sections = { { title = "...", items = { enc, enc, ... } }, ... }
+-- Returns the total content height.
+function Grid:Layout(sections, width)
+    self:Reset()
+    local columns = math.max(1, math.floor((width + GAP) / (SLOT + GAP)))
+    local y = 0
+    for _, section in ipairs(sections) do
+        if #section.items > 0 then
+            local h = self:AcquireHeader()
+            h:ClearAllPoints()
+            h:SetPoint("TOPLEFT", self.parent, "TOPLEFT", 2, -y - 2)
+            h:SetText(section.title or "")
+            local r, g, b = Ext:GetAccentColor()
+            h:SetTextColor(r, g, b)
+            y = y + HEADER_H
+            for i, enc in ipairs(section.items) do
+                local col = (i - 1) % columns
+                local row = math.floor((i - 1) / columns)
+                local btn = self:AcquireButton()
+                btn:ClearAllPoints()
+                btn:SetPoint("TOPLEFT", self.parent, "TOPLEFT", col * (SLOT + GAP), -(y + row * (SLOT + GAP)))
+                self:Paint(btn, enc)
+            end
+            local rows = math.ceil(#section.items / columns)
+            y = y + rows * (SLOT + GAP) + 6
+        end
+    end
+    return y
+end
