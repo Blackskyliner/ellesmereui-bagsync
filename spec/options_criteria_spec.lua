@@ -155,7 +155,8 @@ describe("Acceptance criteria", function()
             if popup then popup.cancel:Click() end
             for k in pairs(ns.db.settings.collect) do ns.db.settings.collect[k] = false end
             ns.SettingsChanged()
-            assert.are.same({ "PLAYER_GUILD_UPDATE", "PLAYER_LEVEL_UP", "PLAYER_LOGOUT", "PLAYER_MONEY" },
+            assert.are.same({ "PLAYER_ENTERING_WORLD", "PLAYER_GUILD_UPDATE", "PLAYER_LEAVING_WORLD",
+                "PLAYER_LEVEL_UP", "PLAYER_LOGOUT", "PLAYER_MONEY" },
                 ns.GetRegisteredEvents())
             assert.are.equal(0, #env.__postCalls)
             assert.is_nil(env.EllesmereUIBagsAltsBrowser)

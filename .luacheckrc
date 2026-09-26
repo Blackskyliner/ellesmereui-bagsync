@@ -41,7 +41,7 @@ files["EllesmereUIBags_Alts/**/*.lua"] = {
         "GetNumGuildBankTabs", "GetGuildBankTabInfo", "GetGuildBankItemInfo", "GetGuildBankItemLink",
         "QueryGuildBankTab", "GetCurrentGuildBankTab", "GetGuildBankMoney",
         -- EllesmereUI (optional host; only touched through feature detection)
-        "EllesmereUI", "EUI_Bags", "EUI_CategoryManager", "EUI_CLIENT_BLOCKED",
+        "EllesmereUI", "EllesmereUIDB", "EUI_Bags", "EUI_CategoryManager", "EUI_CLIENT_BLOCKED",
     },
 }
 

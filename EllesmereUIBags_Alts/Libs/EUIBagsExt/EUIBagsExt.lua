@@ -355,6 +355,21 @@ function lib:GetNativeAPIVersion()
 end
 
 -------------------------------------------------------------------------------
+--  Character gold tracked by EUI Bags (read-only)
+--  EllesmereUIDB.characterGold["Name-Realm Name"] = { gold, lastUpdated, ... },
+--  keyed by UnitName .. "-" .. GetRealmName() (display realm, spaces kept).
+-------------------------------------------------------------------------------
+-- -> gold (copper), lastUpdated (epoch) or nil
+function lib:GetCharacterGold(name, realmName)
+    if not EUI() or type(name) ~= "string" or type(realmName) ~= "string" then return nil end
+    local db = _G.EllesmereUIDB
+    local all = type(db) == "table" and db.characterGold
+    local entry = type(all) == "table" and all[name .. "-" .. realmName]
+    if type(entry) ~= "table" or type(entry.gold) ~= "number" then return nil end
+    return entry.gold, type(entry.lastUpdated) == "number" and entry.lastUpdated or nil
+end
+
+-------------------------------------------------------------------------------
 --  Search
 -------------------------------------------------------------------------------
 function lib:GetBagSearchText()

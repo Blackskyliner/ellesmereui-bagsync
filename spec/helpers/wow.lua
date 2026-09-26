@@ -389,7 +389,12 @@ function M.newEnv(state, savedVariables)
     env.UnitRace = function() return "Human", S.player.race end
     env.UnitFactionGroup = function() return S.player.faction end
     env.UnitLevel = function() return S.player.level end
-    env.GetMoney = function() return S.money end
+    -- The client reports 0 while it tears a character down (logout) and, on
+    -- some logins, before the money is known (moneyZeroUntilWorld).
+    env.GetMoney = function()
+        if S.loggingOut or S.moneyZeroUntilWorld then return 0 end
+        return S.money
+    end
     env.C_AutoComplete = { GetAutoCompleteRealms = function() return S.connectedRealms end }
     env.C_ClassColor = { GetClassColor = function(class)
         return { r = 0.25, g = 0.78, b = 0.92, GenerateHexColor = function() return "ff3fc7eb" end, class = class }
@@ -665,6 +670,7 @@ function M.boot(state, savedVariables, opts)
     env.FireEvent("ADDON_LOADED", ADDON)
     if opts.beforeLogin then opts.beforeLogin(env, ns) end
     env.FireEvent("PLAYER_LOGIN")
+    env.__state.moneyZeroUntilWorld = nil
     env.FireEvent("PLAYER_ENTERING_WORLD", true, false)
     env.FireEvent("BAG_UPDATE_DELAYED")
     return env, ns
@@ -693,7 +699,11 @@ end
 M.serialize = serialize
 
 function M.logout(env)
+    env.__state.loggingOut = true
+    env.FireEvent("PLAYER_LEAVING_WORLD")
+    env.FireEvent("PLAYER_MONEY")          -- teardown noise must not store 0g
     env.FireEvent("PLAYER_LOGOUT")
+    env.__state.loggingOut = nil
     local src = "return " .. serialize(env.EllesmereUIBagsAltsDB)
     return assert(loadstring(src))(), #src
 end

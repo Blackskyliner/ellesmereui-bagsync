@@ -1,4 +1,5 @@
 local wow = require("wow")
+local fakeEUI = require("fake_eui")
 
 local function countCalls(env, ns_name, fn_name)
     local tbl = env[ns_name]
@@ -279,14 +280,86 @@ describe("Character, equipment and currency", function()
         assert.are.same({}, env.__errors)
     end)
 
-    it("records last seen and money on logout", function()
-        local env, ns = wow.boot(wow.defaultState())
+    it("records last seen on logout without reading money there", function()
+        local env = wow.boot(wow.defaultState())
         env.__state.now = env.__state.now + 500
         env.__state.money = 7
-        local sv = wow.logout(env)
+        env.FireEvent("PLAYER_MONEY")
+        local sv = wow.logout(env)                      -- GetMoney() reports 0 during logout
         assert.are.equal(7, sv.chars["Alice-Blackhand"].money)
         assert.are.equal(env.__state.now, sv.chars["Alice-Blackhand"].lastSeen)
-        local _ = ns
+    end)
+
+    it("keeps every character's gold across character switches (regression)", function()
+        local env = wow.boot(wow.defaultState({ money = 1000000 }))
+        local env2 = wow.relog(env, { name = "Bob" }, { money = 2500000 })
+        local env3, ns3 = wow.relog(env2, { name = "Carl" }, { money = 42 })
+        assert.are.equal(1000000, ns3.db.chars["Alice-Blackhand"].money)
+        assert.are.equal(2500000, ns3.db.chars["Bob-Blackhand"].money)
+        assert.are.equal(42, ns3.db.chars["Carl-Blackhand"].money)
+        local _, ns4 = wow.relog(env3, { name = "Alice" }, { money = 1000000 })
+        assert.are.equal(2500000, ns4.db.chars["Bob-Blackhand"].money)
+        assert.are.equal(42, ns4.db.chars["Carl-Blackhand"].money)
+    end)
+
+    it("ignores a 0g reading before the world is entered, stores real changes to 0", function()
+        local env = wow.boot(wow.defaultState({ money = 5000 }))
+        local env2, ns2 = wow.relog(env, { name = "Alice" }, { money = 5000, moneyZeroUntilWorld = true })
+        assert.are.equal(5000, ns2.GetPlayerChar().money)
+        env2.__state.money = 0
+        env2.FireEvent("PLAYER_MONEY")                 -- spent everything: real change
+        assert.are.equal(0, ns2.GetPlayerChar().money)
+        env2.__state.money = 300
+        env2.FireEvent("PLAYER_LEAVING_WORLD")        -- loading screen
+        env2.__state.moneyZeroUntilWorld = true
+        env2.FireEvent("PLAYER_MONEY")
+        assert.are.equal(0, ns2.GetPlayerChar().money) -- 0 -> 0: nothing to protect, unchanged
+        env2.__state.moneyZeroUntilWorld = nil
+        env2.FireEvent("PLAYER_ENTERING_WORLD", false, false)
+        assert.are.equal(300, ns2.GetPlayerChar().money)
+    end)
+
+    it("repairs 0g left by 0.1.0 from EllesmereUI's own gold records", function()
+        local sv = {
+            schema = 1,
+            chars = {
+                ["Bob-Blackhand"] = { name = "Bob", realm = "Blackhand", realmName = "Blackhand", money = 0 },
+                ["Carl-Blackhand"] = { name = "Carl", realm = "Blackhand", realmName = "Blackhand", money = 99 },
+                ["Dora-Blackhand"] = { name = "Dora", realm = "Blackhand", realmName = "Blackhand", money = 0 },
+            },
+        }
+        local env, ns = wow.boot(wow.defaultState({ money = 123 }), sv, { beforeLoad = function(e)
+            fakeEUI.install(e)
+            e.EllesmereUIDB = { characterGold = {
+                ["Bob-Blackhand"] = { gold = 2500000, lastUpdated = 1789990000 },
+                ["Carl-Blackhand"] = { gold = 5, lastUpdated = 1 },
+                ["Alice-Blackhand"] = { gold = 1, lastUpdated = 1 },
+            } }
+        end })
+        assert.are.equal(2500000, ns.db.chars["Bob-Blackhand"].money)     -- repaired
+        assert.are.equal(1789990000, ns.db.chars["Bob-Blackhand"].moneyAt)
+        assert.are.equal(99, ns.db.chars["Carl-Blackhand"].money)         -- non-zero untouched
+        assert.are.equal(0, ns.db.chars["Dora-Blackhand"].money)          -- no EUI record
+        assert.are.equal(123, ns.GetPlayerChar().money)                   -- live value wins
+        assert.are.same({}, env.__errors)
+    end)
+
+    it("repairs nothing without EllesmereUI", function()
+        local sv = { schema = 1, chars = { ["Bob-Blackhand"] = { name = "Bob", realm = "Blackhand", realmName = "Blackhand", money = 0 } } }
+        local env, ns = wow.boot(wow.defaultState(), sv, { beforeLoad = function(e)
+            e.EllesmereUIDB = { characterGold = { ["Bob-Blackhand"] = { gold = 5 } } }   -- EUI itself not loaded
+        end })
+        assert.are.equal(0, ns.db.chars["Bob-Blackhand"].money)
+        assert.are.same({}, env.__errors)
+    end)
+
+    it("does not store 0g from a teardown PLAYER_MONEY on a loading screen", function()
+        local env, ns = wow.boot(wow.defaultState({ money = 777 }))
+        env.FireEvent("PLAYER_LEAVING_WORLD")
+        env.__state.loggingOut = true
+        env.FireEvent("PLAYER_MONEY")
+        env.__state.loggingOut = nil
+        assert.are.equal(777, ns.GetPlayerChar().money)
     end)
 end)
 
