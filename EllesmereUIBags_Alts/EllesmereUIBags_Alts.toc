@@ -1,0 +1,45 @@
+## Interface: 120000, 120001, 120005, 120007, 120100
+## Title: |cff0cd29fEllesmereUI|r Bags: Alts
+## Notes: Cross-character inventory for EllesmereUI Bags: saved bags, bank, warband bank, mail and guild bank of all your characters, optional tooltip counts and a browser.
+## Category: |cff0cd29fEllesmere|rUI
+## Author: Blackskyliner
+## Version: 0.1.0
+## OptionalDeps: EllesmereUI, EllesmereUIBags
+## SavedVariables: EllesmereUIBagsAltsDB
+## IconTexture: Interface\Icons\INV_Misc_Bag_10
+
+# Locale (enUS base first, overrides after)
+Locales\enUS.lua
+Locales\deDE.lua
+
+# Core
+Core\Init.lua
+Core\Keys.lua
+Core\DB.lua
+
+# Connector / extension layer (upstream candidate, see ../upstream)
+Libs\EUIBagsExt\EUIBagsExt.lua
+
+# Data
+Index\ItemIndex.lua
+Collect\Scanner.lua
+Collect\Character.lua
+Collect\Bags.lua
+Collect\Equipped.lua
+Collect\Bank.lua
+Collect\Mail.lua
+Collect\Currency.lua
+Collect\GuildBank.lua
+
+# Presentation
+Tooltip\Tooltip.lua
+UI\Widgets.lua
+UI\ItemGrid.lua
+UI\Search.lua
+UI\Browser.lua
+UI\HeaderButton.lua
+Options\Options.lua
+Core\SelfTest.lua
+
+# Boot last: wires ADDON_LOADED / PLAYER_LOGIN once every module is defined
+Core\Boot.lua
