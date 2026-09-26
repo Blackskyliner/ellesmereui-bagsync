@@ -186,11 +186,25 @@ def main():
         if not re.search(pattern, text, re.M):
             problems.append("EllesmereUI contract broken: " + label)
 
-    # ASCII-only source (EUI house rule)
+    # ASCII-only source (EUI house rule). Locale files are the documented
+    # exception (CONTRIBUTING_TRANSLATIONS.md): UTF-8 without BOM, real
+    # characters in the translated values, English (ASCII) keys.
     for rel, s in sources.items():
+        is_locale = "/Locales/" in rel
+        if is_locale:
+            raw = open(os.path.join(ROOT, rel), "rb").read()
+            if raw.startswith(b"\xef\xbb\xbf"):
+                problems.append("%s: UTF-8 BOM" % rel)
+            try:
+                raw.decode("utf-8", errors="strict")
+            except UnicodeDecodeError as exc:
+                problems.append("%s: invalid UTF-8 (%s)" % (rel, exc))
         for lineno, line in enumerate(s.splitlines(), 1):
-            if any(ord(ch) > 127 for ch in line):
-                problems.append("%s:%d: non-ASCII character" % (rel, lineno))
+            if not any(ord(ch) > 127 for ch in line):
+                continue
+            if is_locale and re.match(r'^L\["[\x20-\x7e]*"\] = "', line):
+                continue
+            problems.append("%s:%d: non-ASCII character" % (rel, lineno))
 
     checked = len(luacheck_read_globals())
     if problems:

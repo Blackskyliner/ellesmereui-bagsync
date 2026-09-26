@@ -8,9 +8,18 @@
 ## SavedVariables: EllesmereUIBagsAltsDB
 ## IconTexture: Interface\Icons\INV_Misc_Bag_10
 
-# Locale (enUS base first, overrides after)
+# Locale (enUS base first; each translation returns unless it is the client locale)
 Locales\enUS.lua
 Locales\deDE.lua
+Locales\esES.lua
+Locales\esMX.lua
+Locales\frFR.lua
+Locales\itIT.lua
+Locales\koKR.lua
+Locales\ptBR.lua
+Locales\ruRU.lua
+Locales\zhCN.lua
+Locales\zhTW.lua
 
 # Core
 Core\Init.lua
