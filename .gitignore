@@ -1,0 +1,4 @@
+# Project-local toolchain, vendored references, simulator build (see scripts/setup-tools.sh)
+/.tools/
+/dist/
+.DS_Store
