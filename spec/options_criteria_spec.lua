@@ -77,10 +77,16 @@ describe("Options", function()
         assert.are.same({}, env.__errors)
     end)
 
-    it("asks once on first run; accepting enables tooltip and header button", function()
+    it("with EUI, asks once at the first bag open; accepting enables tooltip and header button", function()
         local rec
         local env, ns = wow.boot(wow.defaultState(), nil, { beforeLoad = function(e) rec = fakeEUI.install(e) end })
+        assert.are.equal(0, #rec.popups)                       -- no clash with EUI's login popups
+        assert.truthy(table.concat(env.__chat, "\n"):find("/alts", 1, true))
+        env.EUI_Bags:Show()
         assert.are.equal(1, #rec.popups)
+        env.EUI_Bags:Hide()
+        env.EUI_Bags:Show()
+        assert.are.equal(1, #rec.popups)                       -- asked exactly once
         assert.is_false(ns.db.settings.tooltip.enabled)       -- nothing before consent
         rec.popups[1].onConfirm()
         assert.is_true(ns.db.settings.tooltip.enabled)
@@ -88,7 +94,8 @@ describe("Options", function()
         assert.is_table(env.EllesmereUIBagsExt:GetHeaderButton("EllesmereUIBags_Alts"))
         local rec2
         local sv = wow.logout(env)
-        wow.boot(wow.defaultState(), sv, { beforeLoad = function(e) rec2 = fakeEUI.install(e) end })
+        local env2 = wow.boot(wow.defaultState(), sv, { beforeLoad = function(e) rec2 = fakeEUI.install(e) end })
+        env2.EUI_Bags:Show()
         assert.are.equal(0, #rec2.popups)                      -- never asked again
     end)
 

@@ -306,6 +306,7 @@ function Browser:Build()
         if Browser.stale then Browser:Refresh() end
     end)
     f:SetScript("OnHide", function()
+        f:SetFrameStrata("HIGH")
         ns.UnregisterEvent(Browser, "ITEM_DATA_LOAD_RESULT")
         f:SetScript("OnUpdate", nil)
         wipe(pendingSearch)
@@ -631,3 +632,8 @@ function Browser:OpenSearch(text)
 end
 
 function Browser:GetFrame() return frame end
+
+-- Opened from the Settings panel: show above it until the next close.
+function Browser:RaiseAboveSettings()
+    if frame then frame:SetFrameStrata("DIALOG") end
+end

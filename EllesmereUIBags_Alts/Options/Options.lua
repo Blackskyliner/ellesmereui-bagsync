@@ -79,9 +79,11 @@ function Options:Register()
     Checkbox(category, "collect_guildbank", { "collect", "guildbank" }, L["Guild bank"],
         L["Scans the guild bank tabs you can view while the guild bank is open."])
 
+    -- The Settings panel is left alone (no HideUIPanel from addon code: taint
+    -- path); the browser opens above it at DIALOG strata.
     layout:AddInitializer(CreateSettingsButtonInitializer(L["Browser"], L["Open"], function()
-        if SettingsPanel then HideUIPanel(SettingsPanel) end
         ns.Browser:Open()
+        ns.Browser:RaiseAboveSettings()
     end, L["Opens the cross-character browser (/alts)."], true))
 
     Settings.RegisterAddOnCategory(category)
@@ -92,9 +94,13 @@ function Options:Open()
 end
 
 -------------------------------------------------------------------------------
---  First run: ask before anything visible is turned on (criterion 2)
+--  First run: ask before anything visible is turned on (criterion 2).
+--  With EllesmereUI the question waits for the first bag open: at login EUI
+--  shows its own popups and ShowConfirmPopup is one shared dialog.
 -------------------------------------------------------------------------------
-function Options:MaybeAskFirstRun()
+local firstRunHookPending = false
+
+local function AskFirstRun()
     local s = ns.db.settings
     if s.firstRunAsked then return end
     s.firstRunAsked = true
@@ -109,6 +115,25 @@ function Options:MaybeAskFirstRun()
             ns.SettingsChanged()
         end,
     })
+end
+Options.AskFirstRun = AskFirstRun
+
+function Options:MaybeAskFirstRun()
+    if ns.db.settings.firstRunAsked then return end
+    ns.Print(L["Tracking your characters' items. Type /alts to browse, /alts options for tooltip counts."])
+    if Ext:IsBagsLoaded() then
+        if not firstRunHookPending then
+            firstRunHookPending = true
+            EUI_Bags:HookScript("OnShow", function()
+                if firstRunHookPending then
+                    firstRunHookPending = false
+                    AskFirstRun()
+                end
+            end)
+        end
+    else
+        AskFirstRun()
+    end
 end
 
 -------------------------------------------------------------------------------

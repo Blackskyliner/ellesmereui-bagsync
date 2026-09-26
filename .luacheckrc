@@ -20,9 +20,9 @@ files["EllesmereUIBags_Alts/**/*.lua"] = {
         "wipe", "tinsert", "time", "date", "strsplit", "Mixin", "CreateFromMixins", "next",
         "securecallfunction", "geterrorhandler", "issecretvalue", "hooksecurefunc",
         -- Frames / UI
-        "CreateFrame", "UIParent", "GameTooltip", "ItemRefTooltip", "ShoppingTooltip1", "ShoppingTooltip2",
+        "CreateFrame", "UIParent", "GameTooltip", "ItemRefTooltip", 
         "BattlePetTooltip", "BattlePetToolTip_ShowLink", "UISpecialFrames", "DEFAULT_CHAT_FRAME",
-        "STANDARD_TEXT_FONT", "GameFontHighlight", "BackdropTemplateMixin", "SettingsPanel", "HideUIPanel",
+        "STANDARD_TEXT_FONT", "GameFontHighlight", "BackdropTemplateMixin", 
         "SetItemButtonTexture", "SetItemButtonCount", "SetItemButtonQuality",
         "HandleModifiedItemClick", "IsModifiedClick", "IsShiftKeyDown", "IsControlKeyDown", "IsAltKeyDown",
         "BreakUpLargeNumbers", "ITEM_QUALITY_COLORS", "OKAY", "CANCEL",
