@@ -12,6 +12,22 @@ einem eigenen Browser-Fenster an, ähnlich wie Baganator.
 - Eine Zwischenschicht (`Libs/EUIBagsExt`) kapselt jeden Zugriff auf EllesmereUI.
   Der passende Upstream-Vorschlag für EllesmereUI liegt in `upstream/`.
 
+## Sprachen
+
+Das Addon hat dieselben Sprachen wie das EllesmereUI-Repo: Englisch (Basis),
+Deutsch, Spanisch (EU und Lateinamerika), Französisch, Italienisch, Koreanisch,
+Portugiesisch (Brasilien), Russisch, Chinesisch (vereinfacht und traditionell).
+Es gelten die Konventionen aus EUIs `CONTRIBUTING_TRANSLATIONS.md`:
+- Der englische Text ist der Schlüssel.
+- Die Dateien sind UTF-8 ohne BOM, mit echten Sonderzeichen.
+- Nur die Datei der Client-Sprache legt Einträge an.
+- Fehlende Einträge fallen auf Englisch zurück.
+
+Spielbegriffe (Kriegsmeutenbank, Reagenzientasche usw.) folgen Blizzards bzw.
+EllesmereUIs eigenen Übersetzungen. Die Übersetzungen sind KI-erstellt
+und nicht muttersprachlich geprüft. Korrekturen sind willkommen, der Test
+`spec/locales_spec.lua` prüft dabei Abdeckung, Platzhalter und Kodierung.
+
 ## Installation
 
 1. Den Ordner `EllesmereUIBags_Alts` (oder den Inhalt von
