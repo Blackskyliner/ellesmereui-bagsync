@@ -40,6 +40,7 @@ UI\Browser.lua
 UI\HeaderButton.lua
 Options\Options.lua
 Core\SelfTest.lua
+Core\API.lua
 
 # Boot last: wires ADDON_LOADED / PLAYER_LOGIN once every module is defined
 Core\Boot.lua

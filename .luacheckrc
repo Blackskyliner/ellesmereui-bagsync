@@ -12,7 +12,7 @@ ignore = {
 
 files["EllesmereUIBags_Alts/**/*.lua"] = {
     globals = {
-        "EllesmereUIBagsAltsDB", "EllesmereUIBagsExt",
+        "EllesmereUIBagsAltsDB", "EllesmereUIBagsExt", "EllesmereUIBagsAlts",
         "SLASH_EUIALTS1", "SLASH_EUIALTS2", "SlashCmdList",
     },
     read_globals = {

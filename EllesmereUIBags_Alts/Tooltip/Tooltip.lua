@@ -140,11 +140,27 @@ local MODIFIER_TEST = {
     alt   = function() return IsAltKeyDown() end,
 }
 
+-- Item ID of the tooltip data, resolved like Blizzard's TooltipUtil.GetDisplayedItem:
+-- data.id, else the hyperlink, else the item GUID.
+local function ItemIDFromData(data)
+    if not data then return nil end
+    local id = data.id
+    if id ~= nil then return id end
+    local link = data.hyperlink
+    if link and not ns.IsSecret(link) then
+        id = C_Item.GetItemInfoInstant(link)
+        if id then return id end
+    end
+    local guid = data.guid
+    if guid and not ns.IsSecret(guid) then return C_Item.GetItemIDByGUID(guid) end
+    return nil
+end
+
 local function OnTooltipItem(tooltip, data)
     if not active then return end
     if not ALLOWED_TOOLTIPS[tooltip] then return end
     if tooltip.IsForbidden and tooltip:IsForbidden() then return end
-    local itemID = data and data.id
+    local itemID = ItemIDFromData(data)
     if not itemID or ns.IsSecret(itemID) then return end
     if lastAdded[tooltip] == itemID then return end
     local modTest = MODIFIER_TEST[Settings().modifier]
