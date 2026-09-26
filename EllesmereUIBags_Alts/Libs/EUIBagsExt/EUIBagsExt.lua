@@ -114,6 +114,10 @@ end
 
 -- Border color for a button styled by lib:SkinItemButton (quality color etc.).
 function lib:SetItemBorderColor(btn, r, g, b, a)
+    local bags = _G.EUI_Bags
+    if type(bags) == "table" and type(bags.SetItemBorderColor) == "function" then
+        if pcall(bags.SetItemBorderColor, bags, btn, r, g, b, a or 1) then return true end
+    end
     local mns = BagsNS()
     if mns and type(mns.SetInsetBorderColor) == "function" then
         pcall(mns.SetInsetBorderColor, btn, r, g, b, a or 1)
@@ -339,8 +343,15 @@ function lib:SetHeaderButtonShown(key, shown)
     if header then LayoutHeaderButtons(header) end
 end
 
+-- The shim's button for key (nil when EUI's native API owns the buttons).
 function lib:GetHeaderButton(key)
     return headerButtons[key]
+end
+
+-- Native EUI extension API version (0 = not available, shim in use).
+function lib:GetNativeAPIVersion()
+    local bags = _G.EUI_Bags
+    return type(bags) == "table" and tonumber(bags.extAPIVersion) or 0
 end
 
 -------------------------------------------------------------------------------

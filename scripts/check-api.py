@@ -42,7 +42,9 @@ def read(path):
 
 def addon_sources():
     out = {}
-    for path in glob.glob(os.path.join(ADDON, "**", "*.lua"), recursive=True):
+    paths = glob.glob(os.path.join(ADDON, "**", "*.lua"), recursive=True)
+    paths += glob.glob(os.path.join(ROOT, "upstream", "*.lua"))
+    for path in paths:
         out[os.path.relpath(path, ROOT)] = read(path)
     return out
 

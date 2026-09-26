@@ -47,4 +47,8 @@ files["EllesmereUIBags_Alts/**/*.lua"] = {
 
 files["spec/**/*.lua"] = { std = "+busted", globals = { "_G" }, allow_defined_top = true, ignore = { "111", "112", "113", "122", "142", "143", "631" } }
 files["sim/**/*.lua"] = { allow_defined_top = true, ignore = { "111", "112", "113", "122", "631" } }
-files["upstream/**/*.lua"] = { allow_defined_top = true, ignore = { "113", "631" } }
+-- Proposed drop-in for EllesmereUIBags: extends EUI's own global bag frame.
+files["upstream/**/*.lua"] = {
+    globals = { "EUI_Bags" },
+    read_globals = { "EllesmereUI", "EUI_CLIENT_BLOCKED", "CreateFrame" },
+}
