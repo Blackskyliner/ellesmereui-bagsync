@@ -48,6 +48,7 @@ simtest_when(function() return EUI_Bags and EUI_Bags.Header ~= nil end, "header 
     ns.SettingsChanged()
     ToggleAllBags()                      -- EUI's replacement opens EUI_Bags -> OnShow hook attaches
     assertTrue(EUI_Bags:IsShown())
+    if EllesmereUIBagsExt:GetNativeAPIVersion() > 0 then return end   -- covered by 07_upstream.lua
     local btn = EllesmereUIBagsExt:GetHeaderButton("EllesmereUIBags_Alts")
     assertNotNil(btn)
     assertEquals(EUI_Bags.Header, btn:GetParent())
