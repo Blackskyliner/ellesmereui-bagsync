@@ -1,0 +1,5 @@
+simtest("addon loaded and booted", function()
+    assertNotNil(EllesmereUIBagsAlts)
+    assertNotNil(EllesmereUIBagsAlts._ns.db)
+    assertTrue(EllesmereUIBagsAlts._ns.ready)
+end)
