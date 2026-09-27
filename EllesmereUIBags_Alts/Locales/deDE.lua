@@ -96,3 +96,13 @@ L["show status"] = "Status anzeigen"
 L["toggle the browser"] = "Browser ein-/ausblenden"
 L["toggle tooltip counts"] = "Tooltip-Anzahlen ein-/ausschalten"
 L["version"] = "Version"
+
+-- Auction house tracking (0.2.0)
+L["Auctions"] = "Auktionen"
+L["Active auctions"] = "Aktive Auktionen"
+L["Auctions scanned"] = "Auktionen erfasst"
+L["Own auctions"] = "Eigene Auktionen"
+L["Stores your active auctions whenever the auction house shows them (Auctions tab)."] = "Speichert deine aktiven Auktionen, sobald das Auktionshaus sie anzeigt (Reiter „Auktionen“)."
+L["Request own auctions when the auction house opens"] = "Eigene Auktionen beim Öffnen des Auktionshauses abfragen"
+L["Sends one owned-auctions request when you open the auction house, so the Auctions tab does not need to be opened."] = "Sendet beim Öffnen des Auktionshauses eine Anfrage nach deinen Auktionen, damit der Reiter „Auktionen“ nicht geöffnet werden muss."
+L["No auctions stored. Open the Auctions tab of the auction house with this character."] = "Keine Auktionen gespeichert. Öffne mit diesem Charakter im Auktionshaus den Reiter „Auktionen“."

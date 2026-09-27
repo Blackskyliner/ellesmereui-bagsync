@@ -101,3 +101,13 @@ L["show status"] = "显示状态"
 L["toggle the browser"] = "打开/关闭浏览器"
 L["toggle tooltip counts"] = "开关鼠标提示中的数量"
 L["version"] = "版本"
+
+-- Auction house tracking (0.2.0)
+L["Auctions"] = "拍卖"
+L["Active auctions"] = "进行中的拍卖"
+L["Auctions scanned"] = "拍卖记录"
+L["Own auctions"] = "我的拍卖"
+L["Stores your active auctions whenever the auction house shows them (Auctions tab)."] = "每当拍卖行显示你进行中的拍卖时将其保存（拍卖标签页）。"
+L["Request own auctions when the auction house opens"] = "打开拍卖行时请求我的拍卖"
+L["Sends one owned-auctions request when you open the auction house, so the Auctions tab does not need to be opened."] = "打开拍卖行时发送一次我的拍卖请求，无需打开拍卖标签页。"
+L["No auctions stored. Open the Auctions tab of the auction house with this character."] = "没有已保存的拍卖。请用该角色打开拍卖行的拍卖标签页。"

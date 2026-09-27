@@ -101,3 +101,13 @@ L["show status"] = "показать состояние"
 L["toggle the browser"] = "показать/скрыть обозреватель"
 L["toggle tooltip counts"] = "вкл./выкл. количество в подсказках"
 L["version"] = "версия"
+
+-- Auction house tracking (0.2.0)
+L["Auctions"] = "Аукционы"
+L["Active auctions"] = "Активные аукционы"
+L["Auctions scanned"] = "Аукционы считаны"
+L["Own auctions"] = "Свои аукционы"
+L["Stores your active auctions whenever the auction house shows them (Auctions tab)."] = "Сохраняет ваши активные лоты, когда аукцион их показывает (вкладка «Аукционы»)."
+L["Request own auctions when the auction house opens"] = "Запрашивать свои лоты при открытии аукциона"
+L["Sends one owned-auctions request when you open the auction house, so the Auctions tab does not need to be opened."] = "Отправляет один запрос ваших лотов при открытии аукциона, чтобы не открывать вкладку «Аукционы»."
+L["No auctions stored. Open the Auctions tab of the auction house with this character."] = "Лоты не сохранены. Откройте вкладку «Аукционы» на аукционе этим персонажем."

@@ -99,3 +99,13 @@ L["search all characters"] = "rechercher dans tous les personnages"
 L["show status"] = "afficher l'état"
 L["toggle the browser"] = "afficher/masquer le navigateur"
 L["toggle tooltip counts"] = "activer/désactiver les quantités dans l'infobulle"
+
+-- Auction house tracking (0.2.0)
+L["Auctions"] = "Enchères"
+L["Active auctions"] = "Enchères actives"
+L["Auctions scanned"] = "Enchères analysées"
+L["Own auctions"] = "Mes enchères"
+L["Stores your active auctions whenever the auction house shows them (Auctions tab)."] = "Enregistre vos enchères actives dès que l'hôtel des ventes les affiche (onglet Enchères)."
+L["Request own auctions when the auction house opens"] = "Demander mes enchères à l'ouverture de l'hôtel des ventes"
+L["Sends one owned-auctions request when you open the auction house, so the Auctions tab does not need to be opened."] = "Envoie une requête pour vos enchères à l'ouverture de l'hôtel des ventes, sans devoir ouvrir l'onglet Enchères."
+L["No auctions stored. Open the Auctions tab of the auction house with this character."] = "Aucune enchère enregistrée. Ouvrez l'onglet Enchères de l'hôtel des ventes avec ce personnage."

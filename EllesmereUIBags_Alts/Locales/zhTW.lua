@@ -101,3 +101,13 @@ L["show status"] = "顯示狀態"
 L["toggle the browser"] = "開啟/關閉瀏覽器"
 L["toggle tooltip counts"] = "開關提示資訊中的數量"
 L["version"] = "版本"
+
+-- Auction house tracking (0.2.0)
+L["Auctions"] = "拍賣"
+L["Active auctions"] = "進行中的拍賣"
+L["Auctions scanned"] = "拍賣紀錄"
+L["Own auctions"] = "我的拍賣"
+L["Stores your active auctions whenever the auction house shows them (Auctions tab)."] = "每當拍賣場顯示你進行中的拍賣時將其儲存（拍賣分頁）。"
+L["Request own auctions when the auction house opens"] = "開啟拍賣場時請求我的拍賣"
+L["Sends one owned-auctions request when you open the auction house, so the Auctions tab does not need to be opened."] = "開啟拍賣場時發送一次我的拍賣請求，無需開啟拍賣分頁。"
+L["No auctions stored. Open the Auctions tab of the auction house with this character."] = "沒有已儲存的拍賣。請用此角色開啟拍賣場的拍賣分頁。"

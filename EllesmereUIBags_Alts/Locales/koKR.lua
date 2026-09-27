@@ -101,3 +101,13 @@ L["show status"] = "상태 표시"
 L["toggle the browser"] = "탐색기 열기/닫기"
 L["toggle tooltip counts"] = "툴팁 개수 켜기/끄기"
 L["version"] = "버전"
+
+-- Auction house tracking (0.2.0)
+L["Auctions"] = "경매"
+L["Active auctions"] = "진행 중인 경매"
+L["Auctions scanned"] = "경매 기록"
+L["Own auctions"] = "내 경매"
+L["Stores your active auctions whenever the auction house shows them (Auctions tab)."] = "경매장에 표시될 때마다 진행 중인 경매를 저장합니다(경매 탭)."
+L["Request own auctions when the auction house opens"] = "경매장을 열 때 내 경매 요청"
+L["Sends one owned-auctions request when you open the auction house, so the Auctions tab does not need to be opened."] = "경매장을 열 때 내 경매를 한 번 요청하므로 경매 탭을 열 필요가 없습니다."
+L["No auctions stored. Open the Auctions tab of the auction house with this character."] = "저장된 경매가 없습니다. 이 캐릭터로 경매장의 경매 탭을 여세요."

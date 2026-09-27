@@ -99,3 +99,13 @@ L["show status"] = "mostrar o status"
 L["toggle the browser"] = "mostrar/ocultar o navegador"
 L["toggle tooltip counts"] = "ativar/desativar as quantidades no tooltip"
 L["version"] = "versão"
+
+-- Auction house tracking (0.2.0)
+L["Auctions"] = "Leilões"
+L["Active auctions"] = "Leilões ativos"
+L["Auctions scanned"] = "Leilões registrados"
+L["Own auctions"] = "Leilões próprios"
+L["Stores your active auctions whenever the auction house shows them (Auctions tab)."] = "Salva seus leilões ativos sempre que a casa de leilões os mostra (aba Leilões)."
+L["Request own auctions when the auction house opens"] = "Solicitar seus leilões ao abrir a casa de leilões"
+L["Sends one owned-auctions request when you open the auction house, so the Auctions tab does not need to be opened."] = "Envia uma solicitação dos seus leilões ao abrir a casa de leilões, sem precisar abrir a aba Leilões."
+L["No auctions stored. Open the Auctions tab of the auction house with this character."] = "Nenhum leilão salvo. Abra a aba Leilões da casa de leilões com este personagem."

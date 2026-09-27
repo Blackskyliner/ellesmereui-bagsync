@@ -100,3 +100,13 @@ L["show status"] = "mostrar el estado"
 L["toggle the browser"] = "mostrar/ocultar el explorador"
 L["toggle tooltip counts"] = "activar/desactivar las cantidades en la descripción emergente"
 L["version"] = "versión"
+
+-- Auction house tracking (0.2.0)
+L["Auctions"] = "Subastas"
+L["Active auctions"] = "Subastas activas"
+L["Auctions scanned"] = "Subastas registradas"
+L["Own auctions"] = "Subastas propias"
+L["Stores your active auctions whenever the auction house shows them (Auctions tab)."] = "Guarda tus subastas activas cuando la casa de subastas las muestra (pestaña Subastas)."
+L["Request own auctions when the auction house opens"] = "Solicitar subastas propias al abrir la casa de subastas"
+L["Sends one owned-auctions request when you open the auction house, so the Auctions tab does not need to be opened."] = "Envía una solicitud de tus subastas al abrir la casa de subastas, para no tener que abrir la pestaña Subastas."
+L["No auctions stored. Open the Auctions tab of the auction house with this character."] = "No hay subastas guardadas. Abre la pestaña Subastas de la casa de subastas con este personaje."

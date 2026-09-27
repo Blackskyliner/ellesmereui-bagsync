@@ -98,3 +98,13 @@ L["show status"] = "mostra lo stato"
 L["toggle the browser"] = "mostra/nascondi il browser"
 L["toggle tooltip counts"] = "attiva/disattiva le quantità nei tooltip"
 L["version"] = "versione"
+
+-- Auction house tracking (0.2.0)
+L["Auctions"] = "Aste"
+L["Active auctions"] = "Aste attive"
+L["Auctions scanned"] = "Aste rilevate"
+L["Own auctions"] = "Aste personali"
+L["Stores your active auctions whenever the auction house shows them (Auctions tab)."] = "Salva le tue aste attive quando la casa d'aste le mostra (scheda Aste)."
+L["Request own auctions when the auction house opens"] = "Richiedi le tue aste all'apertura della casa d'aste"
+L["Sends one owned-auctions request when you open the auction house, so the Auctions tab does not need to be opened."] = "Invia una richiesta delle tue aste all'apertura della casa d'aste, così non serve aprire la scheda Aste."
+L["No auctions stored. Open the Auctions tab of the auction house with this character."] = "Nessuna asta salvata. Apri la scheda Aste della casa d'aste con questo personaggio."
