@@ -84,7 +84,8 @@ describe("Auction collector", function()
         local env, ns = world()
         openAH(env)
         env.FireEvent("OWNED_AUCTIONS_UPDATED")
-        env.FireEvent("AUCTION_CANCELED", 101)
+        env.C_AuctionHouse.CancelAuction(101)
+        env.ProcessQueue()                                     -- AUCTION_CANCELED, 1
         env.FireEvent("AUCTION_HOUSE_AUCTIONS_EXPIRED", 102)
         local c = ns.GetPlayerChar()
         assert.are.equal(1, #c.auctions.items)
@@ -120,10 +121,11 @@ describe("Auction collector", function()
         local env, ns = world()
         openAH(env)
         env.FireEvent("OWNED_AUCTIONS_UPDATED")
+        env.C_AuctionHouse.CancelAuction(101)
         table.remove(env.__state.ownedAuctions, 1)            -- auction 101 cancelled server-side
         env.FireEvent("OWNED_AUCTIONS_UPDATED")                -- list arrives before the cancel event
-        env.FireEvent("AUCTION_CANCELED", 101)
-        env.FireEvent("AUCTION_CANCELED", 101)                 -- duplicate event
+        env.FireEvent("AUCTION_CANCELED", 1)
+        env.FireEvent("AUCTION_CANCELED", 1)                   -- stray duplicate event
         local c = ns.GetPlayerChar()
         assert.are.equal(1, #c.mailIncoming)
         assert.are.equal("190396,200", c.mailIncoming[1].e)
@@ -246,7 +248,8 @@ describe("Auction collector", function()
             local env, ns = postWorld()
             env.C_AuctionHouse.PostItem(wow.itemLocation(0, 1), 1, 1, nil, 1)
             env.ProcessQueue()
-            env.FireEvent("AUCTION_CANCELED", 9001)
+            env.C_AuctionHouse.CancelAuction(9001)
+            env.ProcessQueue()
             local c = ns.GetPlayerChar()
             assert.are.equal(3, #c.auctions.items)
             assert.truthy(c.mailIncoming[1].e:find("10256", 1, true))
@@ -272,6 +275,311 @@ describe("Auction collector", function()
             env.ProcessQueue()
             assert.are.equal(3, #ns.GetPlayerChar().auctions.items)
             assert.are.same({}, env.__errors)
+        end)
+    end)
+
+    describe("cancelling (through C_AuctionHouse.CancelAuction like Blizzard's dialog)", function()
+        -- The helm is posted; the owned list uses another ID than the created
+        -- event (createdIDOffset) and never reports itself complete.
+        local function cancelWorld(opts)
+            local o = { ownedAuctionsFull = false, createdIDOffset = 50, ownedAuctions = {} }
+            for k, v in pairs(opts or {}) do o[k] = v end
+            local env, ns = world(o)
+            wow.putItem(env.__state, 0, 1, 230000, 1, wow.itemLink(230000, "item:230000::::::::80:66::13:1:10256"))
+            openAH(env)
+            env.C_AuctionHouse.PostItem(wow.itemLocation(0, 1), 1, 1, nil, 1)
+            env.ProcessQueue()
+            env.FireEvent("OWNED_AUCTIONS_UPDATED")            -- Auctions tab: partial list
+            return env, ns, 9051                               -- the ID Blizzard's cancel uses
+        end
+
+        local function assertHelmMailed(ns)
+            local c = ns.GetPlayerChar()
+            local inMail, inAuctions = 0, 0
+            for _, m in ipairs(c.mailIncoming) do if m.e:find("^230000,") then inMail = inMail + 1 end end
+            for _, a in ipairs(c.auctions.items) do if a.e:find("^230000,") then inAuctions = inAuctions + 1 end end
+            assert.are.equal(1, inMail)
+            assert.are.equal(0, inAuctions)
+            ns.Index:EnsureBuilt()
+            local incremental = wow.deepCopy(ns.Index.data)
+            ns.Index:Build()
+            assert.are.same(ns.Index.data, incremental)
+            assert.are.equal(1, ns.Index:GetTotal(230000))     -- counted once
+        end
+
+        it("mails the posted auction although the cancel uses the owned-list ID (regression)", function()
+            local env, ns, listID = cancelWorld()
+            env.C_AuctionHouse.CancelAuction(listID)
+            env.ProcessQueue()
+            assertHelmMailed(ns)
+        end)
+
+        it("works with the live event argument (AUCTION_CANCELED, 1)", function()
+            local env, ns, listID = cancelWorld({ cancelEvent = "one" })
+            env.C_AuctionHouse.CancelAuction(listID)
+            env.ProcessQueue()
+            assertHelmMailed(ns)
+        end)
+
+        it("works when AUCTION_CANCELED carries no argument", function()
+            local env, ns, listID = cancelWorld({ cancelEvent = "none" })
+            env.C_AuctionHouse.CancelAuction(listID)
+            env.ProcessQueue()
+            assertHelmMailed(ns)
+        end)
+
+        it("works when AUCTION_CANCELED does carry the auction ID", function()
+            local env, ns, listID = cancelWorld({ cancelEvent = "id" })
+            env.C_AuctionHouse.CancelAuction(listID)
+            env.ProcessQueue()
+            assertHelmMailed(ns)
+        end)
+
+        it("confirms several quick cancels in request order", function()
+            local env, ns = world()
+            openAH(env)
+            env.FireEvent("OWNED_AUCTIONS_UPDATED")
+            env.C_AuctionHouse.CancelAuction(102)
+            env.C_AuctionHouse.CancelAuction(101)
+            env.ProcessQueue()
+            local c = ns.GetPlayerChar()
+            assert.are.equal(2, #c.mailIncoming)
+            assert.truthy(c.mailIncoming[1].e:find("^230000,"))
+            assert.are.equal("190396,200", c.mailIncoming[2].e)
+            assert.are.equal(1, #c.auctions.items)
+        end)
+
+        it("ignores AUCTION_CANCELED without a preceding cancel request", function()
+            local env, ns = world()
+            openAH(env)
+            env.FireEvent("OWNED_AUCTIONS_UPDATED")
+            env.FireEvent("AUCTION_CANCELED", 1)
+            assert.are.equal(0, #ns.GetPlayerChar().mailIncoming)
+            assert.are.equal(3, #ns.GetPlayerChar().auctions.items)
+        end)
+
+        it("confirms a cancel by absence from the next complete list when no event comes", function()
+            local env, ns, listID = cancelWorld({ cancelEvent = "missing", refreshAfterCancel = true })
+            env.C_AuctionHouse.CancelAuction(listID)
+            env.ProcessQueue()
+            assertHelmMailed(ns)
+        end)
+
+        it("mails nothing if the cancel never happened (no event, still listed)", function()
+            local env, ns, listID = cancelWorld({ cancelEvent = "missing" })
+            env.C_AuctionHouse.CancelAuction(listID)
+            -- server refused: auction stays; a complete list still contains it
+            table.insert(env.__state.ownedAuctions, wow.ownedAuction(listID, 230000, 1, { seconds = 3600 }))
+            env.ProcessQueue()
+            env.__state.ownedAuctionsFull = true
+            env.FireEvent("OWNED_AUCTIONS_UPDATED")
+            assert.are.equal(0, #ns.GetPlayerChar().mailIncoming)
+        end)
+
+        it("mails a listed (not provisional) auction once", function()
+            local env, ns = world()
+            openAH(env)
+            env.FireEvent("OWNED_AUCTIONS_UPDATED")
+            env.__state.refreshAfterCancel = true
+            env.C_AuctionHouse.CancelAuction(101)
+            env.ProcessQueue()
+            local c = ns.GetPlayerChar()
+            assert.are.equal(1, #c.mailIncoming)
+            assert.are.equal("190396,200", c.mailIncoming[1].e)
+            assert.are.equal(2, #c.auctions.items)
+        end)
+
+        it("reads the owned list through the indexed API when the table API is empty", function()
+            local env, ns = world({ ownedTableEmpty = true })
+            openAH(env)
+            env.FireEvent("OWNED_AUCTIONS_UPDATED")
+            assert.are.equal(3, #ns.GetPlayerChar().auctions.items)
+        end)
+
+        it("explains itself with /alts debug", function()
+            local env, ns, listID = cancelWorld({ cancelEvent = "one" })
+            env.Slash("debug")
+            assert.is_true(ns.db.settings.debug)
+            env.C_AuctionHouse.CancelAuction(listID)
+            env.ProcessQueue()
+            local chat = table.concat(env.__chat, "\n")
+            assert.truthy(chat:find("cancel requested 9051", 1, true))
+            assert.truthy(chat:find("AUCTION_CANCELED 1 confirms requested 9051", 1, true))
+            assert.truthy(chat:find("-> mail", 1, true))
+            env.Slash("debug")
+            local n = #env.__chat
+            env.FireEvent("OWNED_AUCTIONS_UPDATED")
+            assert.are.equal(n, #env.__chat)                   -- silent again
+        end)
+    end)
+
+    describe("diff on the owned list (Auctions tab)", function()
+        it("drops auctions that sold (gone, time left) and mails ones that expired", function()
+            local env, ns = world()
+            openAH(env)
+            env.FireEvent("OWNED_AUCTIONS_UPDATED")            -- 101 ore (1h), 102 helm (48h), 104 pet (1min)
+            env.__state.now = env.__state.now + 120            -- pet auction ran out, ore/helm still running
+            env.__state.ownedAuctions = { env.__state.ownedAuctions[2] }   -- ore and pet gone
+            env.FireEvent("OWNED_AUCTIONS_UPDATED")
+            local c = ns.GetPlayerChar()
+            assert.are.equal(1, #c.auctions.items)             -- helm left
+            assert.are.equal(1, #c.mailIncoming)               -- expired pet came back
+            assert.truthy(c.mailIncoming[1].e:find("^82800,"))
+            assert.are.equal(1, #c.mailSold)                   -- ore sold: gold waits in the mailbox
+            assert.are.equal("190396,200", c.mailSold[1].e)
+            assert.are.equal(200 * 10000, c.mailSold[1].money) -- commodity: buyout is per unit
+            ns.Index:EnsureBuilt()
+            assert.are.equal(0, ns.Index:GetTotal(190396))     -- sold ore is no longer an item anywhere
+        end)
+
+        it("drops auctions the list reports as Sold even when the list is partial", function()
+            local env, ns = world()
+            openAH(env)
+            env.FireEvent("OWNED_AUCTIONS_UPDATED")
+            env.__state.ownedAuctionsFull = false
+            env.__state.ownedAuctions[1].status = 1           -- ore now Sold
+            env.FireEvent("OWNED_AUCTIONS_UPDATED")
+            local items = ns.GetPlayerChar().auctions.items
+            assert.are.equal(2, #items)
+            for _, a in ipairs(items) do assert.is_nil(a.e:find("^190396,")) end
+            assert.are.equal(0, #ns.GetPlayerChar().mailIncoming)
+        end)
+
+        it("a partial list never removes auctions that are merely missing from it", function()
+            local env, ns = world()
+            openAH(env)
+            env.FireEvent("OWNED_AUCTIONS_UPDATED")
+            env.__state.ownedAuctionsFull = false
+            env.__state.ownedAuctions = { env.__state.ownedAuctions[1] }
+            env.FireEvent("OWNED_AUCTIONS_UPDATED")
+            assert.are.equal(3, #ns.GetPlayerChar().auctions.items)
+        end)
+    end)
+
+    describe("sold auctions and value", function()
+        local function notify(env, kind, text, id)
+            env.FireEvent("AUCTION_HOUSE_SHOW_FORMATTED_NOTIFICATION", kind, text, id)
+        end
+
+        it("a sale notification (anywhere) turns an item auction into sold mail with its price", function()
+            local env, ns = world()
+            openAH(env)
+            env.FireEvent("OWNED_AUCTIONS_UPDATED")
+            closeAH(env)                                       -- works without the AH open
+            notify(env, 4, "Void-Touched Helm", 102)
+            local c = ns.GetPlayerChar()
+            assert.are.equal(2, #c.auctions.items)
+            assert.are.equal(1, #c.mailSold)
+            assert.truthy(c.mailSold[1].e:find("^230000,1,"))
+            assert.are.equal(10000, c.mailSold[1].money)
+            assert.are.equal(env.__state.now, c.mailSold[1].at)
+            ns.Index:EnsureBuilt()
+            assert.are.equal(0, ns.Index:GetTotal(230000))
+        end)
+
+        it("matches the notification by item name when the ID does not fit", function()
+            local env, ns = world()
+            openAH(env)
+            env.FireEvent("OWNED_AUCTIONS_UPDATED")
+            notify(env, 4, "Void-Touched Helm", 1)            -- like AUCTION_CANCELED's "1"
+            assert.are.equal(1, #ns.GetPlayerChar().mailSold)
+        end)
+
+        it("leaves commodity sales to the list diff (quantity unknown), then records partial sales", function()
+            local env, ns = world()
+            openAH(env)
+            env.FireEvent("OWNED_AUCTIONS_UPDATED")
+            notify(env, 4, "Serevite Ore", 101)
+            assert.are.equal(0, #ns.GetPlayerChar().mailSold)
+            env.__state.ownedAuctions[1].quantity = 120        -- 80 of 200 units sold
+            env.FireEvent("OWNED_AUCTIONS_UPDATED")
+            local c = ns.GetPlayerChar()
+            assert.are.equal(1, #c.mailSold)
+            assert.are.equal("190396,80", c.mailSold[1].e)
+            assert.are.equal(80 * 10000, c.mailSold[1].money)
+            ns.Index:EnsureBuilt()
+            assert.are.equal(120, ns.Index:Get(190396)["Alice-Blackhand"].auctions)
+        end)
+
+        it("an expiry notification moves the auction into in-transit mail", function()
+            local env, ns = world()
+            openAH(env)
+            env.FireEvent("OWNED_AUCTIONS_UPDATED")
+            notify(env, 5, "Void-Touched Helm", 102)
+            local c = ns.GetPlayerChar()
+            assert.are.equal(1, #c.mailIncoming)
+            assert.are.equal(0, #c.mailSold)
+        end)
+
+        it("an auction listed as Sold is recorded with the list's price", function()
+            local env, ns = world()
+            openAH(env)
+            env.FireEvent("OWNED_AUCTIONS_UPDATED")
+            env.__state.ownedAuctionsFull = false
+            env.__state.ownedAuctions[2].status = 1
+            env.__state.ownedAuctions[2].buyoutAmount = 5000000
+            env.FireEvent("OWNED_AUCTIONS_UPDATED")
+            local sold = ns.GetPlayerChar().mailSold
+            assert.are.equal(1, #sold)
+            assert.are.equal(10000, sold[1].money)             -- the price stored when first listed wins
+        end)
+
+        it("keeps the exact posting price and sums what is on the auction house", function()
+            local env, ns = world({ ownedAuctions = {} })
+            wow.putItem(env.__state, 0, 1, 230000, 1, wow.itemLink(230000, "item:230000::::::::80:66::13:1:10256"))
+            wow.putItem(env.__state, 0, 2, 2589, 200)
+            openAH(env)
+            env.C_AuctionHouse.PostItem(wow.itemLocation(0, 1), 3, 1, 100, 2500000)     -- 250g buyout
+            env.C_AuctionHouse.PostCommodity(wow.itemLocation(0, 2), 1, 150, 1234)    -- 150 x 12s34c
+            env.ProcessQueue()
+            local c = ns.GetPlayerChar()
+            assert.are.equal(2500000, c.auctions.items[1].u)
+            assert.are.equal(1234, c.auctions.items[2].u)
+            local value, count = ns.AuctionValue(c)
+            assert.are.equal(2500000 + 150 * 1234, value)
+            assert.are.equal(2, count)
+            env.FireEvent("OWNED_AUCTIONS_UPDATED")             -- list keeps the posting prices
+            assert.are.equal(2500000 + 150 * 1234, (ns.AuctionValue(c)))
+        end)
+
+        it("shows value in the auctions footer and sold gold in the mail tab", function()
+            local env, ns = world()
+            openAH(env)
+            env.FireEvent("OWNED_AUCTIONS_UPDATED")
+            notify(env, 4, "Void-Touched Helm", 102)
+            ns.Browser:Open()
+            ns.Browser:SelectTab("auctions")
+            local f = env.EllesmereUIBagsAltsBrowser
+            assert.truthy(f.footer.text:find("On the auction house", 1, true))
+            assert.truthy(f.footer.text:find("(2)", 1, true))
+            ns.Browser:SelectTab("mail")
+            assert.truthy(f.footer.text:find("Gold in mail: 1|cffffd700g|r", 1, true))
+            assert.are.equal(1, f.results.used)
+            assert.truthy(f.results.items[1].name.text:find("Void-Touched Helm", 1, true))
+            assert.truthy(f.results.items[1].total.text:find("1|cffffd700g|r", 1, true))
+        end)
+
+        it("opening the mailbox clears sold entries; they also expire after 30 days", function()
+            local env, ns = world()
+            openAH(env)
+            env.FireEvent("OWNED_AUCTIONS_UPDATED")
+            notify(env, 4, "Void-Touched Helm", 102)
+            local env2, ns2 = wow.relog(env, { name = "Alice" }, { now = 1790000000 + 31 * 86400 })
+            assert.are.equal(0, #ns2.GetPlayerChar().mailSold)
+            local _ = { ns, env2 }
+            local env3, ns3 = world()
+            openAH(env3)
+            env3.FireEvent("OWNED_AUCTIONS_UPDATED")
+            notify(env3, 4, "Void-Touched Helm", 102)
+            env3.FireEvent("MAIL_SHOW")
+            assert.are.equal(0, #ns3.GetPlayerChar().mailSold)
+        end)
+
+        it("formats money with gold, silver and copper", function()
+            local _, ns = world()
+            assert.are.equal("12|cffffd700g|r 34|cffc7c7cfs|r", ns.W.FormatMoney(123456))
+            assert.are.equal("34|cffc7c7cfs|r 56|cffeda55fc|r", ns.W.FormatMoney(3456))
+            assert.are.equal("0|cffeda55fc|r", ns.W.FormatMoney(0))
         end)
     end)
 end)

@@ -118,6 +118,8 @@ local function Enums()
         AuctionStatus = { Active = 0, Sold = 1 },
         AuctionHouseTimeLeftBand = { Short = 0, Medium = 1, Long = 2, VeryLong = 3 },
         AuctionHouseSortOrder = { Price = 0, Name = 1, Level = 2, Bid = 3, Buyout = 4, TimeRemaining = 5 },
+        AuctionHouseNotification = { BidPlaced = 0, AuctionRemoved = 1, AuctionWon = 2, AuctionOutbid = 3,
+                                     AuctionSold = 4, AuctionExpired = 5 },
     }
 end
 
@@ -318,6 +320,11 @@ function M.defaultState(overrides)
         postNeedsConfirm = false,   -- PostItem/PostCommodity return true, AUCTION_HOUSE_POST_WARNING follows
         postWarningSync = false,    -- fire that warning inside the call (before post-hooks run)
         multisell = nil,            -- n: PostItem(quantity) creates n auctions
+        createdIDOffset = 0,        -- AUCTION_HOUSE_AUCTION_CREATED id differs from the owned-list id
+        ownedTableEmpty = false,    -- GetOwnedAuctions() returns {} while the indexed API has data
+        cancelEvent = "one",        -- live client: AUCTION_CANCELED fires with 1, not the auction ID.
+                                    -- "one" | "id" | "none" (no arg) | "missing" (no event)
+        refreshAfterCancel = false, -- client sends a complete owned list after a cancel
         currencies = {}, -- list of { id, name, quantity, icon, header }
         loadedItems = {},
         inCombat = false,
@@ -538,14 +545,32 @@ function M.newEnv(state, savedVariables)
     env.C_AuctionHouse = {
         GetOwnedAuctions = function()
             local out = {}
+            if S.ownedTableEmpty then return out end
             for i, a in ipairs(S.ownedAuctions) do out[i] = a end
             return out
         end,
+        GetNumOwnedAuctions = function() return #S.ownedAuctions end,
+        GetOwnedAuctionInfo = function(i) return S.ownedAuctions[i] end,
+        CancelAuction = function(auctionID)
+            table.insert(env.__queue, function()
+                for i, a in ipairs(S.ownedAuctions) do
+                    if a.auctionID == auctionID then table.remove(S.ownedAuctions, i) break end
+                end
+                if S.cancelEvent == "one" then env.FireEvent("AUCTION_CANCELED", 1)
+                elseif S.cancelEvent == "id" then env.FireEvent("AUCTION_CANCELED", auctionID)
+                elseif S.cancelEvent == "none" then env.FireEvent("AUCTION_CANCELED") end
+                if S.refreshAfterCancel then
+                    S.ownedAuctionsFull = true
+                    env.FireEvent("OWNED_AUCTIONS_UPDATED")
+                end
+            end)
+        end,
         HasFullOwnedAuctionResults = function() return S.ownedAuctionsFull end,
-        PostItem = function(loc, duration, quantity) return env.__post(loc, duration, quantity, false, false) end,
-        PostCommodity = function(loc, duration, quantity) return env.__post(loc, duration, quantity, true, false) end,
-        ConfirmPostItem = function(loc, duration, quantity) env.__post(loc, duration, quantity, false, true) end,
-        ConfirmPostCommodity = function(loc, duration, quantity) env.__post(loc, duration, quantity, true, true) end,
+        -- PostItem(item, duration, quantity, bid, buyout) / PostCommodity(item, duration, quantity, unitPrice)
+        PostItem = function(loc, duration, quantity, bid, buyout) return env.__post(loc, duration, quantity, false, false, buyout or bid) end,
+        PostCommodity = function(loc, duration, quantity, unitPrice) return env.__post(loc, duration, quantity, true, false, unitPrice) end,
+        ConfirmPostItem = function(loc, duration, quantity, bid, buyout) env.__post(loc, duration, quantity, false, true, buyout or bid) end,
+        ConfirmPostCommodity = function(loc, duration, quantity, unitPrice) env.__post(loc, duration, quantity, true, true, unitPrice) end,
         QueryOwnedAuctions = function(sorts)
             assert(type(sorts) == "table", "QueryOwnedAuctions needs a sorts table")
             S.auctionQueries = S.auctionQueries + 1
@@ -557,7 +582,7 @@ function M.newEnv(state, savedVariables)
     }
 
     -- Posting: the client answers asynchronously (events on the queue).
-    env.__post = function(loc, duration, quantity, isCommodity, confirmed)
+    env.__post = function(loc, duration, quantity, isCommodity, confirmed, price)
         local bag = S.bags[loc.bagID]
         local it = bag and bag.slots[loc.slotIndex]
         assert(it, "posting an empty slot")
@@ -572,8 +597,9 @@ function M.newEnv(state, savedVariables)
             if n > 1 then env.FireEvent("AUCTION_MULTISELL_START", n) end
             for _ = 1, n do
                 S.nextAuctionID = S.nextAuctionID + 1
-                table.insert(S.ownedAuctions, M.ownedAuction(S.nextAuctionID, id, quantity / n,
-                    { link = not isCommodity and link or nil, seconds = ({ 43200, 86400, 172800 })[duration] }))
+                table.insert(S.ownedAuctions, M.ownedAuction(S.nextAuctionID + S.createdIDOffset, id, quantity / n,
+                    { link = not isCommodity and link or nil, seconds = ({ 43200, 86400, 172800 })[duration],
+                      buyout = price }))
                 env.FireEvent("AUCTION_HOUSE_AUCTION_CREATED", S.nextAuctionID)
             end
             it.count = it.count - quantity
