@@ -87,6 +87,8 @@ function M.ownedAuction(auctionID, itemID, quantity, opts)
     }
 end
 
+function M.itemLocation(bagID, slotIndex) return { bagID = bagID, slotIndex = slotIndex } end
+
 function M.itemLink(id, itemString)
     local info = M.ITEMS[id] or { name = "Item " .. id, quality = 1 }
     local colors = { [0] = "ff9d9d9d", "ffffffff", "ff1eff00", "ff0070dd", "ffa335ee", "ffff8000", "ffe6cc80", "ff00ccff" }
@@ -312,6 +314,10 @@ function M.defaultState(overrides)
         ownedAuctions = {},   -- list of OwnedAuctionInfo-shaped tables (C_AuctionHouse.GetOwnedAuctions)
         ownedAuctionsFull = false,
         auctionQueries = 0,
+        nextAuctionID = 9000,
+        postNeedsConfirm = false,   -- PostItem/PostCommodity return true, AUCTION_HOUSE_POST_WARNING follows
+        postWarningSync = false,    -- fire that warning inside the call (before post-hooks run)
+        multisell = nil,            -- n: PostItem(quantity) creates n auctions
         currencies = {}, -- list of { id, name, quantity, icon, header }
         loadedItems = {},
         inCombat = false,
@@ -438,6 +444,18 @@ function M.newEnv(state, savedVariables)
             info = info or {}
             return id, info.type, info.subtype, info.equipLoc, info.icon, 0, 0
         end,
+        DoesItemExist = function(loc)
+            local bag = type(loc) == "table" and S.bags[loc.bagID]
+            return bag ~= nil and bag and bag.slots[loc.slotIndex] ~= nil or false
+        end,
+        GetItemID = function(loc)
+            local it = S.bags[loc.bagID] and S.bags[loc.bagID].slots[loc.slotIndex]
+            return it and it.id
+        end,
+        GetItemLink = function(loc)
+            local it = S.bags[loc.bagID] and S.bags[loc.bagID].slots[loc.slotIndex]
+            return it and it.link
+        end,
         GetItemQualityByID = function(ref)
             local id, info = infoFor(ref)
             if S.uncachedItems and S.uncachedItems[id] and not S.loadedItems[id] then return nil end
@@ -524,6 +542,10 @@ function M.newEnv(state, savedVariables)
             return out
         end,
         HasFullOwnedAuctionResults = function() return S.ownedAuctionsFull end,
+        PostItem = function(loc, duration, quantity) return env.__post(loc, duration, quantity, false, false) end,
+        PostCommodity = function(loc, duration, quantity) return env.__post(loc, duration, quantity, true, false) end,
+        ConfirmPostItem = function(loc, duration, quantity) env.__post(loc, duration, quantity, false, true) end,
+        ConfirmPostCommodity = function(loc, duration, quantity) env.__post(loc, duration, quantity, true, true) end,
         QueryOwnedAuctions = function(sorts)
             assert(type(sorts) == "table", "QueryOwnedAuctions needs a sorts table")
             S.auctionQueries = S.auctionQueries + 1
@@ -533,6 +555,34 @@ function M.newEnv(state, savedVariables)
             end)
         end,
     }
+
+    -- Posting: the client answers asynchronously (events on the queue).
+    env.__post = function(loc, duration, quantity, isCommodity, confirmed)
+        local bag = S.bags[loc.bagID]
+        local it = bag and bag.slots[loc.slotIndex]
+        assert(it, "posting an empty slot")
+        if S.postNeedsConfirm and not confirmed then
+            if S.postWarningSync then env.FireEvent("AUCTION_HOUSE_POST_WARNING")
+            else table.insert(env.__queue, function() env.FireEvent("AUCTION_HOUSE_POST_WARNING") end) end
+            return true
+        end
+        local id, link = it.id, it.link
+        table.insert(env.__queue, function()
+            local n = (not isCommodity and S.multisell and quantity > 1) and S.multisell or 1
+            if n > 1 then env.FireEvent("AUCTION_MULTISELL_START", n) end
+            for _ = 1, n do
+                S.nextAuctionID = S.nextAuctionID + 1
+                table.insert(S.ownedAuctions, M.ownedAuction(S.nextAuctionID, id, quantity / n,
+                    { link = not isCommodity and link or nil, seconds = ({ 43200, 86400, 172800 })[duration] }))
+                env.FireEvent("AUCTION_HOUSE_AUCTION_CREATED", S.nextAuctionID)
+            end
+            it.count = it.count - quantity
+            if it.count <= 0 then bag.slots[loc.slotIndex] = nil end
+            env.FireEvent("BAG_UPDATE", loc.bagID)
+            env.FireEvent("BAG_UPDATE_DELAYED")
+        end)
+        return false
+    end
 
     -- Mail
     env.GetInboxNumItems = function() return #S.inbox, #S.inbox end

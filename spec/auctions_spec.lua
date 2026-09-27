@@ -99,16 +99,36 @@ describe("Auction collector", function()
         assert.are.same(ns.Index.data, incremental)
     end)
 
-    it("drops expired auctions at login and keeps the rest across relogs", function()
+    it("moves auctions that expired while offline into in-transit mail at login", function()
         local env, ns = world()
         openAH(env)
         env.FireEvent("OWNED_AUCTIONS_UPDATED")
         local _ = ns
         local env2, ns2 = wow.relog(env, { name = "Bob" }, { now = 1790000000 + 2 * 3600 })
-        local a = ns2.db.chars["Alice-Blackhand"].auctions.items
-        assert.are.equal(1, #a)                                -- only the 48h one survives 2h
-        assert.truthy(a[1].e:find("^230000,"))
+        local alice = ns2.db.chars["Alice-Blackhand"]
+        assert.are.equal(1, #alice.auctions.items)             -- only the 48h one survives 2h
+        assert.truthy(alice.auctions.items[1].e:find("^230000,"))
+        assert.are.equal(2, #alice.mailIncoming)               -- ore (1h) and the pet (1min) came back
+        ns2.Index:EnsureBuilt()
+        local byLoc = ns2.Index:Get(190396)["Alice-Blackhand"]
+        assert.are.equal(200, byLoc.mail)
+        assert.is_nil(byLoc.auctions)
         assert.are.same({}, env2.__errors)
+    end)
+
+    it("mails a cancelled auction even if a fresh list dropped it first, and only once", function()
+        local env, ns = world()
+        openAH(env)
+        env.FireEvent("OWNED_AUCTIONS_UPDATED")
+        table.remove(env.__state.ownedAuctions, 1)            -- auction 101 cancelled server-side
+        env.FireEvent("OWNED_AUCTIONS_UPDATED")                -- list arrives before the cancel event
+        env.FireEvent("AUCTION_CANCELED", 101)
+        env.FireEvent("AUCTION_CANCELED", 101)                 -- duplicate event
+        local c = ns.GetPlayerChar()
+        assert.are.equal(1, #c.mailIncoming)
+        assert.are.equal("190396,200", c.mailIncoming[1].e)
+        ns.Index:EnsureBuilt()
+        assert.are.equal(200, ns.Index:GetTotal(190396))       -- counted once, in mail
     end)
 
     it("ignores secret auction data", function()
@@ -150,5 +170,108 @@ describe("Auction collector", function()
         openAH(env)
         env.FireEvent("OWNED_AUCTIONS_UPDATED")
         assert.are.equal(0, #ns.GetPlayerChar().auctions.items)
+    end)
+
+    describe("posting", function()
+        local function postWorld(opts)
+            local env, ns = world(opts)
+            wow.putItem(env.__state, 0, 1, 230000, 1, wow.itemLink(230000, "item:230000::::::::80:66::13:1:10256"))
+            wow.putItem(env.__state, 0, 2, 2589, 200)
+            openAH(env)
+            env.FireEvent("OWNED_AUCTIONS_UPDATED")            -- 3 known auctions
+            return env, ns
+        end
+
+        it("appends a posted item immediately with its auction ID and duration", function()
+            local env, ns = postWorld()
+            env.C_AuctionHouse.PostItem(wow.itemLocation(0, 1), 2, 1, nil, 5000000)
+            env.ProcessQueue()
+            local items = ns.GetPlayerChar().auctions.items
+            assert.are.equal(4, #items)
+            local last = items[4]
+            assert.truthy(last.e:find("10256", 1, true))
+            assert.are.equal(9001, last.id)
+            assert.are.equal(env.__state.now + 24 * 3600, last.x)
+            ns.Index:EnsureBuilt()
+            assert.are.equal(2, ns.Index:Get(230000)["Alice-Blackhand"].auctions)   -- listed helm + new one
+        end)
+
+        it("appends a posted commodity with its quantity", function()
+            local env, ns = postWorld()
+            env.C_AuctionHouse.PostCommodity(wow.itemLocation(0, 2), 1, 150, 99)
+            env.ProcessQueue()
+            local last = ns.GetPlayerChar().auctions.items[4]
+            assert.are.equal("2589,150", last.e)
+            assert.are.equal(env.__state.now + 12 * 3600, last.x)
+            ns.Index:EnsureBuilt()
+            local byLoc = ns.Index:Get(2589)["Alice-Blackhand"]
+            assert.are.equal(150, byLoc.auctions)
+            assert.are.equal(50, byLoc.bags)                   -- bag scan after BAG_UPDATE
+        end)
+
+        it("waits for confirmation and does not record a cancelled confirmation", function()
+            local env, ns = postWorld({ postNeedsConfirm = true })
+            env.C_AuctionHouse.PostItem(wow.itemLocation(0, 1), 3, 1, nil, 1)   -- dialog, user cancels
+            env.ProcessQueue()
+            assert.are.equal(3, #ns.GetPlayerChar().auctions.items)
+            env.C_AuctionHouse.PostCommodity(wow.itemLocation(0, 2), 1, 20, 5)  -- new post: dialog again
+            env.ProcessQueue()
+            env.C_AuctionHouse.ConfirmPostCommodity(wow.itemLocation(0, 2), 1, 20, 5)
+            env.ProcessQueue()
+            local items = ns.GetPlayerChar().auctions.items
+            assert.are.equal(4, #items)
+            assert.are.equal("2589,20", items[4].e)            -- not the cancelled helm
+        end)
+
+        it("handles a confirmation warning that arrives before the post-hook", function()
+            local env, ns = postWorld({ postNeedsConfirm = true, postWarningSync = true })
+            env.C_AuctionHouse.PostItem(wow.itemLocation(0, 1), 3, 1, nil, 1)
+            env.C_AuctionHouse.ConfirmPostItem(wow.itemLocation(0, 1), 3, 1, nil, 1)
+            env.ProcessQueue()
+            local items = ns.GetPlayerChar().auctions.items
+            assert.are.equal(4, #items)
+            assert.are.equal(env.__state.now + 48 * 3600, items[4].x)
+        end)
+
+        it("records one auction per multisell repetition", function()
+            local env, ns = postWorld({ multisell = 4 })
+            env.C_AuctionHouse.PostItem(wow.itemLocation(0, 2), 1, 20, nil, 1)
+            env.ProcessQueue()
+            local items = ns.GetPlayerChar().auctions.items
+            assert.are.equal(7, #items)
+            for i = 4, 7 do assert.are.equal("2589,5", items[i].e) end
+        end)
+
+        it("a posted auction that is cancelled goes to the mail", function()
+            local env, ns = postWorld()
+            env.C_AuctionHouse.PostItem(wow.itemLocation(0, 1), 1, 1, nil, 1)
+            env.ProcessQueue()
+            env.FireEvent("AUCTION_CANCELED", 9001)
+            local c = ns.GetPlayerChar()
+            assert.are.equal(3, #c.auctions.items)
+            assert.truthy(c.mailIncoming[1].e:find("10256", 1, true))
+        end)
+
+        it("the next complete list replaces the provisional entries", function()
+            local env, ns = postWorld()
+            env.C_AuctionHouse.PostCommodity(wow.itemLocation(0, 2), 1, 150, 99)
+            env.ProcessQueue()
+            env.FireEvent("OWNED_AUCTIONS_UPDATED")
+            local items = ns.GetPlayerChar().auctions.items
+            assert.are.equal(4, #items)                        -- same auction, not duplicated
+            ns.Index:EnsureBuilt()
+            local incremental = wow.deepCopy(ns.Index.data)
+            ns.Index:Build()
+            assert.are.same(ns.Index.data, incremental)
+        end)
+
+        it("ignores posts while the feature is off or the AH is closed", function()
+            local env, ns = postWorld()
+            closeAH(env)
+            env.C_AuctionHouse.PostItem(wow.itemLocation(0, 1), 1, 1, nil, 1)
+            env.ProcessQueue()
+            assert.are.equal(3, #ns.GetPlayerChar().auctions.items)
+            assert.are.same({}, env.__errors)
+        end)
     end)
 end)

@@ -136,6 +136,16 @@ simtest("taint: only the addon's own globals carry its taint", function()
             end
         end
     end
-    -- Blizzard globals the addon hooks stay secure (hooksecurefunc, never replaced)
+    -- Blizzard functions the addon hooks stay secure (hooksecurefunc, never replaced).
+    -- The auction post-hooks are installed on the first auction house visit.
     assertTrue((issecurevariable("SendMail")))
+    A_Admin.FireEvent("AUCTION_HOUSE_SHOW")
+    for _, name in ipairs({ "PostItem", "PostCommodity", "ConfirmPostItem", "ConfirmPostCommodity" }) do
+        if type(C_AuctionHouse[name]) == "function" then
+            local secure, source = issecurevariable(C_AuctionHouse, name)
+            assertTrue(secure or source ~= "EllesmereUIBags_Alts", "C_AuctionHouse." .. name .. " tainted by the addon")
+        end
+    end
+    A_Admin.FireEvent("AUCTION_HOUSE_CLOSED")
+    if EUI_Bags and EUI_Bags:IsShown() then ToggleAllBags() end
 end)
