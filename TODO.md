@@ -126,5 +126,11 @@ Header-Button + Gildenbank. Keine Auktionen, kein LDB/Minimap.
 - [x] Keine Rescans bei Ladebildschirmen, Taschenwechsel über BAG_CONTAINER_UPDATE
 - [x] `/alts status` zeigt die Aktivierung
 
+## 19. EllesmereUI Bags als Abhängigkeit (0.7.1)
+- [x] TOC `## Dependencies: EllesmereUIBags` (Standalone-Bags genügt), inert auf EUI_CLIENT_BLOCKED-Clients
+- [x] Standalone-Ballast entfernt: Ersatz-Popup, GameTooltip-Fallback, No-EUI-Zweige, No-EUI-Tests, Simulator-Modus `noeui`
+- [x] Bleibt: schlichte Optik ohne EUIs Blizzard-Skin-Modul, Drift-Schutz im Connector (fehlende EUI-Funktion -> leise)
+- [x] Simulator-Modus `skin` (EUI-Kern + Bags + BlizzardSkin); Visual nur `bags` (Simulator-Fehler bei Objekt-Hooks, festgehalten)
+
 ## Offen (braucht den echten Client)
 - [ ] Ingame-Testplan aus README.md durchgehen (Bank, Post, Auktionen, Gildenbank, Kampf/Instanz, taint.log)

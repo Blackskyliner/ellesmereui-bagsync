@@ -5,8 +5,11 @@ Ausrüstung, Bank, Kriegsmeutenbank, Post, eigene Auktionen, Währungen und opti
 aller deiner Charaktere. Die Bestände zeigt es auf Wunsch im Item-Tooltip und in
 einem eigenen Browser-Fenster an, ähnlich wie Baganator.
 
-- Eigenständiges Addon, **EllesmereUI wird nicht verändert**. Ohne EllesmereUI
-  läuft es auch, dann mit eigener, schlichter Optik.
+- Begleit-Addon zu **EllesmereUI Bags** (Abhängigkeit, damit auch der
+  EllesmereUI-Kern). Es genügt EllesmereUI mit nur dem Bags-Modul, die übrigen
+  Module sind nicht nötig. **EllesmereUI wird nicht verändert.** Ist EUIs Modul
+  für Blizzard-Fenster (EllesmereUIBlizzardSkin) aktiv, trägt der Browser EUIs
+  Look, sonst eine schlichte eigene Optik.
 - Alles Sichtbare ist standardmäßig **aus** und wird erst nach Zustimmung aktiv
   (siehe „Erster Start“).
 - Eine Zwischenschicht (`Libs/EUIBagsExt`) kapselt jeden Zugriff auf EllesmereUI.
@@ -31,10 +34,12 @@ und nicht muttersprachlich geprüft. Korrekturen sind willkommen, der Test
 ## Installation
 
 1. Den Ordner `EllesmereUIBags_Alts` (oder den Inhalt von
-   `dist/EllesmereUIBags_Alts-0.5.0.zip`) nach
-   `World of Warcraft/_retail_/Interface/AddOns/` kopieren.
+   `dist/EllesmereUIBags_Alts-<version>.zip`) nach
+   `World of Warcraft/_retail_/Interface/AddOns/` kopieren. Voraussetzung:
+   EllesmereUI mit dem Modul Bags.
 2. Im Charakterauswahl-Bildschirm unter „AddOns“ prüfen, dass
-   „EllesmereUI Bags: Alts“ aktiv ist.
+   „EllesmereUI Bags: Alts“ aktiv ist. Ohne EllesmereUI Bags meldet WoW eine
+   fehlende Abhängigkeit und lädt das Addon nicht.
 3. Einloggen. Daten sammeln sich ab jetzt pro Charakter: **jeden Charakter
    einmal einloggen**, für Bankdaten einmal einen Bankier besuchen und für
    Postdaten einmal einen Briefkasten öffnen.
@@ -42,10 +47,9 @@ und nicht muttersprachlich geprüft. Korrekturen sind willkommen, der Test
 ## Erster Start
 
 - Beim ersten Login erscheint nur eine Chat-Zeile mit Hinweis auf `/alts`.
-- Mit EllesmereUI fragt beim **ersten Öffnen der Tasche** ein Popup, ob die
-  Tooltip-Anzahlen und der Button im Taschen-Kopf aktiviert werden sollen. Die
-  Frage kommt erst dann, weil EUI beim Login eigene Popups zeigt. Ohne EUI kommt
-  die Frage direkt beim Login.
+- Beim **ersten Öffnen der Tasche** fragt ein Popup, ob die Tooltip-Anzahlen
+  und der Button im Taschen-Kopf aktiviert werden sollen. Die Frage kommt erst
+  dann, weil EUI beim Login eigene Popups zeigt.
 - Die Entscheidung lässt sich jederzeit ändern: Optionen → AddOns →
   „EllesmereUI Bags: Alts“ oder `/alts options`.
 
@@ -193,8 +197,9 @@ Vorbereitung: [BugGrabber](https://www.curseforge.com/wow/addons/bug-grabber) un
    `EllesmereUIBags_Alts`.
 11. **Abschalten:** `/alts tooltip` blendet die Tooltip-Zeilen aus. Bei
     abgeschaltetem Button in den Optionen verschwindet er aus dem Taschen-Kopf.
-12. **Ohne EUI (optional):** EllesmereUI deaktivieren. Das Addon lädt weiter,
-    der Browser hat dann die schlichte eigene Optik.
+12. **Ohne EUIs Blizzard-Skin (optional):** Das Modul EllesmereUIBlizzardSkin
+    deaktivieren. Das Addon läuft weiter, der Browser hat dann die schlichte
+    eigene Optik, die Item-Slots behalten EUI Bags' Look.
 
 Falls etwas auffällt, bitte `/alts status` und `/alts selftest` ausführen und
 die Ausgabe sowie die BugSack-Meldung festhalten.
@@ -237,14 +242,15 @@ scripts/test.sh
 2. **API-Check** (`scripts/check-api.py`): Jede globale Funktion, jede
    `C_*`-Funktion, jeder `Enum`-Wert, jedes Event und jedes Template muss in
    Blizzards 12.1-Quellen bzw. den API-Annotationen existieren. Dazu kommen der
-   Vertrag mit dem EllesmereUI-Quellcode (18 Symbole) und die ASCII-Prüfung.
+   Vertrag mit dem EllesmereUI-Quellcode (20 Symbole) und die ASCII-Prüfung.
 3. **busted** (`spec/`): WoW-Client-Mock mit Taschen, Bank, Post, Gildenbank,
    Secret Values und Relogs samt serialisierten SavedVariables. Nicht
    modellierte Frame-Methoden werden nur akzeptiert, wenn sie echte
    Widget-Methoden laut Blizzard-Doku sind.
 4. **wow-ui-sim** (`sim/`): Das Addon läuft im Headless-Simulator mit Blizzards
-   echtem FrameXML 12.1 und echtem EllesmereUI. Es gibt drei Durchläufe: mit
-   EUI, ohne EUI und mit gepatchtem EUI (Upstream-API). Jeder Lua-Fehler aus dem
+   echtem FrameXML 12.1 und echtem EllesmereUI. Es gibt drei Durchläufe: EUI-Kern
+   mit Bags (so wie bei Standalone-Bags), zusätzlich mit EUIs Blizzard-Skin
+   (`skin`) und mit gepatchtem EUI Bags (Upstream-API). Jeder Lua-Fehler aus dem
    Addon lässt den Lauf scheitern. `08_secure_combat.lua` ruft jeden Addon-Pfad
    im Kampf als unsicheren Code auf. Der Simulator erzwingt geschützte Frames,
    und jeder Treffer würde `ADDON_ACTION_BLOCKED` auslösen. Eine Positivkontrolle
@@ -264,7 +270,7 @@ scripts/test.sh
    (`sim/.../Fixture.lua`) sind drei Charaktere auf zwei Realms mit Bank, Post,
    Auktionen, Währungen, Kriegsmeuten- und Gildenbank.
 5. **Visual Regression** (`scripts/visual-test.sh`): Jedes Szenario in
-   `sim/visual/scenarios/` wird mit dem GPU-Build gerendert, mit und ohne EUI,
+   `sim/visual/scenarios/` wird mit dem GPU-Build gerendert (EUI-Kern mit Bags),
    auf den Ziel-Frame zugeschnitten und mit `sim/visual/baselines/<modus>/`
    verglichen. Ein Pixel zählt als verändert, wenn ein Kanal um mehr als 24
    abweicht. Ein Szenario scheitert ab 0,1 % veränderten Pixeln, bei geänderter
@@ -273,9 +279,13 @@ scripts/test.sh
    Änderung übernimmt `scripts/visual-test.sh --update [szenario...]` die neuen
    Bilder. Die Referenzbilder vor dem Commit ansehen.
    **Grenzen:** Ohne lokale WoW-Installation fehlen Blizzards Texturen
-   (Item-Icons, Atlanten, Slot-Rahmen im Fallback-Look), und native
-   Tooltip-Zeilen erzeugt der Simulator nicht. Die Bilder zeigen Layout, EUIs
-   Skin und unsere Texte, nicht die exakte Optik im Spiel. Mit
+   (Item-Icons, Atlanten), und native Tooltip-Zeilen erzeugt der Simulator
+   nicht. Die Bilder zeigen Layout, EUI Bags' Slot-Look und unsere Texte,
+   nicht die exakte Optik im Spiel. Den vollen EUI-Skin rendern sie nicht: Im
+   Simulator greifen Methoden-Hooks auf ein Objekt auf alle Objekte desselben
+   Typs über (`sim/.../tests/00_harness.lua` hält das fest), dadurch blendet EUIs
+   Settings-Skin dort jede Textur aus. Die Geometrie mit Skin prüfen die
+   Layout-Tests im Durchlauf `skin`. Mit
    `WOW_INSTALL_PATH` auf eine WoW-Installation zeigen die Renders auch die
    Blizzard-Grafiken, dann müssen die Referenzbilder neu erzeugt werden.
 
