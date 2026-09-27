@@ -37,6 +37,7 @@ Collect\Bags.lua
 Collect\Equipped.lua
 Collect\Bank.lua
 Collect\Mail.lua
+Collect\Auctions.lua
 Collect\Currency.lua
 Collect\GuildBank.lua
 

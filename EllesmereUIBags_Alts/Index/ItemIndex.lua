@@ -7,7 +7,7 @@
 --  only touches the items that were or are in that bag.
 --
 --  Owners:    "<Name-Realm>" (characters), "#warband", "@<Guild-Realm>"
---  Locations: bags, bank, equipped, mail, warband, guild
+--  Locations: bags, bank, equipped, mail, auctions, warband, guild
 -------------------------------------------------------------------------------
 local _, ns = ...
 
@@ -74,6 +74,7 @@ function Index:Build()
             if c.equipped then Accumulate(data, key, "equipped", c.equipped.items, 1) end
             if c.mail then Accumulate(data, key, "mail", c.mail.items, 1) end
             Accumulate(data, key, "mail", c.mailIncoming, 1)
+            if c.auctions then Accumulate(data, key, "auctions", c.auctions.items, 1) end
         end
         if db.warband then
             AccumulateMap(data, ns.WARBAND_OWNER, "warband", db.warband.bank, 1)

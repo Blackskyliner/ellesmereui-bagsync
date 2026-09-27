@@ -23,6 +23,8 @@ local REQUIRED_APIS = {
     "GetSendMailItem", "GetSendMailItemLink", "GetInventoryItemLink", "GetInventoryItemID",
     "GetNumGuildBankTabs", "GetGuildBankTabInfo", "GetGuildBankItemInfo", "GetGuildBankItemLink",
     "QueryGuildBankTab", "GetCurrentGuildBankTab", "GetGuildBankMoney", "GetGuildInfo",
+    "C_AuctionHouse.GetOwnedAuctions", "C_AuctionHouse.HasFullOwnedAuctionResults",
+    "C_AuctionHouse.QueryOwnedAuctions",
     "GetNormalizedRealmName", "HandleModifiedItemClick", "SetItemButtonTexture",
     "SetItemButtonCount", "SetItemButtonQuality",
 }

@@ -78,6 +78,10 @@ function Options:Register()
     Checkbox(category, "collect_currency", { "collect", "currency" }, L["Currencies"])
     Checkbox(category, "collect_guildbank", { "collect", "guildbank" }, L["Guild bank"],
         L["Scans the guild bank tabs you can view while the guild bank is open."])
+    Checkbox(category, "collect_auctions", { "collect", "auctions" }, L["Own auctions"],
+        L["Stores your active auctions whenever the auction house shows them (Auctions tab)."])
+    Checkbox(category, "collect_auctionsQuery", { "collect", "auctionsQuery" }, L["Request own auctions when the auction house opens"],
+        L["Sends one owned-auctions request when you open the auction house, so the Auctions tab does not need to be opened."])
 
     -- The Settings panel is left alone (no HideUIPanel from addon code: taint
     -- path); the browser opens above it at DIALOG strata.

@@ -16,7 +16,8 @@
 --  CharRecord = { name, realm, realmName, class, race, faction, level, guild,
 --                 money, lastSeen, bags = {[bagID]=Container}, bank = {[tabID]=Container},
 --                 bankAt, equipped = Container, mail = { items = { {e=enc, x=expires} } },
---                 mailAt, mailIncoming = { {e=enc, x=expires, from=key} }, currency = {[id]=qty} }
+--                 mailAt, mailIncoming = { {e=enc, x=expires, from=key} }, currency = {[id]=qty},
+--                 auctions = { scannedAt, items = { {e=enc, x=expires, id=auctionID} } } }
 -------------------------------------------------------------------------------
 local _, ns = ...
 
@@ -37,6 +38,8 @@ ns.DEFAULTS = {
             mail      = true,
             currency  = true,
             guildbank = false,
+            auctions  = true,        -- passive: reads what the client already reports
+            auctionsQuery = false,   -- opt-in: request own auctions when the AH opens
         },
         tooltip = {
             enabled     = false,
@@ -120,6 +123,8 @@ local function SanitizeChar(key, c)
     if type(c.mail) ~= "table" then c.mail = {} end
     c.mail.items = SanitizeMailList(c.mail.items)
     c.mailIncoming = SanitizeMailList(c.mailIncoming)
+    if type(c.auctions) ~= "table" then c.auctions = {} end
+    c.auctions.items = SanitizeMailList(c.auctions.items)
     if type(c.currency) ~= "table" then c.currency = {} end
     if not c.name then c.name, c.realm = ns.SplitKey(key) end
     return c

@@ -17,9 +17,9 @@ local active = false
 local lineCache = {}              -- itemID -> { left1, right1, left2, right2, ... } | false
 local lastAdded = setmetatable({}, { __mode = "k" })   -- tooltip -> itemID already appended
 
-local LOCATION_ORDER = { "bags", "bank", "equipped", "mail", "warband", "guild" }
+local LOCATION_ORDER = { "bags", "bank", "equipped", "mail", "auctions", "warband", "guild" }
 local LOCATION_LABEL = {
-    bags = "Bags", bank = "Bank", equipped = "Equipped", mail = "Mail",
+    bags = "Bags", bank = "Bank", equipped = "Equipped", mail = "Mail", auctions = "Auctions",
     warband = "Warband Bank", guild = "Guild Bank",
 }
 

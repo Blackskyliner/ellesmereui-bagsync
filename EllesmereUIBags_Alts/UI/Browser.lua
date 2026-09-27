@@ -28,6 +28,7 @@ local CHAR_TABS = {
     { key = "bank",     label = "Bank" },
     { key = "equipped", label = "Equipped" },
     { key = "mail",     label = "Mail" },
+    { key = "auctions", label = "Auctions" },
     { key = "currency", label = "Currency" },
 }
 
@@ -101,6 +102,8 @@ local function CharSections(c, tab)
     elseif tab == "mail" then
         sections[1] = { title = L["Inbox"], items = MailItems(c.mail and c.mail.items) }
         sections[2] = { title = L["In transit"], items = MailItems(c.mailIncoming) }
+    elseif tab == "auctions" then
+        sections[1] = { title = L["Active auctions"], items = MailItems(c.auctions and c.auctions.items) }
     end
     return sections
 end
@@ -509,6 +512,10 @@ local function FooterFor(owner)
     end
     local c = ns.db.chars[owner]
     if not c then return "" end
+    if state.tab == "auctions" then
+        return string.format("%s: %s   %s: %s", L["Gold"], W.FormatGold(c.money),
+            L["Auctions scanned"], W.FormatAgo(c.auctions and c.auctions.scannedAt))
+    end
     return string.format("%s: %s   %s: %s   %s: %s   %s: %s",
         L["Gold"], W.FormatGold(c.money),
         L["Last seen"], W.FormatAgo(c.lastSeen),
@@ -573,8 +580,13 @@ function Browser:Refresh()
             count = f.grid.used
         end
         if count == 0 then
-            f.empty:SetText(isChar and state.tab == "bank" and L["No bank data yet. Visit a banker with this character."]
-                or L["Nothing stored here yet."])
+            local hint = L["Nothing stored here yet."]
+            if isChar and state.tab == "bank" then
+                hint = L["No bank data yet. Visit a banker with this character."]
+            elseif isChar and state.tab == "auctions" then
+                hint = L["No auctions stored. Open the Auctions tab of the auction house with this character."]
+            end
+            f.empty:SetText(hint)
         end
         f.footer:SetText(FooterFor(owner))
     end

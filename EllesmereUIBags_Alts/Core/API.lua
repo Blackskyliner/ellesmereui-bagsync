@@ -4,7 +4,7 @@
 --
 --    EllesmereUIBagsAlts.GetItemCount(itemID)  -> total, { [owner] = { [location] = n } }
 --        owner: "Name-Realm", "#warband" or "@Guild-Realm";
---        location: bags, bank, equipped, mail, warband, guild. Copy, safe to keep.
+--        location: bags, bank, equipped, mail, auctions, warband, guild. Copy, safe to keep.
 --    EllesmereUIBagsAlts.GetCharacters()        -> sorted { "Name-Realm", ... }
 --    EllesmereUIBagsAlts.GetCharacterInfo(key)  -> { name, realm, class, level, money, lastSeen } or nil
 --    EllesmereUIBagsAlts.ToggleBrowser() / OpenBrowser([owner]) / Search(text)
