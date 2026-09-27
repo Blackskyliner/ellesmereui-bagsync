@@ -31,7 +31,7 @@ und nicht muttersprachlich geprüft. Korrekturen sind willkommen, der Test
 ## Installation
 
 1. Den Ordner `EllesmereUIBags_Alts` (oder den Inhalt von
-   `dist/EllesmereUIBags_Alts-0.4.0.zip`) nach
+   `dist/EllesmereUIBags_Alts-0.5.0.zip`) nach
    `World of Warcraft/_retail_/Interface/AddOns/` kopieren.
 2. Im Charakterauswahl-Bildschirm unter „AddOns“ prüfen, dass
    „EllesmereUI Bags: Alts“ aktiv ist.
@@ -74,6 +74,15 @@ Charaktere, sie sind also weder gebunden noch überweisbar. Sie stehen in einem
 eigenen Abschnitt „Kriegsmeutenweit (geteilt)“, der nur erscheint, wenn solche
 Währungen vorkommen. Die Art jeder Währung merkt sich das Addon accountweit,
 damit auch die Währungen anderer Charaktere richtig einsortiert werden.
+
+**Bindung und Sets:** Das Addon merkt sich pro Item, ob es seelengebunden
+oder kriegsmeutengebunden ist. Im Browser-Tooltip steht bei gebundenen Items
+deshalb „Seelengebunden“ bzw. „Kriegsmeutengebunden“ statt der allgemeinen
+Angabe „Beim Anlegen gebunden“. Items ohne diesen Hinweis sind noch frei
+beweglich, „kriegsmeutengebunden bis zum Anlegen“ bleibt sichtbar. Gehört ein
+Item zu einem Ausrüstungsset (Taschen oder angelegt), nennt der Tooltip die
+Sets. Der Browser zeigt Items in einem eigenen Tooltip-Fenster, Blizzards
+`GameTooltip` bleibt unberührt.
 
 **Suche:** Wörter (Namensbestandteile), `12345` oder `id:12345` (Item-ID),
 `q:epic` oder `q:4` (Qualität), `t:rüstung` (Typ/Untertyp). Mehrere Begriffe

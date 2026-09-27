@@ -87,5 +87,11 @@ Header-Button + Gildenbank. Keine Auktionen, kein LDB/Minimap.
 - [x] Art accountweit gemerkt (db.currencyMeta) für Offline-Charaktere
 - [x] Locales, Tests
 
+## 13. Bindung und Ausrüstungssets (0.4.0)
+- [x] Bindungsstatus pro Item (seelen-/kriegsmeutengebunden, Marker in der Kodierung, rückwärtskompatibel)
+- [x] Browser-Tooltip über ProcessInfo mit linePreCall (Bindungszeile) und tooltipPostCall (Sets)
+- [x] Ausrüstungssets pro Taschen-/Angelegt-Slot (C_EquipmentSet + EquipmentManager_GetLocationData)
+- [x] Eigener Tooltip-Frame für den Browser (kein Taint auf GameTooltip)
+
 ## Offen (braucht den echten Client)
 - [ ] Ingame-Testplan aus README.md durchgehen (Bank, Post, Auktionen, Gildenbank, Kampf/Instanz, taint.log)

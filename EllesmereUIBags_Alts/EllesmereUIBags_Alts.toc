@@ -3,7 +3,7 @@
 ## Notes: Cross-character inventory for EllesmereUI Bags: saved bags, bank, warband bank, mail, auctions and guild bank of all your characters, optional tooltip counts and a browser.
 ## Category: |cff0cd29fEllesmere|rUI
 ## Author: Blackskyliner
-## Version: 0.4.0
+## Version: 0.5.0
 ## OptionalDeps: EllesmereUI, EllesmereUIBags
 ## SavedVariables: EllesmereUIBagsAltsDB
 ## IconTexture: Interface\Icons\INV_Misc_Bag_10
