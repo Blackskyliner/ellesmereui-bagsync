@@ -93,7 +93,7 @@ Header-Button + Gildenbank. Keine Auktionen, kein LDB/Minimap.
 - [x] Ausrüstungssets pro Taschen-/Angelegt-Slot (C_EquipmentSet + EquipmentManager_GetLocationData)
 - [x] Eigener Tooltip-Frame für den Browser (kein Taint auf GameTooltip)
 
-## 14. Übersichten und Währungs-Tooltip (0.6.0)
+## 14. Übersichten und Währungs-Tooltip (0.6.0, Tab „Alles“ pro Charakter 0.6.1)
 - [x] Seitenleiste: „Alle Charaktere“ und anklickbare Realm-Überschriften
 - [x] Zusammengefasste Items (Link bzw. itemID), gruppiert nach Gegenstandsklasse/EUI-Kategorie, Tab „Alles“
 - [x] Tab „Alles“ auch für einzelne Charaktere (alle Orte des Charakters zusammengefasst)
