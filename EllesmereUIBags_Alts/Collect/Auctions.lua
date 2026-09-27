@@ -494,10 +494,9 @@ local function OnOpened()
     ns.RegisterEvent(feature, "OWNED_AUCTIONS_UPDATED", ScanOwned)
     ns.RegisterEvent(feature, "AUCTION_CANCELED", function(_, _, auctionID) OnAuctionCanceled(auctionID) end)
     ns.RegisterEvent(feature, "AUCTION_HOUSE_AUCTIONS_EXPIRED", function(_, _, auctionID) MoveToMail(auctionID, "expired") end)
-    ns.RegisterEvent(feature, "AUCTION_HOUSE_AUCTION_CREATED", function(_, _, auctionID)
-        OnAuctionCreated(auctionID)
-        if ns.db.settings.collect.auctionsQuery then C_AuctionHouse.QueryOwnedAuctions(OWNED_SORTS) end
-    end)
+    -- No query here: the post-hooks already record each new auction with its
+    -- ID, and a multisell would otherwise send one request per repetition.
+    ns.RegisterEvent(feature, "AUCTION_HOUSE_AUCTION_CREATED", function(_, _, auctionID) OnAuctionCreated(auctionID) end)
     ns.RegisterEvent(feature, "AUCTION_HOUSE_POST_WARNING", OnPostNeedsConfirm)
     ns.RegisterEvent(feature, "AUCTION_HOUSE_POST_ERROR", OnPostNeedsConfirm)
     ns.RegisterEvent(feature, "AUCTION_MULTISELL_START", function(_, _, n) OnMultisellStart(n) end)

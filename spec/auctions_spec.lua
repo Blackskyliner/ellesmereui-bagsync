@@ -66,18 +66,18 @@ describe("Auction collector", function()
         assert.are.equal(3, #ns.GetPlayerChar().auctions.items)
     end)
 
-    it("opt-in: requests owned auctions on open and after posting", function()
-        local env, ns = world({ ownedAuctionsFull = false })
+    it("opt-in: requests owned auctions once on open, not again for each post", function()
+        local env, ns = world({ ownedAuctionsFull = false, multisell = 4 })
         ns.db.settings.collect.auctionsQuery = true
+        wow.putItem(env.__state, 0, 2, 2589, 200)
         openAH(env)
         assert.are.equal(1, env.__state.auctionQueries)
         env.ProcessQueue()
         assert.are.equal(3, #ns.GetPlayerChar().auctions.items)
-        table.insert(env.__state.ownedAuctions, wow.ownedAuction(105, 6948, 1, { seconds = 7200 }))
-        env.FireEvent("AUCTION_HOUSE_AUCTION_CREATED", 105)
-        assert.are.equal(2, env.__state.auctionQueries)
+        env.C_AuctionHouse.PostItem(wow.itemLocation(0, 2), 1, 20, nil, 1)   -- 4 auctions
         env.ProcessQueue()
-        assert.are.equal(4, #ns.GetPlayerChar().auctions.items)
+        assert.are.equal(7, #ns.GetPlayerChar().auctions.items)          -- recorded by the post-hooks
+        assert.are.equal(1, env.__state.auctionQueries)
     end)
 
     it("moves cancelled and expired auctions into in-transit mail", function()
