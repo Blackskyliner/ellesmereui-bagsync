@@ -11,6 +11,7 @@
 --    chars    = { ["Name-Realm"] = CharRecord }
 --    warband  = { money, moneyAt, bank = Container, bankAt }
 --    guilds   = { ["Guild-Realm"] = { name, realm, faction, money, scannedAt, tabs = { [tab] = Container } } }
+--    currencyMeta = { [currencyID] = { t = transferable, w = warbandWide } }
 --
 --  Container = { size = n, name = str?, icon = fileID?, items = { [slot] = enc } }
 --  CharRecord = { name, realm, realmName, class, race, faction, level, guild,
@@ -156,6 +157,11 @@ function ns.InitDB()
 
     if type(db.warband) ~= "table" then db.warband = {} end
     db.warband.bank = SanitizeContainerMap(db.warband.bank)
+
+    if type(db.currencyMeta) ~= "table" then db.currencyMeta = {} end
+    for id, meta in pairs(db.currencyMeta) do
+        if type(id) ~= "number" or type(meta) ~= "table" then db.currencyMeta[id] = nil end
+    end
 
     if type(db.guilds) ~= "table" then db.guilds = {} end
     for key, g in pairs(db.guilds) do

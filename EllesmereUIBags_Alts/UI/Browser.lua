@@ -426,25 +426,61 @@ local function RenderSidebar(f)
     content:SetHeight(math.max(1, y))
 end
 
+-- Currency groups, in display order. Warband-wide currencies are shared by all
+-- characters (neither bound nor transferable); that group shows only if used.
+local CURRENCY_GROUPS = {
+    { key = "bound",       title = "Character-bound" },
+    { key = "transferable", title = "Transferable" },
+    { key = "warband",     title = "Warband-wide (shared)" },
+}
+
+local function CurrencyKind(id, info)
+    local t, w
+    if type(info) == "table" then t, w = info.isAccountTransferable, info.isAccountWide end
+    if t == nil and w == nil then
+        local meta = ns.db.currencyMeta and ns.db.currencyMeta[id]
+        if meta then t, w = meta.t, meta.w end
+    end
+    if w then return "warband" end
+    if t then return "transferable" end
+    return "bound"
+end
+
 local function RenderCurrencies(f, c, width)
-    local rows = {}
+    local groups = { bound = {}, transferable = {}, warband = {} }
+    local total = 0
     for id, qty in pairs(c.currency or {}) do
         local info = C_CurrencyInfo.GetCurrencyInfo(id)
-        rows[#rows + 1] = { name = (info and info.name) or ("#" .. id), icon = info and info.iconFileID, qty = qty }
+        local list = groups[CurrencyKind(id, info)]
+        list[#list + 1] = { name = (info and info.name) or ("#" .. id), icon = info and info.iconFileID, qty = qty }
+        total = total + 1
     end
-    table.sort(rows, function(a, b) return a.name < b.name end)
     local y = 0
-    for _, data in ipairs(rows) do
-        local r = PoolAcquire(f.currencies)
-        r:ClearAllPoints()
-        r:SetPoint("TOPLEFT", 0, -y)
-        r:SetWidth(width)
-        r.icon:SetTexture(data.icon or 134400)
-        r.name:SetText(data.name)
-        r.qty:SetText(BreakUpLargeNumbers and BreakUpLargeNumbers(data.qty) or tostring(data.qty))
-        y = y + ROW_H
+    local ar, ag, ab = Ext:GetAccentColor()
+    for _, group in ipairs(CURRENCY_GROUPS) do
+        local rows = groups[group.key]
+        if #rows > 0 then
+            table.sort(rows, function(a, b) return a.name < b.name end)
+            local h = f.grid:AcquireHeader()
+            h:ClearAllPoints()
+            h:SetPoint("TOPLEFT", f.scroll.content, "TOPLEFT", 2, -y - 2)
+            h:SetText(L[group.title])
+            h:SetTextColor(ar, ag, ab)
+            y = y + 20
+            for _, data in ipairs(rows) do
+                local r = PoolAcquire(f.currencies)
+                r:ClearAllPoints()
+                r:SetPoint("TOPLEFT", 0, -y)
+                r:SetWidth(width)
+                r.icon:SetTexture(data.icon or 134400)
+                r.name:SetText(data.name)
+                r.qty:SetText(BreakUpLargeNumbers and BreakUpLargeNumbers(data.qty) or tostring(data.qty))
+                y = y + ROW_H
+            end
+            y = y + 6
+        end
     end
-    return y, #rows
+    return y, total
 end
 
 -- "Alice 5 (Bags 3, Bank 2), Warband 10"
