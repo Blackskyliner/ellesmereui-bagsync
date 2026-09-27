@@ -94,12 +94,16 @@ def load_framexml_globals():
 
 
 def load_ketho_globals():
-    names = set()
+    # -> global names, C_ namespace functions. The annotations also cover
+    # client functions Blizzard's generated docs leave out (e.g. parts of
+    # C_PetJournal that Blizzard_FrameXML/BattlePetTooltip.lua calls).
+    names, functions = set(), set()
     for path in glob.glob(os.path.join(KETHO, "**", "*.lua"), recursive=True):
         s = read(path)
         names.update(re.findall(r"^function ([A-Za-z_][\w]*)\s*\(", s, re.M))
         names.update(re.findall(r"^([A-Za-z_][\w]*)\s*=", s, re.M))
-    return names
+        functions.update(a + "." + b for a, b in re.findall(r"^function (C_\w+)\.(\w+)\s*\(", s, re.M))
+    return names, functions
 
 
 def luacheck_read_globals():
@@ -113,7 +117,8 @@ def luacheck_read_globals():
 def main():
     functions, enums, events, doc_globals = load_docs()
     fx_globals, xml_names, templates = load_framexml_globals()
-    ketho = load_ketho_globals()
+    ketho, ketho_functions = load_ketho_globals()
+    functions = functions | ketho_functions
     known_globals = fx_globals | xml_names | ketho | doc_globals | LUA_STD | C_CONSTANTS | GLOBAL_STRINGS
     sources = addon_sources()
     problems = []

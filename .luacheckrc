@@ -21,7 +21,8 @@ files["EllesmereUIBags_Alts/**/*.lua"] = {
         "securecallfunction", "geterrorhandler", "issecretvalue", "hooksecurefunc",
         -- Frames / UI
         "CreateFrame", "UIParent", "GameTooltip", "ItemRefTooltip", 
-        "BattlePetTooltip", "BattlePetToolTip_ShowLink", "UISpecialFrames", "DEFAULT_CHAT_FRAME",
+        "BattlePetToolTip_UnpackBattlePetLink", "BattlePetTooltipTemplate_SetBattlePet", "C_PetJournal",
+        "UISpecialFrames", "DEFAULT_CHAT_FRAME",
         "STANDARD_TEXT_FONT", "GameFontHighlight", "BackdropTemplateMixin", 
         "SetItemButtonTexture", "SetItemButtonCount", "SetItemButtonQuality",
         "HandleModifiedItemClick", "IsModifiedClick", "IsShiftKeyDown", "IsControlKeyDown", "IsAltKeyDown",
