@@ -120,3 +120,8 @@ L["On the auction house"] = "На аукционе"
 L["Character-bound"] = "Привязана к персонажу"
 L["Transferable"] = "Передаваемая"
 L["Warband-wide (shared)"] = "Общая для отряда"
+
+-- Bound state and equipment sets (0.4.0)
+L["Soulbound"] = "Персональный предмет"
+L["Warbound"] = "Привязано к отряду"
+L["Equipment sets: %s"] = "Комплекты экипировки: %s"

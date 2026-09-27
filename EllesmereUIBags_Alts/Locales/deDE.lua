@@ -115,3 +115,8 @@ L["On the auction house"] = "Im Auktionshaus"
 L["Character-bound"] = "Charaktergebunden"
 L["Transferable"] = "Überweisbar"
 L["Warband-wide (shared)"] = "Kriegsmeutenweit (geteilt)"
+
+-- Bound state and equipment sets (0.4.0)
+L["Soulbound"] = "Seelengebunden"
+L["Warbound"] = "Kriegsmeutengebunden"
+L["Equipment sets: %s"] = "Ausrüstungssets: %s"

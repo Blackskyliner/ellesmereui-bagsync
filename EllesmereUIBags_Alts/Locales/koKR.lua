@@ -120,3 +120,8 @@ L["On the auction house"] = "경매장에 등록됨"
 L["Character-bound"] = "캐릭터 귀속"
 L["Transferable"] = "전송 가능"
 L["Warband-wide (shared)"] = "전투부대 공유"
+
+-- Bound state and equipment sets (0.4.0)
+L["Soulbound"] = "귀속됨"
+L["Warbound"] = "전투부대 귀속"
+L["Equipment sets: %s"] = "장비 구성: %s"
