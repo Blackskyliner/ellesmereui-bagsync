@@ -28,9 +28,10 @@ describe("Bound state", function()
         local _, ns = wow.boot(wow.defaultState())
         assert.are.equal("6948,1,!", ns.EncodeItem(6948, 1, nil, "soul"))
         assert.are.equal("232000,1,~", ns.EncodeItem(232000, 1, nil, "account"))
+        local core = "item:230000::::::::80:66::13:1:10256"         -- stored: the link's item: core
         local enc = ns.EncodeItem(230000, 1, HELM_LINK, "soul")
-        assert.are.equal("230000,1,!" .. HELM_LINK, enc)
-        assert.are.same({ 230000, 1, HELM_LINK, "soul" }, { ns.DecodeItem(enc) })
+        assert.are.equal("230000,1,!" .. core, enc)
+        assert.are.same({ 230000, 1, core, "soul" }, { ns.DecodeItem(enc) })
         assert.are.same({ 230000, 1, HELM_LINK }, { ns.DecodeItem("230000,1," .. HELM_LINK) })   -- 0.3.x data
         assert.are.same({ 2589, 20 }, { ns.DecodeItem("2589,20") })
         assert.are.same({ 6948, 1 }, { ns.DecodeItemIDCount("6948,1,!") })
@@ -47,7 +48,7 @@ describe("Bound state", function()
         s.bags[0].slots[4].bound = true
         s.bags[0].slots[4].wue = true
         local _, ns = wow.boot(s)
-        local items = ns.GetPlayerChar().bags[0].items
+        local items = wow.items(ns.GetPlayerChar().bags[0])
         assert.are.equal("soul", select(4, ns.DecodeItem(items[1])))
         assert.is_nil(select(4, ns.DecodeItem(items[2])))
         assert.are.equal("account", select(4, ns.DecodeItem(items[3])))
@@ -61,7 +62,7 @@ describe("Bound state", function()
         s.equipped[1] = { id = 230000, link = HELM_LINK }
         s.equipped[16] = { id = 232000, link = wow.itemLink(232000) }
         local _, ns = wow.boot(s)
-        local items = ns.GetPlayerChar().equipped.items
+        local items = wow.items(ns.GetPlayerChar().equipped)
         assert.are.equal("soul", select(4, ns.DecodeItem(items[1])))
         assert.are.equal("account", select(4, ns.DecodeItem(items[16])))
     end)

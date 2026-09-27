@@ -10,8 +10,8 @@ describe("boot smoke", function()
         assert.is_true(ns.ready)
         local c = ns.db.chars["Alice-Blackhand"]
         assert.is_table(c)
-        assert.are.equal("6948,1", c.bags[0].items[1])
-        assert.are.equal("2589,20", c.bags[0].items[2])
+        assert.are.equal("6948,1", wow.items(c.bags[0])[1])
+        assert.are.equal("2589,20", wow.items(c.bags[0])[2])
     end)
 end)
 

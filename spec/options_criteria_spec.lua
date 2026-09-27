@@ -131,7 +131,7 @@ describe("Self-test", function()
         local env, ns = wow.boot(s)
         ns.Index:EnsureBuilt()
         ns.Index.data[2589]["Alice-Blackhand"].bags = 999        -- simulate drift
-        ns.GetPlayerChar().bags[0].items[1] = "2589,19"           -- stored differs from game
+        wow.setItem(ns.GetPlayerChar().bags[0], 1, "2589,19")     -- stored differs from game
         local ok, report = ns.RunSelfTest(false)
         assert.is_false(ok)
         assert.are.equal(1, #report.countMismatches)
@@ -280,12 +280,14 @@ describe("SavedVariables", function()
             local ch = ns.GetChar("Alt" .. c .. "-Blackhand", true)
             ch.class = "MAGE"
             for bag = 0, 4 do
-                ch.bags[bag] = { size = 36, items = {} }
-                for slot = 1, 36 do ch.bags[bag].items[slot] = ns.EncodeItem(2589 + (slot % 5), slot) end
+                local items = {}
+                for slot = 1, 36 do items[slot] = ns.EncodeItem(2589 + (slot % 5), slot) end
+                ch.bags[bag] = { size = 36, items = ns.PackItems(items) }
             end
             for tab = 6, 7 do
-                ch.bank[tab] = { size = 98, items = {} }
-                for slot = 1, 98 do ch.bank[tab].items[slot] = ns.EncodeItem(190396, 1000) end
+                local items = {}
+                for slot = 1, 98 do items[slot] = ns.EncodeItem(190396, 1000) end
+                ch.bank[tab] = { size = 98, items = ns.PackItems(items) }
             end
         end
         local sv, bytes = wow.logout(env)

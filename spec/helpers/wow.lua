@@ -1021,6 +1021,31 @@ function M.relog(env, playerOverrides, stateOverrides)
     return M.boot(state, sv)
 end
 
+-- Stored stacks of a packed container ("slot:enc;slot:enc", Keys.lua), parsed
+-- independently of the addon: { [slot] = enc }.
+function M.items(container)
+    local map = {}
+    local packed = container and container.items or ""
+    assert(type(packed) == "string", "container items are not packed: " .. type(packed))
+    for slot, enc in packed:gmatch("(%d+):([^;]+)") do map[tonumber(slot)] = enc end
+    return map
+end
+
+-- { [slot] = enc } -> packed string (slot order)
+function M.pack(map)
+    local slots, parts = {}, {}
+    for slot in pairs(map) do slots[#slots + 1] = slot end
+    table.sort(slots)
+    for i, slot in ipairs(slots) do parts[i] = slot .. ":" .. map[slot] end
+    return table.concat(parts, ";")
+end
+
+function M.setItem(container, slot, enc)
+    local map = M.items(container)
+    map[slot] = enc
+    container.items = M.pack(map)
+end
+
 M.Secret = Secret
 M.shallowCopy = shallowCopy
 return M

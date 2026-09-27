@@ -3,6 +3,7 @@
 local wow = require("wow")
 
 local HELM_LINK = wow.itemLink(230000, "item:230000::::::::80:66::13:1:10256")
+local HELM_REF = "item:230000::::::::80:66::13:1:10256"     -- what is stored and shown: the link's core
 
 local CURRENCIES = {
     { id = 3008, name = "Valorstones", quantity = 1000, icon = 1 },
@@ -97,7 +98,7 @@ describe("All characters view", function()
         local f = env.EllesmereUIBagsAltsBrowser
         local c = counts(f)
         assert.are.equal(35, c["item:2589"])            -- 20 + 5 bank + 3 Bob + 7 Carol
-        assert.are.equal(2, c[HELM_LINK])               -- same link: one button
+        assert.are.equal(2, c[HELM_REF])               -- same link: one button
         assert.are.equal(500, c["item:190396"])         -- warband bank
         assert.are.equal(1, c["item:6948"])
         -- one button per merged item
@@ -196,7 +197,7 @@ describe("Everything tab of a character", function()
         assert.are.same({ "all", "bags", "bank", "equipped", "mail", "auctions", "currency" }, shown)
         local c = counts(f)
         assert.are.equal(25, c["item:2589"])            -- bags 20 + bank 5, not Bob or Carol
-        assert.are.equal(1, c[HELM_LINK])
+        assert.are.equal(1, c[HELM_REF])
         assert.is_nil(c["item:190396"])                 -- warband bank is not the character's
         assert.are.same({ "Armor", "Tradeskill", "Miscellaneous" }, headers(f))
         assert.is_true(f.delete:IsShown() == false)     -- current character: never deletable
@@ -244,7 +245,7 @@ describe("Realm view", function()
         ns.Browser:Select(ns.Browser.RealmOwner("Proudmoore"))
         c = counts(f)
         assert.are.equal(7, c["item:2589"])
-        assert.is_nil(c[HELM_LINK])
+        assert.is_nil(c[HELM_REF])
         assert.truthy(f.footer.text:find("1 characters", 1, true))
         assert.falsy(f.delete:IsShown())
         assert.are.same({}, env.__errors)

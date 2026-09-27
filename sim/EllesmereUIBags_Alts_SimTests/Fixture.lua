@@ -14,9 +14,7 @@ local LINEN, WOOL, HEARTH, THUNDERFURY, ORE, POTION = 2589, 2592, 6948, 19019, 1
 local function enc(id, count) return id .. "," .. (count or 1) end
 
 local function container(size, items, name)
-    local c = { size = size, items = {}, name = name }
-    for slot, e in pairs(items) do c.items[slot] = e end
-    return c
+    return { size = size, items = ns.PackItems(items), name = name }
 end
 
 local function chars(now)

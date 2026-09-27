@@ -26,11 +26,15 @@ describe("Keys", function()
         local gem = wow.itemLink(230000, "item:230000::213743::::::80:::::")
         local pet = "|cff0070dd|Hbattlepet:1387:25:3:1627:289:289:0000000000000000:0|h[Pet]|h|r"
         local key = "|cffa335ee|Hkeystone:180653:2649:12:10:0:0:0|h[Keystone]|h|r"
+        -- item links keep only their "item:" core; pet and keystone links stay whole
+        local expected = { [bonus] = "item:230000::::::::80:66::13:2:10256:1520", [enchant] = "item:19019:6226:::::::80:::::",
+                           [gem] = "item:230000::213743::::::80:::::", [pet] = pet, [key] = key }
         for _, link in ipairs({ bonus, enchant, gem, pet, key }) do
             assert.is_true(ns.LinkIsRich(link), link)
             local enc = ns.EncodeItem(1, 1, link)
             local _, _, back = ns.DecodeItem(enc)
-            assert.are.equal(link, back)
+            assert.are.equal(expected[link], back)
+            assert.is_true(ns.LinkIsRich(back))
         end
         assert.is_false(ns.LinkIsRich(wow.itemLink(230000, "item:230000::::::::80:66::13:0")))
         assert.is_false(ns.LinkIsRich(nil))
@@ -91,14 +95,14 @@ describe("DB", function()
         local env, ns = wow.boot(wow.defaultState(), sv)
         assert.are.same({}, env.__errors)
         local bob = ns.db.chars["Bob-Blackhand"]
-        assert.are.same({ [1] = "6948,1" }, bob.bags[0].items)
+        assert.are.equal("1:6948,1", bob.bags[0].items)            -- old table format packed
         assert.are.same({}, bob.mail.items)
         assert.is_table(bob.currency)
         assert.is_nil(ns.db.chars[5])
         assert.is_nil(ns.db.chars["Broken-Realm"])
         assert.are.equal("table", type(ns.db.settings.tooltip))
         assert.is_true(ns.db.settings.collect.bags)
-        assert.are.equal("2589,5", ns.db.warband.bank[12].items[1])
+        assert.are.equal("2589,5", wow.items(ns.db.warband.bank[12])[1])
         assert.is_nil(ns.db.warband.bank.bad)
         assert.are.same({}, ns.db.guilds["G-R"].tabs)
         assert.is_nil(ns.db.guilds[1])
