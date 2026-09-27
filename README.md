@@ -148,6 +148,14 @@ eingehängt, weil EllesmereUI Bags vorausgesetzt ist. Ladebildschirme
 
 Die Daten liegen accountweit in `WTF/Account/<ACCOUNT>/SavedVariables/EllesmereUIBags_Alts.lua`
 (Variable `EllesmereUIBagsAltsDB`), bewusst getrennt von `EllesmereUIDB`.
+Jede Tasche, jedes Bankfach und jedes Gildenbankfach steht dort als **ein**
+String (`"slot:itemID,Anzahl;…"`). Von Item-Links wird nur der `item:`-Kern
+gespeichert, Name und Farbe kommen aus dem Item-Cache. Bei 20 Charakteren mit
+je 150 Items in den Taschen und 300 in der Bank sind das rund 200 KB statt
+über 300 KB, und das Laden kostet etwa ein Viertel der Zeit und des Speichers.
+Seit 0.8.0 werden ältere Daten beim ersten Benutzen einmal umgewandelt. Eine
+ältere Version des Addons kann das neue Format nicht lesen und verwirft dann
+die Container-Inhalte, bis die Charaktere neu erfasst sind.
 
 ## Ingame-Testplan
 

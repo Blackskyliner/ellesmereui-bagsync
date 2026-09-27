@@ -136,5 +136,11 @@ Header-Button + Gildenbank. Keine Auktionen, kein LDB/Minimap.
 - [x] 35-px-Header mit EUI-Bags-Metriken (Titel 13/8 px, grauer Untertitel 11, Suche 22 px, EUI-Close-Glyph 12 px, Trennlinie)
 - [x] EUI-Skin ohne eigene 25-px-Titelleiste (noTopBar), Suchfeld ohne Skin im Stil der Bag-Suche (PanelPP-Rahmen)
 
+## 21. Kompaktes Speicherformat (0.8.0)
+- [x] Ein gepackter String pro Container (`slot:enc;...`), Index und Diff direkt auf dem String
+- [x] Item-Links nur als `item:`-Kern (Pet- und Keystone-Links vollständig), Name/Chat-Link aus dem Item-Cache
+- [x] Umwandlung alter Daten idempotent in der Datenprüfung bei der Aktivierung
+- [x] Tests: Format, Umwandlung, Links aus dem Kern, SV-Größe (20 Chars, 150/300/300)
+
 ## Offen (braucht den echten Client)
 - [ ] Ingame-Testplan aus README.md durchgehen (Bank, Post, Auktionen, Gildenbank, Kampf/Instanz, taint.log)
