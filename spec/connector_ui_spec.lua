@@ -207,7 +207,7 @@ describe("Browser", function()
         assert.is_true(f:IsShown())
         local rows = {}
         for i = 1, f.sideRows.used do rows[#rows + 1] = f.sideRows.items[i].ownerKey end
-        assert.are.same({ "Alice-Blackhand", "Bob-Blackhand", "#warband" }, rows)
+        assert.are.same({ "*all", "*realm:Blackhand", "Alice-Blackhand", "Bob-Blackhand", "#warband" }, rows)
         assert.are.equal("Alice-Blackhand", ns.Browser:GetState().owner)
         assert.are.equal(4, f.grid.used)
         -- the rich link survives into the button reference

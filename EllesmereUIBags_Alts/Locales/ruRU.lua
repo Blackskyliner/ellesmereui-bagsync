@@ -125,3 +125,8 @@ L["Warband-wide (shared)"] = "Общая для отряда"
 L["Soulbound"] = "Персональный предмет"
 L["Warbound"] = "Привязано к отряду"
 L["Equipment sets: %s"] = "Комплекты экипировки: %s"
+
+-- All characters / realm overview (0.6.0)
+L["All characters"] = "Все персонажи"
+L["Everything"] = "Всё"
+L["%d characters"] = "Персонажей: %d"

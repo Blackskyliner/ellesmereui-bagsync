@@ -123,3 +123,8 @@ L["Warband-wide (shared)"] = "De todo o bando de guerra (compartilhada)"
 L["Soulbound"] = "Vinculado"
 L["Warbound"] = "Vinculado ao bando de guerra"
 L["Equipment sets: %s"] = "Conjuntos de equipamento: %s"
+
+-- All characters / realm overview (0.6.0)
+L["All characters"] = "Todos os personagens"
+L["Everything"] = "Tudo"
+L["%d characters"] = "%d personagens"

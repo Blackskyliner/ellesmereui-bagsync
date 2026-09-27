@@ -19,11 +19,33 @@ local RESULT_H = 38
 local Browser = { stale = true }
 ns.Browser = Browser
 
+-- Pseudo owners of the aggregated views: "All characters" and one per realm
+-- (the realm headers of the sidebar).
+local ALL_OWNER = "*all"
+local REALM_PREFIX = "*realm:"
+Browser.ALL_OWNER = ALL_OWNER
+function Browser.RealmOwner(realm) return REALM_PREFIX .. realm end
+
+-- nil for a single owner, else the scope of an aggregated view:
+-- {} = everything, { realm = r } = characters and guilds of one realm.
+local function AggregateScope(owner)
+    if owner == ALL_OWNER then return {} end
+    if owner and owner:sub(1, #REALM_PREFIX) == REALM_PREFIX then
+        return { realm = owner:sub(#REALM_PREFIX + 1) }
+    end
+    return nil
+end
+
+local function InScope(scope, realm)
+    return scope.realm == nil or scope.realm == realm
+end
+
 local frame
 local state = { owner = nil, tab = "bags", query = nil, queryText = "" }
 local pendingSearch = {}   -- itemID -> true while waiting for item data
 
 local CHAR_TABS = {
+    { key = "all",      label = "Everything", allOnly = true },
     { key = "bags",     label = "Bags" },
     { key = "bank",     label = "Bank" },
     { key = "equipped", label = "Equipped" },
@@ -130,6 +152,116 @@ local function TabSections(tabs)
 end
 
 -------------------------------------------------------------------------------
+--  All characters / one realm: every stored stack of a kind merged per item
+--  (the link for gear and other rich items, the itemID for plain stacks) and
+--  grouped by item class, or by EUI category when that option is on. The
+--  warband bank is account wide and therefore only part of "All characters".
+-------------------------------------------------------------------------------
+local function EachContainer(map, add)
+    if type(map) ~= "table" then return end
+    for _, cont in pairs(map) do
+        if type(cont) == "table" then add(cont.items) end
+    end
+end
+
+-- Calls add(items) for every item collection of the scope shown on the tab.
+local function CollectAll(scope, tab, add)
+    local all = tab == "all"
+    for _, c in pairs(ns.db.chars) do
+        if InScope(scope, c.realm) then
+            if all or tab == "bags" then EachContainer(c.bags, add) end
+            if all or tab == "bank" then EachContainer(c.bank, add) end
+            if all or tab == "equipped" then add(c.equipped and c.equipped.items) end
+            if all or tab == "mail" then
+                add(c.mail and c.mail.items)
+                add(c.mailIncoming)
+            end
+            if all or tab == "auctions" then add(c.auctions and c.auctions.items) end
+        end
+    end
+    if (all or tab == "bank") and not scope.realm then EachContainer(ns.db.warband.bank, add) end
+    if all then
+        for key, g in pairs(ns.db.guilds) do
+            if InScope(scope, select(2, ns.SplitKey(key))) then EachContainer(g.tabs, add) end
+        end
+    end
+end
+
+local function MergedStacks(scope, tab)
+    local merged, list = {}, {}
+    CollectAll(scope, tab, function(items)
+        if type(items) ~= "table" then return end
+        for _, v in pairs(items) do
+            local enc = type(v) == "table" and v.e or v
+            if type(enc) == "string" then
+                local id, count, link, bound = ns.DecodeItem(enc)
+                if id then
+                    local key = link or id
+                    local m = merged[key]
+                    if not m then
+                        m = { id = id, link = link, count = 0, bound = bound,
+                              quality = C_Item.GetItemQualityByID(link or id) or -1 }
+                        merged[key] = m
+                        list[#list + 1] = m
+                    elseif m.bound ~= bound then
+                        m.bound = nil   -- bound on one character, free on another
+                    end
+                    m.count = m.count + (count or 1)
+                end
+            end
+        end
+    end)
+    return list
+end
+
+local function StackOrder(a, b)
+    if a.quality ~= b.quality then return a.quality > b.quality end
+    if a.id ~= b.id then return a.id < b.id end
+    return (a.link or "") < (b.link or "")
+end
+
+local function AllSections(scope, tab)
+    local groups, order = {}, {}
+    for _, m in ipairs(MergedStacks(scope, tab)) do
+        local classID = select(6, C_Item.GetItemInfoInstant(m.id)) or Enum.ItemClass.Miscellaneous
+        local g = groups[classID]
+        if not g then
+            g = { classID = classID, title = C_Item.GetItemClassInfo(classID), stacks = {} }
+            groups[classID] = g
+            order[#order + 1] = g
+        end
+        g.stacks[#g.stacks + 1] = m
+    end
+    table.sort(order, function(a, b) return a.classID < b.classID end)
+    local sections = {}
+    for _, g in ipairs(order) do
+        table.sort(g.stacks, StackOrder)
+        local items = {}
+        for i, m in ipairs(g.stacks) do items[i] = ns.EncodeItem(m.id, m.count, m.link, m.bound) end
+        sections[#sections + 1] = { title = g.title, items = items }
+    end
+    return ByEUICategory(sections)
+end
+
+-- id -> quantity summed over the characters of the scope; shared: id ->
+-- quantity of the most recently seen one (warband-wide currencies hold the
+-- same value on every character, so they are not summed).
+local function AllCurrencyTotals(scope)
+    local totals, shared, at = {}, {}, {}
+    for _, c in pairs(ns.db.chars) do
+        local seen = c.lastSeen or 0
+        for id, qty in pairs(InScope(scope, c.realm) and c.currency or {}) do
+            totals[id] = (totals[id] or 0) + qty
+            if not at[id] or seen > at[id] then
+                at[id] = seen
+                shared[id] = qty
+            end
+        end
+    end
+    return totals, shared
+end
+
+-------------------------------------------------------------------------------
 --  Frame construction (lazy)
 -------------------------------------------------------------------------------
 local function SavePosition(self)
@@ -205,9 +337,80 @@ local function CreateResultRow(parent)
     return r
 end
 
+-- Currency groups, in display order. Warband-wide currencies are shared by all
+-- characters (neither bound nor transferable); that group shows only if used.
+local CURRENCY_GROUPS = {
+    { key = "bound",       title = "Character-bound" },
+    { key = "transferable", title = "Transferable" },
+    { key = "warband",     title = "Warband-wide (shared)" },
+}
+
+local function CurrencyKind(id, info)
+    local t, w
+    if type(info) == "table" then t, w = info.isAccountTransferable, info.isAccountWide end
+    if t == nil and w == nil then
+        local meta = ns.db.currencyMeta and ns.db.currencyMeta[id]
+        if meta then t, w = meta.t, meta.w end
+    end
+    if w then return "warband" end
+    if t then return "transferable" end
+    return "bound"
+end
+
+-- Character name in class colour, with the realm when it is not the player's.
+local function CharLabel(key)
+    local c = ns.db.chars[key]
+    local name = (c and c.name) or key
+    if c and c.realm and c.realm ~= ns.GetPlayerRealm() then name = name .. "-" .. c.realm end
+    local r, g, b = W.ClassColor(c and c.class)
+    return string.format("|cff%02x%02x%02x%s|r", r * 255, g * 255, b * 255, name)
+end
+
+local function FormatQty(n)
+    return BreakUpLargeNumbers and BreakUpLargeNumbers(n) or tostring(n)
+end
+
+-- Currency tooltip: Blizzard's own currency tooltip plus who holds how many.
+local function CurrencyRow_OnEnter(self)
+    if not self.currencyID then return end
+    local id = self.currencyID
+    local tooltip = W.GetTooltip()
+    tooltip:SetOwner(self, "ANCHOR_RIGHT")
+    tooltip:SetCurrencyByID(id)
+    local rows, total = {}, 0
+    for key, c in pairs(ns.db.chars) do
+        local qty = c.currency and c.currency[id]
+        if qty then
+            rows[#rows + 1] = { key = key, qty = qty }
+            total = total + qty
+        end
+    end
+    table.sort(rows, function(a, b)
+        if a.qty ~= b.qty then return a.qty > b.qty end
+        return a.key < b.key
+    end)
+    if self.kind == "warband" then
+        tooltip:AddLine(" ")
+        tooltip:AddLine(L["Warband-wide (shared)"], 0.31, 0.76, 0.97)
+    elseif #rows > 0 then
+        tooltip:AddLine(" ")
+        for _, row in ipairs(rows) do
+            tooltip:AddDoubleLine(CharLabel(row.key), FormatQty(row.qty), 1, 0.82, 0, 1, 1, 1)
+        end
+        if #rows > 1 then tooltip:AddDoubleLine(L["Total"], FormatQty(total), 1, 0.82, 0, 1, 1, 1) end
+    end
+    tooltip:Show()
+end
+
 local function CreateCurrencyRow(parent)
     local r = CreateFrame("Frame", nil, parent)
     r:SetHeight(ROW_H)
+    r:EnableMouse(true)
+    r:SetScript("OnEnter", CurrencyRow_OnEnter)
+    r:SetScript("OnLeave", function() W.GetTooltip():Hide() end)
+    r.hl = r:CreateTexture(nil, "HIGHLIGHT")
+    r.hl:SetAllPoints()
+    r.hl:SetColorTexture(1, 1, 1, 0.05)
     r.icon = r:CreateTexture(nil, "ARTWORK")
     r.icon:SetSize(ROW_H - 4, ROW_H - 4)
     r.icon:SetPoint("LEFT", 2, 0)
@@ -276,15 +479,11 @@ function Browser:Build()
     f.sideRows = Pool(CreateSidebarRow, f.sideScroll.content)
     f.sideHeaders = Pool(function(parent) return W.Text(parent, 11, nil, 0.6, 0.6, 0.6) end, f.sideScroll.content)
 
-    -- Tabs
+    -- Tabs (anchored per render: the visible set depends on the owner)
     f.tabs = {}
-    local prev
     for _, def in ipairs(CHAR_TABS) do
         local tab = W.Tab(f, L[def.label], function() Browser:SelectTab(def.key) end)
-        tab.key = def.key
-        if prev then tab:SetPoint("LEFT", prev, "RIGHT", 2, 0)
-        else tab:SetPoint("TOPLEFT", f.sidebar, "TOPRIGHT", PAD, 0) end
-        prev = tab
+        tab.key, tab.allOnly = def.key, def.allOnly
         f.tabs[#f.tabs + 1] = tab
     end
 
@@ -342,7 +541,14 @@ end
 --  State
 -------------------------------------------------------------------------------
 function Browser:OwnerExists(owner)
-    if owner == ns.WARBAND_OWNER then return true end
+    if owner == ns.WARBAND_OWNER or owner == ALL_OWNER then return true end
+    local scope = AggregateScope(owner)
+    if scope then
+        for _, c in pairs(ns.db.chars) do
+            if c.realm == scope.realm then return true end
+        end
+        return false
+    end
     if owner:sub(1, 1) == "@" then return ns.db.guilds[owner:sub(2)] ~= nil end
     return ns.db.chars[owner] ~= nil
 end
@@ -410,12 +616,26 @@ local function RenderSidebar(f)
         y = y + ROW_H
     end
 
+    local allGold = ns.db.warband.money or 0
+    for _, c in pairs(ns.db.chars) do allGold = allGold + (c.money or 0) end
+    Row(ALL_OWNER, L["All characters"], W.FormatGold(allGold), 1, 0.82, 0)
+
+    local realmGold = {}
+    for _, c in pairs(ns.db.chars) do
+        if c.realm then realmGold[c.realm] = (realmGold[c.realm] or 0) + (c.money or 0) end
+    end
     local lastRealm
     for _, key in ipairs(ns.GetSortedCharKeys()) do
         local c = ns.db.chars[key]
         local realmLabel = c.realmName or c.realm or "?"
         if realmLabel ~= lastRealm then
-            Header(realmLabel)
+            -- realm header doubles as the entry of the realm-wide overview
+            if c.realm then
+                y = y + 4
+                Row(REALM_PREFIX .. c.realm, realmLabel, W.FormatGold(realmGold[c.realm]), 0.6, 0.6, 0.6)
+            else
+                Header(realmLabel)
+            end
             lastRealm = realmLabel
         end
         local r, g, b = W.ClassColor(c.class)
@@ -437,33 +657,18 @@ local function RenderSidebar(f)
     content:SetHeight(math.max(1, y))
 end
 
--- Currency groups, in display order. Warband-wide currencies are shared by all
--- characters (neither bound nor transferable); that group shows only if used.
-local CURRENCY_GROUPS = {
-    { key = "bound",       title = "Character-bound" },
-    { key = "transferable", title = "Transferable" },
-    { key = "warband",     title = "Warband-wide (shared)" },
-}
-
-local function CurrencyKind(id, info)
-    local t, w
-    if type(info) == "table" then t, w = info.isAccountTransferable, info.isAccountWide end
-    if t == nil and w == nil then
-        local meta = ns.db.currencyMeta and ns.db.currencyMeta[id]
-        if meta then t, w = meta.t, meta.w end
-    end
-    if w then return "warband" end
-    if t then return "transferable" end
-    return "bound"
-end
-
-local function RenderCurrencies(f, c, width)
+-- quantities: id -> qty; shared (all-characters view): id -> the single value
+-- shown for warband-wide currencies instead of the sum.
+local function RenderCurrencies(f, quantities, width, shared)
     local groups = { bound = {}, transferable = {}, warband = {} }
     local total = 0
-    for id, qty in pairs(c.currency or {}) do
+    for id, qty in pairs(quantities or {}) do
         local info = C_CurrencyInfo.GetCurrencyInfo(id)
-        local list = groups[CurrencyKind(id, info)]
-        list[#list + 1] = { name = (info and info.name) or ("#" .. id), icon = info and info.iconFileID, qty = qty }
+        local kind = CurrencyKind(id, info)
+        if kind == "warband" and shared and shared[id] then qty = shared[id] end
+        local list = groups[kind]
+        list[#list + 1] = { id = id, kind = kind, name = (info and info.name) or ("#" .. id),
+                            icon = info and info.iconFileID, qty = qty }
         total = total + 1
     end
     local y = 0
@@ -483,9 +688,10 @@ local function RenderCurrencies(f, c, width)
                 r:ClearAllPoints()
                 r:SetPoint("TOPLEFT", 0, -y)
                 r:SetWidth(width)
+                r.currencyID, r.kind = data.id, data.kind
                 r.icon:SetTexture(data.icon or 134400)
                 r.name:SetText(data.name)
-                r.qty:SetText(BreakUpLargeNumbers and BreakUpLargeNumbers(data.qty) or tostring(data.qty))
+                r.qty:SetText(FormatQty(data.qty))
                 y = y + ROW_H
             end
             y = y + 6
@@ -509,9 +715,7 @@ local function DescribeOwners(itemID)
             local g = ns.db.guilds[owner:sub(2)]
             label = "|cff40c040" .. ((g and g.name) or owner:sub(2)) .. "|r"
         else
-            local c = ns.db.chars[owner]
-            local r, g, b = W.ClassColor(c and c.class)
-            label = string.format("|cff%02x%02x%02x%s|r", r * 255, g * 255, b * 255, (c and c.name) or owner)
+            label = CharLabel(owner)
         end
         parts[#parts + 1] = { text = label .. " " .. n, n = n }
     end
@@ -588,7 +792,33 @@ local function SoldTotal(c)
     return total
 end
 
+local function FooterForScope(scope)
+    local gold = scope.realm and 0 or (ns.db.warband.money or 0)
+    local chars, value, auctions, mailGold = 0, 0, 0, 0
+    for _, c in pairs(ns.db.chars) do
+        if InScope(scope, c.realm) then
+            chars = chars + 1
+            gold = gold + (c.money or 0)
+            if state.tab == "auctions" then
+                local v, n = ns.AuctionValue(c)
+                value, auctions = value + v, auctions + n
+            elseif state.tab == "mail" then
+                mailGold = mailGold + SoldTotal(c)
+            end
+        end
+    end
+    local text = string.format("%s: %s   %s", L["Gold"], W.FormatGold(gold), string.format(L["%d characters"], chars))
+    if state.tab == "auctions" then
+        text = text .. string.format("   %s: %s (%d)", L["On the auction house"], W.FormatMoney(value), auctions)
+    elseif state.tab == "mail" then
+        text = text .. string.format("   %s: %s", L["Gold in mail"], W.FormatMoney(mailGold))
+    end
+    return text
+end
+
 local function FooterFor(owner)
+    local scope = AggregateScope(owner)
+    if scope then return FooterForScope(scope) end
     if owner == ns.WARBAND_OWNER then
         local wb = ns.db.warband
         return string.format("%s: %s   %s: %s", L["Gold"], W.FormatGold(wb.money), L["Bank scanned"], W.FormatAgo(wb.bankAt))
@@ -638,11 +868,22 @@ function Browser:Refresh()
     f.scroll.content:SetWidth(width)
 
     local owner = state.owner
-    local isChar = owner ~= ns.WARBAND_OWNER and owner:sub(1, 1) ~= "@"
+    local scope = AggregateScope(owner)
+    local isAll = scope ~= nil
+    local isChar = not isAll and owner ~= ns.WARBAND_OWNER and owner:sub(1, 1) ~= "@"
     local searching = state.query ~= nil
+    if state.tab == "all" and not isAll then state.tab = "bags" end
+    local prev
     for _, tab in ipairs(f.tabs) do
-        tab:SetShown(isChar and not searching)
+        local shown = (isChar or isAll) and not searching and (isAll or not tab.allOnly)
+        tab:SetShown(shown)
         tab:SetSelected(tab.key == state.tab)
+        if shown then
+            tab:ClearAllPoints()
+            if prev then tab:SetPoint("LEFT", prev, "RIGHT", 2, 0)
+            else tab:SetPoint("TOPLEFT", f.sidebar, "TOPRIGHT", PAD, 0) end
+            prev = tab
+        end
     end
 
     local height, count = 0, 0
@@ -655,10 +896,17 @@ function Browser:Refresh()
         f.footer:SetText(string.format(L["%d results"], n))
     else
         local sections
-        if isChar then
+        if isAll then
+            if state.tab == "currency" then
+                local totals, shared = AllCurrencyTotals(scope)
+                height, count = RenderCurrencies(f, totals, width, shared)
+            else
+                sections = AllSections(scope, state.tab)
+            end
+        elseif isChar then
             local c = ns.db.chars[owner]
             if state.tab == "currency" then
-                height, count = RenderCurrencies(f, c, width)
+                height, count = RenderCurrencies(f, c.currency, width)
             else
                 sections = CharSections(c, state.tab)
             end
@@ -669,7 +917,7 @@ function Browser:Refresh()
             sections = g and TabSections(g.tabs) or {}
         end
         if sections then
-            height = f.grid:Layout(sections, width)
+            height = f.grid:Layout(sections, width, isAll)
             count = f.grid.used
         end
         if isChar and state.tab == "mail" then
@@ -689,7 +937,7 @@ function Browser:Refresh()
         f.footer:SetText(FooterFor(owner))
     end
     f.scroll.content:SetHeight(math.max(1, height))
-    f.delete:SetShown(not searching and owner ~= ns.WARBAND_OWNER and owner ~= ns.GetPlayerKey())
+    f.delete:SetShown(not searching and not isAll and owner ~= ns.WARBAND_OWNER and owner ~= ns.GetPlayerKey())
 end
 
 -------------------------------------------------------------------------------
@@ -697,7 +945,7 @@ end
 -------------------------------------------------------------------------------
 function Browser:ConfirmDelete()
     local owner = state.owner
-    if not owner or owner == ns.GetPlayerKey() or owner == ns.WARBAND_OWNER then return end
+    if not owner or owner == ns.GetPlayerKey() or owner == ns.WARBAND_OWNER or AggregateScope(owner) then return end
     local isGuild = owner:sub(1, 1) == "@"
     local label = isGuild and ((ns.db.guilds[owner:sub(2)] or {}).name or owner:sub(2)) or owner
     Ext:Confirm({

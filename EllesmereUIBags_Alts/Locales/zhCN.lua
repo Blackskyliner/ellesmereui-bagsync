@@ -125,3 +125,8 @@ L["Warband-wide (shared)"] = "战团通用（共享）"
 L["Soulbound"] = "已绑定"
 L["Warbound"] = "战团绑定"
 L["Equipment sets: %s"] = "装备方案：%s"
+
+-- All characters / realm overview (0.6.0)
+L["All characters"] = "所有角色"
+L["Everything"] = "全部"
+L["%d characters"] = "%d个角色"
