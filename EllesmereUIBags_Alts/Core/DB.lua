@@ -17,7 +17,8 @@
 --                 money, lastSeen, bags = {[bagID]=Container}, bank = {[tabID]=Container},
 --                 bankAt, equipped = Container, mail = { items = { {e=enc, x=expires} } },
 --                 mailAt, mailIncoming = { {e=enc, x=expires, from=key} }, currency = {[id]=qty},
---                 auctions = { scannedAt, items = { {e=enc, x=expires, id=auctionID} } } }
+--                 mailSold = { {e=enc, money=copper, at=time, x=expires, id=auctionID} },
+--                 auctions = { scannedAt, items = { {e=enc, x=expires, id=auctionID, u=unitPrice, p=provisional} } } }
 -------------------------------------------------------------------------------
 local _, ns = ...
 
@@ -57,6 +58,7 @@ ns.DEFAULTS = {
             browserScale     = 1,
         },
         firstRunAsked = false,
+        debug = false,   -- /alts debug: chat diagnostics
     },
 }
 
@@ -123,6 +125,10 @@ local function SanitizeChar(key, c)
     if type(c.mail) ~= "table" then c.mail = {} end
     c.mail.items = SanitizeMailList(c.mail.items)
     c.mailIncoming = SanitizeMailList(c.mailIncoming)
+    c.mailSold = SanitizeMailList(c.mailSold)
+    for _, m in ipairs(c.mailSold) do
+        if type(m.money) ~= "number" then m.money = 0 end
+    end
     if type(c.auctions) ~= "table" then c.auctions = {} end
     c.auctions.items = SanitizeMailList(c.auctions.items)
     if type(c.currency) ~= "table" then c.currency = {} end

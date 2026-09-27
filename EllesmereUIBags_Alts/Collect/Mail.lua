@@ -47,6 +47,7 @@ local function ScanInbox()
     c.mail.items = items
     c.mail.scannedAt = now
     c.mailIncoming = {}
+    c.mailSold = {}   -- the sale gold is real mail in the inbox now
     ns.Fire("CHAR_UPDATED", key, "mail")
 end
 
@@ -81,6 +82,17 @@ function ns.AddIncomingMail(charKey, encodedItems, from)
         added[#added + 1] = entry
     end
     ns.Index:Replace(charKey, "mail", nil, added)
+    ns.Fire("CHAR_UPDATED", charKey, "mail")
+end
+
+-- Records a sold auction: its gold waits in the owner's mailbox. Not an item
+-- stack, so it never enters the item index. money = sale price in copper.
+function ns.AddSoldMail(charKey, enc, money, auctionID)
+    local c = ns.GetChar(charKey, false)
+    if not c or not enc then return end
+    local now = time()
+    c.mailSold[#c.mailSold + 1] = { e = enc, money = money or 0, at = now,
+        x = now + MAIL_LIFETIME_DAYS * DAY, id = auctionID }
     ns.Fire("CHAR_UPDATED", charKey, "mail")
 end
 
@@ -125,6 +137,7 @@ function ns.PruneExpiredMail()
     for _, c in pairs(ns.db.chars) do
         c.mail.items = prune(c.mail.items)
         c.mailIncoming = prune(c.mailIncoming)
+        c.mailSold = prune(c.mailSold)
     end
     if changed then ns.Index:Invalidate() end
 end
