@@ -75,6 +75,8 @@ Header-Button + Gildenbank. Keine Auktionen, kein LDB/Minimap.
 - [x] Abgebrochen/abgelaufen → „Post unterwegs“, Ablauf-Pruning beim Login
 - [x] Index, Tooltip, Browser-Tab, Optionen, Selbsttest, Locales (10 Sprachen)
 - [x] Tests: busted (Mock C_AuctionHouse), Simulator (echte C_AuctionHouse-Oberfläche, Kampf/Taint)
+- [x] 0.2.1: Eingestellte Auktionen sofort (Post-Hooks + AUCTION_HOUSE_AUCTION_CREATED, Bestätigung, Multisell)
+- [x] 0.2.1: Abbruch robust per ID in die Post, Ablauf beim Login in die Post
 
 ## Offen (braucht den echten Client)
 - [ ] Ingame-Testplan aus README.md durchgehen (Bank, Post, Auktionen, Gildenbank, Kampf/Instanz, taint.log)

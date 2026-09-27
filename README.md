@@ -31,7 +31,7 @@ und nicht muttersprachlich geprüft. Korrekturen sind willkommen, der Test
 ## Installation
 
 1. Den Ordner `EllesmereUIBags_Alts` (oder den Inhalt von
-   `dist/EllesmereUIBags_Alts-0.2.0.zip`) nach
+   `dist/EllesmereUIBags_Alts-0.2.1.zip`) nach
    `World of Warcraft/_retail_/Interface/AddOns/` kopieren.
 2. Im Charakterauswahl-Bildschirm unter „AddOns“ prüfen, dass
    „EllesmereUI Bags: Alts“ aktiv ist.
@@ -85,7 +85,7 @@ Realm oder alle), aktuellen Charakter ausblenden und maximale Zeilenzahl.
 | Gold, Level, Gilde | laufend | |
 | Charakterbank + Kriegsmeutenbank | **nur am Bankier** | Zeitstempel „Bank erfasst“ im Browser |
 | Post | **nur am Briefkasten** | Post an eigene Charaktere erscheint sofort als „Unterwegs“ beim Empfänger |
-| Eigene Auktionen | **nur im Auktionshaus** | Standardmäßig passiv: Gelesen wird, was der Client meldet, etwa beim Öffnen des Reiters „Auktionen“. Opt-in: beim Öffnen selbst abfragen. Abgebrochene und abgelaufene Auktionen wandern in „Post → Unterwegs“. |
+| Eigene Auktionen | **nur im Auktionshaus** | Standardmäßig passiv: Gelesen wird, was der Client meldet, etwa beim Öffnen des Reiters „Auktionen“. Opt-in: beim Öffnen selbst abfragen. **Neu eingestellte Auktionen erscheinen sofort**, auch mit Bestätigungsdialog und bei Mehrfach-Einstellungen. Abgebrochene Auktionen wandern sofort in „Post → Unterwegs“, abgelaufene spätestens beim nächsten Login. |
 | Währungen | laufend | Die Erstliste enthält nur aufgeklappte Kategorien, danach wird jede Änderung erfasst |
 | Gildenbank (Opt-in) | **nur an der Gildenbank** | liest alle Fächer, die du sehen darfst |
 
@@ -118,11 +118,12 @@ Vorbereitung: [BugGrabber](https://www.curseforge.com/wow/addons/bug-grabber) un
 7. **Post:** Mit Charakter A etwas an Charakter B schicken. Im Browser taucht es
    bei B unter „Post → Unterwegs“ auf. Nach dem Einloggen von B und dem Öffnen
    des Briefkastens steht es unter „Posteingang“.
-8. **Auktionen:** Im Auktionshaus den Reiter „Auktionen“ öffnen (oder in den
-   Optionen „Eigene Auktionen beim Öffnen … abfragen“ aktivieren). Im Browser
-   unter „Auktionen“ erscheinen die aktiven Auktionen, und der Tooltip zeigt
-   „Auktionen: n“. Brichst du eine Auktion ab, steht das Item sofort unter
-   „Post → Unterwegs“.
+8. **Auktionen:** Ein Item einstellen. Es erscheint sofort im Browser unter
+   „Auktionen“, ohne dass du den Reiter „Auktionen“ öffnen musst, und der
+   Tooltip zeigt „Auktionen: n“. Den Reiter einmal öffnen, die Liste bleibt
+   gleich und ist nicht doppelt. Eine Auktion abbrechen, das Item steht sofort
+   unter „Post → Unterwegs“. Eine Auktion mit kurzer Laufzeit ablaufen lassen,
+   nach dem nächsten Login steht sie ebenfalls unter „Post → Unterwegs“.
 9. **Gildenbank (optional):** In den Optionen „Gildenbank“ aktivieren und die
    Gildenbank öffnen. Die Fächer erscheinen im Browser unter „Gildenbanken“.
 10. **Kampf/Instanz:** In einem Dungeon kämpfen, Taschen öffnen und `/alts`
@@ -144,9 +145,9 @@ die Ausgabe sowie die BugSack-Meldung festhalten.
   eingeloggt waren.
 - Die erste Währungsliste enthält keine zugeklappten Kategorien. Das Addon
   klappt keine UI-Elemente für dich auf.
-- Auktionen sind nur so aktuell wie die letzte Liste im Auktionshaus. Verkaufte
-  Auktionen verschwinden erst mit der nächsten Liste, abgelaufene beim nächsten
-  Login.
+- Verkaufte Auktionen verschwinden erst mit der nächsten Auktionsliste. Ein
+  Verkauf wird nicht als eigenes Event gemeldet, solange du nicht im
+  Auktionshaus bist.
 
 ## Entwicklung
 
