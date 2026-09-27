@@ -20,10 +20,14 @@ feature. In practice:
   (`Libs/EUIBagsExt`). Features that would need EllesmereUI's internals belong in
   a proposal for EllesmereUI (see `upstream/`), not in a workaround here.
 - **Zero cost until used.** Installed but unused, the addon does no work: no scans
-  at login, no data walks, no collector events, no frames. It activates on its
-  first use in a session and only then starts what is enabled.
+  at login, no data walks, no collector events. What exists before the first use
+  is its event frame, the settings page, the slash commands, the skin
+  registration with EllesmereUI, the activation triggers and the first-run hint.
+  It activates on its first use in a session and only then starts what is
+  enabled.
 - **Zero behavior change without opt-in.** Everything a user can see or feel is off
-  until they turn it on.
+  until they turn it on. The only exception is the consent question itself: a chat
+  hint at login and one popup at the first bag open, until it is answered.
 - **Cheap when used.** Event-driven, incremental, cached. A tooltip refresh must
   not recount anything, a bag change must not rescan more than the changed bag.
 - **Zero taint and zero Lua errors.** A bag addon runs in every combat and every
@@ -43,27 +47,44 @@ all five.
    runs no hooks that do work, creates no frames and has no OnUpdate. Features are
    built lazily on first enable and register their events only while active. On
    top of that, collectors start only after the addon's activation on first use
-   (`Core/Activation.lua`); before it, only the activation triggers exist.
+   (`Core/Activation.lua`); before it, only the triggers, the settings page, the
+   slash commands and the first-run hint exist, and no stored data is walked.
 2. **Zero behavior change without opt-in.** New settings default to **off**. Only
-   genuine bug fixes may change behavior without opt-in.
+   genuine bug fixes may change behavior without opt-in. Invisible collection of
+   the player's own data (bags, bank, mail, ...) defaults to on: installing the
+   addon is the opt-in for its purpose, and it only starts after the first use.
 3. **Low cost when enabled.** Event-driven, never OnUpdate polling; no wall-clock
    timers as logic gates (a self-removing one-shot OnUpdate to coalesce a burst is
-   fine); no per-call table allocations in hot paths such as tooltips; small loops.
+   fine, see `UI/Browser.lua` and `Collect/Equipped.lua`; a new one goes into the
+   `ONE_SHOT` list of `spec/options_criteria_spec.lua` with a test that it removes
+   itself); no per-call table allocations in hot paths such as tooltips; small
+   loops. An option's text says exactly which server requests it sends.
 4. **Zero taint risk.**
    - No secure templates, no protected actions (using, moving or picking up items),
      no `StaticPopup`.
    - Never write fields onto Blizzard or EllesmereUI frames and never `SetScript`
      on them; keep our state in our own tables.
-   - Hooks only through `hooksecurefunc` or `HookScript`, and never on Blizzard's
-     bag windows or bag functions.
-   - Show item tooltips on the addon's own tooltip frame, never on Blizzard's
-     shared `GameTooltip`.
+   - Hooks only through `hooksecurefunc`, `HookScript` or Blizzard's tooltip
+     callbacks (`TooltipDataProcessor.AddTooltipPostCall`, the `linePreCall` /
+     `tooltipPostCall` of `ProcessInfo`), and never on Blizzard's bag windows or
+     bag functions.
+   - Show items and caged pets on the addon's own tooltip frames, never on
+     Blizzard's shared `GameTooltip` or `BattlePetTooltip`. Adding count lines to
+     them through `TooltipDataProcessor` is how tooltip counts work and is fine.
+   - Blizzard tables the UI is meant to be extended through are fine (the browser
+     joins `UISpecialFrames` so Escape closes it).
    - Guard every value that may be secret (`issecretvalue`, `ns.IsSecret`) before
-     comparing or computing with it.
+     testing, comparing or computing with it. Blizzard's API docs
+     (`Blizzard_APIDocumentationGenerated`) mark such returns (`SecretReturns`,
+     `ConditionalSecret`, `SecretWhen...`); container data can also be secret in
+     combat and instances, where the collectors defer until combat ends.
    - A template that pins an absolute frame level (e.g. `UIPanelCloseButton`) is
      not used.
-5. **Midnight only.** Interface 12.0 to 12.1, current `C_*` APIs only, no version
-   gates or legacy paths.
+5. **Midnight only.** The TOC lists the same interface versions as EllesmereUI;
+   current `C_*` APIs only, no version gates, no legacy paths and no fallbacks for
+   APIs every 12.x client has. The only gate is EllesmereUI's own failsafe
+   (`EUI_CLIENT_BLOCKED` on clients before 12.1, `Core/Boot.lua`), under which the
+   addon stays inert with its dependency.
 
 ## Code style
 
@@ -76,14 +97,16 @@ all five.
   colour, widget tooltips, confirm popups, item slot skin and bag categories come
   from `EllesmereUIBagsExt`. The connector feature-detects every EllesmereUI
   function it uses and degrades quietly if one is missing, so an EllesmereUI
-  update never breaks the addon. If you need a new EllesmereUI symbol, add it to
-  the connector and to the EllesmereUI contract in `scripts/check-api.py`.
+  update never breaks the addon. If you need a new EllesmereUI symbol or media
+  file, add it to the connector and to the EllesmereUI contract in
+  `scripts/check-api.py`. A static test (`spec/options_criteria_spec.lua`) fails
+  when code outside `Libs/EUIBagsExt` names EllesmereUI directly.
 - **Plain look as fallback.** Without EllesmereUI's Blizzard skin module the
   browser uses its own plain look; keep both working.
 
 ## Translations
 
-The nine translations besides English were generated by the AI assistant and have
+The ten translations besides English were generated by the AI assistant and have
 not been reviewed by native speakers. **Corrections are explicitly wanted**, from a
 single wrong word to a full review of a language, and are the easiest way to
 contribute:
@@ -135,7 +158,8 @@ scripts/setup-tools.sh
 ```
 
 Prerequisites on the host: `git`, `curl`, a C compiler and `make`, `python3`,
-`rsync` and a Rust toolchain (`cargo`) for the simulator. The script is written
+`rsync`, `zip`/`unzip` (packaging) and a Rust toolchain (`cargo`) for the
+simulator. The script is written
 for macOS (Lua is built with its `macosx` target); on Linux the Lua build target
 needs adjusting. It builds or fetches:
 
@@ -160,7 +184,8 @@ fails without the fix, then make it pass.
 1. **luacheck**: Lua 5.1, every global declared (`.luacheckrc`).
 2. **API check** (`scripts/check-api.py`): every global function, every `C_*`
    function, `Enum` value, event and template the addon uses must exist in
-   Blizzard's 12.1 sources or the API annotations. It also checks the contract
+   Blizzard's live UI source (the `live` branch of Gethe/wow-ui-source, Midnight
+   12.x) or Ketho's API annotations. It also checks the contract
    with EllesmereUI's source (every EllesmereUI symbol the connector relies on)
    and that the code is ASCII outside the locales.
 3. **busted** (`spec/`): the addon runs against a client mock in
@@ -173,7 +198,8 @@ fails without the fix, then make it pass.
      (`spec/fixtures/widget_methods.lua`, generated from Blizzard's docs).
    - `wow.boot` logs in and opens the bags once (the first use); pass
      `{ inactive = true }` to test the unused state.
-4. **Simulator** (`scripts/sim-test.sh [tests|skin|upstream]`): the addon runs in
+4. **Simulator** (`scripts/sim-test.sh [tests|skin|upstream|errors]`; `errors`
+   only prints the startup Lua errors as JSON): the addon runs in
    wow-ui-sim with Blizzard's real FrameXML 12.1 and the real EllesmereUI (core +
    Bags; `skin` adds the Blizzard skin module; `upstream` patches EllesmereUI Bags
    with the proposed extension API). Tests live in
@@ -183,8 +209,12 @@ fails without the fix, then make it pass.
      window, which is built 0.5 s after login).
    - `Fixture.lua` installs three characters on two realms with bank, mail,
      auctions, currencies, warband and guild bank; always uninstall it again.
-   - `08_secure_combat.lua` runs every addon path as insecure code in combat and
-     checks that nothing is blocked and no foreign global carries our taint.
+   - `08_secure_combat.lua` runs the user-facing paths (tooltip, browser with
+     every tab and view, header button, self-test, slash commands) as insecure
+     code in combat and checks that nothing is blocked and no foreign global
+     carries our taint. The collectors' event handlers are not covered there:
+     the simulator does not track taint inside handlers, which is what the
+     in-game `taint.log` check is for.
    - `10_layout.lua` checks layout invariants in every browser view on the
      geometry the simulator computes from the real anchors: nothing outside the
      window, the title row inside the 35 px header, no overlapping tabs, slots or

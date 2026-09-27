@@ -6,7 +6,7 @@
 -- Not modelled by the simulator (and therefore NOT covered here): execution
 -- taint inside event/script handlers (the simulator computes it and drops it)
 -- and taint propagation into Blizzard's secure code paths. Those remain for the
--- in-game test with taintLog (README, step 9).
+-- in-game test with taintLog (README, test plan step 10).
 local ns = EllesmereUIBagsAlts._ns
 
 local blocked = {}
