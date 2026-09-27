@@ -16,25 +16,20 @@ end)
 
 -- EllesmereUI builds its bag window 0.5 s after login.
 local function bagsReady()
-    return not EllesmereUI or (EUI_Bags and EUI_Bags.Header ~= nil)
+    return EUI_Bags and EUI_Bags.Header ~= nil
 end
 
-simtest_when(bagsReady, "first use activates once (EUI: the bag key; else: the browser)", function()
+simtest_when(bagsReady, "the bag key (EUI's ToggleAllBags) activates once", function()
     local ns = EllesmereUIBagsAlts._ns
-    if EllesmereUI then
-        ToggleAllBags()
-        assertTrue(ns.IsActivated())
-        assertEquals("bags", ns.activatedBy)
-        ToggleAllBags()
-    else
-        -- Blizzard's bag functions are never hooked (EUI Bags is required):
-        -- they stay secure globals. Without EUI the API still activates.
-        for _, name in ipairs({ "ToggleAllBags", "OpenAllBags", "ToggleBackpack", "OpenBackpack", "ToggleBag", "OpenBag" }) do
-            assertTrue(issecurevariable(name), name)
-        end
-        EllesmereUIBagsAlts.GetCharacters()
-        assertEquals("api", ns.activatedBy)
+    -- Blizzard's own bag functions are never hooked by the addon.
+    for _, name in ipairs({ "ToggleBackpack", "OpenBackpack", "ToggleBag", "OpenBag", "OpenAllBags" }) do
+        local _, source = issecurevariable(name)
+        assertTrue(source ~= "EllesmereUIBags_Alts", name)
     end
+    ToggleAllBags()
+    assertTrue(ns.IsActivated())
+    assertEquals("bags", ns.activatedBy)
+    ToggleAllBags()
     assertNotNil(ns.db.chars[ns.GetPlayerKey()])
     assertTrue(ns.featureByKey.bags.active)
 end)

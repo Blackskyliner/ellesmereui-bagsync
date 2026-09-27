@@ -19,7 +19,7 @@ step "busted"
 "$T/rocks/bin/busted" -o utfTerminal || fail=1
 
 if [ -x "$T/vendor/wow-ui-sim/target/release/wow-sim" ]; then
-  for mode in tests noeui upstream; do
+  for mode in tests skin upstream; do
     step "wow-ui-sim ($mode)"
     log="$(mktemp)"
     bash scripts/sim-test.sh "$mode" >"$log" 2>&1

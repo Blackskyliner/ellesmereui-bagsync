@@ -8,7 +8,10 @@
 #   scripts/visual-test.sh --update   accept the current renders as baselines
 #   scripts/visual-test.sh [--update] <scenario>...   only these scenarios
 #
-# Modes: eui (EllesmereUI loaded) and noeui (fallback look). Output, diffs and
+# Mode: bags (EUI core + Bags, the dependency: our plain look). Not with EUI's
+# Blizzard skin module: a simulator bug fades every texture there (see
+# sim/.../tests/00_harness.lua); its geometry is covered by the layout tests
+# of `sim-test.sh skin`. Output, diffs and
 # an HTML report land in .tools/visual-out/. Needs the GUI build and the
 # Python venv from scripts/setup-tools.sh.
 set -euo pipefail
@@ -31,7 +34,7 @@ else
 fi
 
 ADDONS="$SIM/Interface/AddOns"
-LINKS=("$ADDONS/EllesmereUIBags_Alts" "$ADDONS/EllesmereUIBags_Alts_SimTests" "$ADDONS/EllesmereUI" "$ADDONS/EllesmereUIBags")
+LINKS=("$ADDONS/EllesmereUIBags_Alts" "$ADDONS/EllesmereUIBags_Alts_SimTests" "$ADDONS/EllesmereUI" "$ADDONS/EllesmereUIBags" "$ADDONS/EllesmereUIBlizzardSkin")
 unlink_all() { for l in "${LINKS[@]}"; do if [ -L "$l" ]; then rm "$l"; fi; done; }
 trap unlink_all EXIT
 
@@ -39,14 +42,13 @@ rm -rf "${OUT:?}" && mkdir -p "$OUT"
 export HOME="$ROOT/.tools/simhome"
 export WOW_SIM_NO_SOUND=1
 
-for mode in eui noeui; do
+for mode in bags; do
   unlink_all
   ln -sfn "$ROOT/EllesmereUIBags_Alts" "$ADDONS/EllesmereUIBags_Alts"
   ln -sfn "$ROOT/sim/EllesmereUIBags_Alts_SimTests" "$ADDONS/EllesmereUIBags_Alts_SimTests"
-  if [ "$mode" = "eui" ]; then
-    ln -sfn "$EUI" "$ADDONS/EllesmereUI"
-    ln -sfn "$EUI/EllesmereUIBags" "$ADDONS/EllesmereUIBags"
-  fi
+  ln -sfn "$EUI" "$ADDONS/EllesmereUI"
+  ln -sfn "$EUI/EllesmereUIBags" "$ADDONS/EllesmereUIBags"
+  if [ "$mode" = "skin" ]; then ln -sfn "$EUI/EllesmereUIBlizzardSkin" "$ADDONS/EllesmereUIBlizzardSkin"; fi
   mkdir -p "$OUT/$mode"
   for name in "${SCENARIOS[@]}"; do
     scenario="$ROOT/sim/visual/scenarios/$name.lua"

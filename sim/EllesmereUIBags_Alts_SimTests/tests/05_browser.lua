@@ -41,17 +41,6 @@ simtest("browser closes via slash toggle and stops listening for item data", fun
     assertTrue(not ns.IsEventRegistered(ns.Browser, "ITEM_DATA_LOAD_RESULT"))
 end)
 
-if not EllesmereUI then
-    simtest("header button setting without EllesmereUI only prints a hint", function()
-        ns.db.settings.ui.headerButton = true
-        ns.SettingsChanged()
-        assertNil(EllesmereUIBagsExt:GetHeaderButton("EllesmereUIBags_Alts"))
-        ns.db.settings.ui.headerButton = false
-        ns.SettingsChanged()
-    end)
-    return
-end
-
 simtest_when(function() return EUI_Bags and EUI_Bags.Header ~= nil end, "header button attaches to the real EUI bag header on first bag open", function()
     ns.db.settings.ui.headerButton = true
     ns.SettingsChanged()

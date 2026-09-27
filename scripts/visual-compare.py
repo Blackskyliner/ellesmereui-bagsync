@@ -3,7 +3,7 @@
 
   visual-compare.py [--update] OUT_DIR BASELINE_DIR scenario...
 
-For every mode directory in OUT_DIR (eui, noeui) and scenario:
+For every mode directory in OUT_DIR (bags) and scenario:
   * the target frame's screen rect is read from the --dump-tree log of the
     same run and the full-screen render is cropped to it;
   * the crop is compared with BASELINE_DIR/<mode>/<scenario>.webp (lossless): a pixel
@@ -24,7 +24,7 @@ from PIL import Image, ImageChops
 
 CHANNEL_TOL = 24        # per channel, 0..255
 PIXEL_TOL = 0.001       # share of pixels allowed to differ
-MODES = ("eui", "noeui")
+MODES = ("bags",)
 
 
 def frame_rect(log_path, frame):

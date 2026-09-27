@@ -1,18 +1,12 @@
--- Real EllesmereUI (core + Bags) is loaded next to the addon (scripts/sim-test.sh);
--- `sim-test.sh noeui` runs the fallback branch instead.
+-- Real EllesmereUI (core + Bags, the dependency) is loaded next to the addon
+-- (scripts/sim-test.sh); `sim-test.sh skin` adds EUI's Blizzard skin module.
 local Ext = EllesmereUIBagsExt
 
-if not EllesmereUI then
-    simtest("without EllesmereUI the connector reports absence and falls back", function()
-        assertTrue(not Ext:IsEUILoaded())
-        assertTrue(not Ext:IsBagsLoaded())
-        assertTrue(not Ext:SkinItemButton(CreateFrame("ItemButton", nil, UIParent)))
-        local path = Ext:GetFont("bags")
-        assertEquals(STANDARD_TEXT_FONT, path)
-        assertTrue(not Ext:RegisterHeaderButton("x", {}))
-    end)
-    return
-end
+simtest("the skin callback fires exactly when EUI's Blizzard skin module runs", function()
+    local skinModule = C_AddOns.IsAddOnLoaded("EllesmereUIBlizzardSkin")
+    local skin = EllesmereUIBagsAlts._ns.W.GetSkin()
+    if skinModule then assertNotNil(skin) else assertNil(skin) end
+end)
 
 simtest("EllesmereUI and its Bags module are present", function()
     assertNotNil(EllesmereUI)

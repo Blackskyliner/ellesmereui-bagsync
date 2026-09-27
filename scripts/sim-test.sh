@@ -3,7 +3,7 @@
 # (core + Bags) + this addon, inside Osso/wow-ui-sim (built by setup-tools.sh).
 #   scripts/sim-test.sh            run-tests (sim/EllesmereUIBags_Alts_SimTests/tests)
 #   scripts/sim-test.sh errors     startup Lua errors as JSON
-#   scripts/sim-test.sh noeui      run-tests without EllesmereUI loaded
+#   scripts/sim-test.sh skin       run-tests with EUI's Blizzard skin module loaded too
 #   scripts/sim-test.sh upstream   run-tests with EUI Bags patched with upstream/EllesmereUIBags_ExtAPI.lua
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -15,7 +15,7 @@ ADDONS="$SIM/Interface/AddOns"
 MODE="${1:-tests}"
 
 # Link the addons under test (links are removed again on exit).
-LINKS=("$ADDONS/EllesmereUIBags_Alts" "$ADDONS/EllesmereUIBags_Alts_SimTests" "$ADDONS/EllesmereUI" "$ADDONS/EllesmereUIBags")
+LINKS=("$ADDONS/EllesmereUIBags_Alts" "$ADDONS/EllesmereUIBags_Alts_SimTests" "$ADDONS/EllesmereUI" "$ADDONS/EllesmereUIBags" "$ADDONS/EllesmereUIBlizzardSkin")
 cleanup() {
   local status=$?
   for l in "${LINKS[@]}"; do if [ -L "$l" ]; then rm "$l"; fi; done
@@ -32,9 +32,10 @@ if [ "$MODE" = "upstream" ]; then
   printf '\nEllesmereUIBags_ExtAPI.lua\n' >> "$PATCHED/EllesmereUIBags.toc"
   ln -sfn "$EUI" "$ADDONS/EllesmereUI"
   ln -sfn "$PATCHED" "$ADDONS/EllesmereUIBags"
-elif [ "$MODE" != "noeui" ]; then
+else
   ln -sfn "$EUI" "$ADDONS/EllesmereUI"
   ln -sfn "$EUI/EllesmereUIBags" "$ADDONS/EllesmereUIBags"
+  if [ "$MODE" = "skin" ]; then ln -sfn "$EUI/EllesmereUIBlizzardSkin" "$ADDONS/EllesmereUIBlizzardSkin"; fi
 fi
 
 cd "$SIM"
