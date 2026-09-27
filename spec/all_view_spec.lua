@@ -108,7 +108,7 @@ describe("All characters view", function()
         assert.are.same({}, env.__errors)
     end)
 
-    it("keeps the per-kind tabs, plus the Everything tab only here", function()
+    it("keeps the per-kind tabs next to the Everything tab", function()
         local env, ns = world()
         ns.Browser:Open(ns.Browser.ALL_OWNER)
         local f = env.EllesmereUIBagsAltsBrowser
@@ -121,14 +121,8 @@ describe("All characters view", function()
         ns.Browser:SelectTab("bank")
         assert.are.equal(5, counts(f)["item:2589"])
         assert.are.equal(500, counts(f)["item:190396"])
-        -- a character never shows the Everything tab and falls back to bags
-        ns.Browser:SelectTab("all")
-        ns.Browser:Select("Alice-Blackhand")
-        assert.are.equal("bags", ns.Browser:GetState().tab)
-        for _, tab in ipairs(f.tabs) do
-            if tab.key == "all" then assert.is_false(tab:IsShown()) end
-        end
     end)
+
 
     it("shows who holds the item in the tooltip, without the opt-in tooltip setting", function()
         local env, ns = world()
@@ -159,8 +153,9 @@ describe("All characters view", function()
         end
         local _, n = tooltipText(env):gsub("Total", "")
         assert.are.equal(1, n)
-        -- a single character's view keeps the normal (feature) lines
+        -- a single character's bag tab keeps the normal (feature) lines
         ns.Browser:Select("Alice-Blackhand")
+        ns.Browser:SelectTab("bags")
         for i = 1, f.grid.used do
             if f.grid.buttons[i].itemID == 2589 then f.grid.buttons[i]:RunScript("OnEnter") end
         end
@@ -187,6 +182,53 @@ describe("All characters view", function()
         local f = env.EllesmereUIBagsAltsBrowser
         assert.truthy(f.footer.text:find("3 characters", 1, true))
         assert.truthy(f.footer.text:find(ns.W.FormatGold(80000), 1, true))
+    end)
+end)
+
+describe("Everything tab of a character", function()
+    it("merges all locations of that one character, without warband or guild", function()
+        local env, ns = world()
+        ns.Browser:Open("Alice-Blackhand")
+        ns.Browser:SelectTab("all")
+        local f = env.EllesmereUIBagsAltsBrowser
+        local shown = {}
+        for _, tab in ipairs(f.tabs) do if tab:IsShown() then shown[#shown + 1] = tab.key end end
+        assert.are.same({ "all", "bags", "bank", "equipped", "mail", "auctions", "currency" }, shown)
+        local c = counts(f)
+        assert.are.equal(25, c["item:2589"])            -- bags 20 + bank 5, not Bob or Carol
+        assert.are.equal(1, c[HELM_LINK])
+        assert.is_nil(c["item:190396"])                 -- warband bank is not the character's
+        assert.are.same({ "Armor", "Tradeskill", "Miscellaneous" }, headers(f))
+        assert.is_true(f.delete:IsShown() == false)     -- current character: never deletable
+        -- footer stays the character's
+        assert.truthy(f.footer.text:find("Last seen", 1, true))
+        assert.are.same({}, env.__errors)
+    end)
+
+    it("tooltip shows where the stacks are", function()
+        local env, ns = world()
+        ns.Browser:Open("Alice-Blackhand")
+        ns.Browser:SelectTab("all")
+        local f = env.EllesmereUIBagsAltsBrowser
+        for i = 1, f.grid.used do
+            if f.grid.buttons[i].itemID == 2589 then f.grid.buttons[i]:RunScript("OnEnter") end
+        end
+        assert.truthy(tooltipText(env):find("Bags: 20, Bank: 5", 1, true))
+        -- the per-location tabs keep their own tooltip (no owner lines)
+        ns.Browser:SelectTab("bags")
+        for i = 1, f.grid.used do
+            if f.grid.buttons[i].itemID == 2589 then f.grid.buttons[i]:RunScript("OnEnter") end
+        end
+        assert.is_nil(env.EllesmereUIBagsAltsTooltip.processingInfo.euiAltsOwners)
+    end)
+
+    it("stays on Everything when switching characters", function()
+        local env, ns = world()
+        ns.Browser:Open("Alice-Blackhand")
+        ns.Browser:SelectTab("all")
+        ns.Browser:Select("Carol-Proudmoore")
+        assert.are.equal("all", ns.Browser:GetState().tab)
+        assert.are.equal(7, counts(env.EllesmereUIBagsAltsBrowser)["item:2589"])
     end)
 end)
 

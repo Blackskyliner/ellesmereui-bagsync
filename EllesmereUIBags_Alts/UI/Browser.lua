@@ -27,7 +27,8 @@ Browser.ALL_OWNER = ALL_OWNER
 function Browser.RealmOwner(realm) return REALM_PREFIX .. realm end
 
 -- nil for a single owner, else the scope of an aggregated view:
--- {} = everything, { realm = r } = characters and guilds of one realm.
+-- {} = everything, { realm = r } = characters and guilds of one realm
+-- ({ char = key } is the Everything tab of a single character).
 local function AggregateScope(owner)
     if owner == ALL_OWNER then return {} end
     if owner and owner:sub(1, #REALM_PREFIX) == REALM_PREFIX then
@@ -36,7 +37,9 @@ local function AggregateScope(owner)
     return nil
 end
 
-local function InScope(scope, realm)
+-- charKey: nil for guild banks, which are never part of a character's scope.
+local function InScope(scope, realm, charKey)
+    if scope.char then return charKey == scope.char end
     return scope.realm == nil or scope.realm == realm
 end
 
@@ -45,7 +48,7 @@ local state = { owner = nil, tab = "bags", query = nil, queryText = "" }
 local pendingSearch = {}   -- itemID -> true while waiting for item data
 
 local CHAR_TABS = {
-    { key = "all",      label = "Everything", allOnly = true },
+    { key = "all",      label = "Everything" },
     { key = "bags",     label = "Bags" },
     { key = "bank",     label = "Bank" },
     { key = "equipped", label = "Equipped" },
@@ -156,6 +159,7 @@ end
 --  (the link for gear and other rich items, the itemID for plain stacks) and
 --  grouped by item class, or by EUI category when that option is on. The
 --  warband bank is account wide and therefore only part of "All characters".
+--  A character's Everything tab is the same view over that one character.
 -------------------------------------------------------------------------------
 local function EachContainer(map, add)
     if type(map) ~= "table" then return end
@@ -167,8 +171,8 @@ end
 -- Calls add(items) for every item collection of the scope shown on the tab.
 local function CollectAll(scope, tab, add)
     local all = tab == "all"
-    for _, c in pairs(ns.db.chars) do
-        if InScope(scope, c.realm) then
+    for key, c in pairs(ns.db.chars) do
+        if InScope(scope, c.realm, key) then
             if all or tab == "bags" then EachContainer(c.bags, add) end
             if all or tab == "bank" then EachContainer(c.bank, add) end
             if all or tab == "equipped" then add(c.equipped and c.equipped.items) end
@@ -179,7 +183,7 @@ local function CollectAll(scope, tab, add)
             if all or tab == "auctions" then add(c.auctions and c.auctions.items) end
         end
     end
-    if (all or tab == "bank") and not scope.realm then EachContainer(ns.db.warband.bank, add) end
+    if (all or tab == "bank") and not scope.realm and not scope.char then EachContainer(ns.db.warband.bank, add) end
     if all then
         for key, g in pairs(ns.db.guilds) do
             if InScope(scope, select(2, ns.SplitKey(key))) then EachContainer(g.tabs, add) end
@@ -248,9 +252,9 @@ end
 -- same value on every character, so they are not summed).
 local function AllCurrencyTotals(scope)
     local totals, shared, at = {}, {}, {}
-    for _, c in pairs(ns.db.chars) do
+    for key, c in pairs(ns.db.chars) do
         local seen = c.lastSeen or 0
-        for id, qty in pairs(InScope(scope, c.realm) and c.currency or {}) do
+        for id, qty in pairs(InScope(scope, c.realm, key) and c.currency or {}) do
             totals[id] = (totals[id] or 0) + qty
             if not at[id] or seen > at[id] then
                 at[id] = seen
@@ -483,7 +487,7 @@ function Browser:Build()
     f.tabs = {}
     for _, def in ipairs(CHAR_TABS) do
         local tab = W.Tab(f, L[def.label], function() Browser:SelectTab(def.key) end)
-        tab.key, tab.allOnly = def.key, def.allOnly
+        tab.key = def.key
         f.tabs[#f.tabs + 1] = tab
     end
 
@@ -872,10 +876,9 @@ function Browser:Refresh()
     local isAll = scope ~= nil
     local isChar = not isAll and owner ~= ns.WARBAND_OWNER and owner:sub(1, 1) ~= "@"
     local searching = state.query ~= nil
-    if state.tab == "all" and not isAll then state.tab = "bags" end
     local prev
     for _, tab in ipairs(f.tabs) do
-        local shown = (isChar or isAll) and not searching and (isAll or not tab.allOnly)
+        local shown = (isChar or isAll) and not searching
         tab:SetShown(shown)
         tab:SetSelected(tab.key == state.tab)
         if shown then
@@ -907,6 +910,8 @@ function Browser:Refresh()
             local c = ns.db.chars[owner]
             if state.tab == "currency" then
                 height, count = RenderCurrencies(f, c.currency, width)
+            elseif state.tab == "all" then
+                sections = AllSections({ char = owner }, "all")
             else
                 sections = CharSections(c, state.tab)
             end
@@ -917,7 +922,7 @@ function Browser:Refresh()
             sections = g and TabSections(g.tabs) or {}
         end
         if sections then
-            height = f.grid:Layout(sections, width, isAll)
+            height = f.grid:Layout(sections, width, isAll or state.tab == "all")
             count = f.grid.used
         end
         if isChar and state.tab == "mail" then
