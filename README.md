@@ -169,8 +169,12 @@ Vorbereitung: [BugGrabber](https://www.curseforge.com/wow/addons/bug-grabber) un
    Footer zeigt „Gold in der Post“. Nach dem Öffnen des Briefkastens ist der
    Eintrag weg. Bei Abweichungen `/alts debug` einschalten und die Chatzeilen
    mitschicken.
-9. **Gildenbank (optional):** In den Optionen „Gildenbank“ aktivieren und die
-   Gildenbank öffnen. Die Fächer erscheinen im Browser unter „Gildenbanken“.
+9. **Gildenbank (optional):** In den Optionen „Gildenbank“ aktivieren (sie ist
+   standardmäßig aus, `/alts status` listet `guildbank` unter den aktiven
+   Features) und die Gildenbank öffnen. Die Fächer erscheinen im Browser unter
+   „Gildenbanken“, auch beim ersten Besuch nach dem Einloggen. Mit
+   `/alts debug` meldet der Chat, wie viele Fächer bekannt sind und welches
+   Fach mit wie vielen Stapeln erfasst wurde.
 10. **Kampf/Instanz:** In einem Dungeon kämpfen, Taschen öffnen und `/alts`
    öffnen. BugSack bleibt leer, und `taint.log` enthält keine Zeile mit
    `EllesmereUIBags_Alts`.

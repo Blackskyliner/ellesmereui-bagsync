@@ -113,5 +113,11 @@ Header-Button + Gildenbank. Keine Auktionen, kein LDB/Minimap.
 - [x] Screenshots von 11 Szenarien in zwei Modi, Vergleich mit Referenzbildern, Diff-Bilder und HTML-Bericht
 - [x] Gefunden und behoben: Qualitätsrahmen der ersten Grid-Spalte im Fallback-Look um 1,5 px abgeschnitten
 
+## 17. Gildenbank-Scan (0.6.4)
+- [x] Fächerliste kommt beim ersten Besuch einer Sitzung erst mit GUILDBANK_UPDATE_TABS: Warteschlange von dort nachfüllen
+- [x] Gespeicherte Fächer nicht mehr löschen, solange der Client 0 Fächer meldet
+- [x] Offener Browser zeigt die Gilde sofort nach dem Öffnen der Gildenbank
+- [x] Debug-Ausgaben (`/alts debug`) für den Ablauf
+
 ## Offen (braucht den echten Client)
 - [ ] Ingame-Testplan aus README.md durchgehen (Bank, Post, Auktionen, Gildenbank, Kampf/Instanz, taint.log)
