@@ -176,13 +176,34 @@ describe("Acceptance criteria", function()
     describe("3: low cost when enabled", function()
         local sources = addonSources()
 
+        -- Files with a self-removing one-shot OnUpdate (each proven below).
+        local ONE_SHOT = { ["UI/Browser.lua"] = true, ["Collect/Equipped.lua"] = true }
+
         it("never uses C_Timer and never polls with OnUpdate", function()
             for rel, s in pairs(sources) do
                 assert.is_nil(s:find("C_Timer", 1, true), rel)
-                if not rel:find("UI/Browser.lua", 1, true) then
+                local oneShot = false
+                for file in pairs(ONE_SHOT) do if rel:find(file, 1, true) then oneShot = true end end
+                if not oneShot then
                     assert.is_nil(s:find("OnUpdate", 1, true), rel)
                 end
             end
+        end)
+
+        it("scans worn gear once per burst of equipment events, then removes its OnUpdate", function()
+            local env, ns = wow.boot(wow.defaultState())
+            local n = 0
+            local orig = env.GetInventoryItemLink
+            env.GetInventoryItemLink = function(...) n = n + 1 return orig(...) end
+            env.__state.equipped[16] = nil
+            for slot = 1, 16 do env.FireEvent("PLAYER_EQUIPMENT_CHANGED", slot, true) end   -- a set swap
+            assert.are.equal(0, n)
+            local c = ns.GetPlayerChar()
+            env.RunOnUpdates()
+            assert.are.equal(19, n)                          -- one pass over the 19 slots
+            assert.is_nil(wow.items(c.equipped)[16])
+            env.RunOnUpdates()
+            assert.are.equal(19, n)                          -- nothing left armed
         end)
 
         it("the browser's only OnUpdate is a self-removing one-shot", function()

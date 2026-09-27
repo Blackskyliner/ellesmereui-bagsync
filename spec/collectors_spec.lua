@@ -273,6 +273,7 @@ describe("Character, equipment and currency", function()
 
         env.__state.equipped[16] = nil
         env.FireEvent("PLAYER_EQUIPMENT_CHANGED", 16, true)
+        env.RunOnUpdates()                                  -- scanned once on the next frame
         assert.is_nil(wow.items(c.equipped)[16])
 
         env.FireEvent("PLAYER_LEVEL_UP", 81)
