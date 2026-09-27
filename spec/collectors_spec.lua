@@ -342,6 +342,11 @@ describe("Character, equipment and currency", function()
         assert.are.equal(99, ns.db.chars["Carl-Blackhand"].money)         -- non-zero untouched
         assert.are.equal(0, ns.db.chars["Dora-Blackhand"].money)          -- no EUI record
         assert.are.equal(123, ns.GetPlayerChar().money)                   -- live value wins
+        assert.is_true(ns.db.moneyRepaired)
+        -- once per database: a later activation leaves a 0g character alone
+        ns.db.chars["Bob-Blackhand"].money = 0
+        assert.are.equal(0, ns.RepairMoneyFromEUI())
+        assert.are.equal(0, ns.db.chars["Bob-Blackhand"].money)
         assert.are.same({}, env.__errors)
     end)
 

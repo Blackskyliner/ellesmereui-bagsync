@@ -33,7 +33,10 @@ end
 -- One-time repair for data saved by 0.1.0, which read money at logout and so
 -- stored 0g for characters that were left: take EllesmereUI's own per-character
 -- gold record (never written at logout) for offline characters stuck at 0.
+-- Runs at the first activation of a database; db.moneyRepaired marks it done.
 local function RepairMoneyFromEUI()
+    if ns.db.moneyRepaired then return 0 end
+    ns.db.moneyRepaired = true
     local Ext = _G.EllesmereUIBagsExt
     local playerKey = ns.GetPlayerKey()
     local repaired = 0

@@ -12,6 +12,7 @@
 --    warband  = { money, moneyAt, bank = Container, bankAt }
 --    guilds   = { ["Guild-Realm"] = { name, realm, faction, money, scannedAt, tabs = { [tab] = Container } } }
 --    currencyMeta = { [currencyID] = { t = transferable, w = warbandWide } }
+--    moneyRepaired = true   -- the 0.1.0 gold repair ran (Collect/Character.lua)
 --
 --  Container = { size = n, name = str?, icon = fileID?, items = "slot:enc;..." (packed, Keys.lua),
 --                sets = { [slot] = "Set A, Set B" }? }   -- equipment sets (bags, worn)
