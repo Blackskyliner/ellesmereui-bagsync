@@ -4,7 +4,7 @@
 ## Category: |cff0cd29fEllesmere|rUI
 ## Author: Blackskyliner
 ## Version: 0.7.0
-## OptionalDeps: EllesmereUI, EllesmereUIBags
+## Dependencies: EllesmereUIBags
 ## SavedVariables: EllesmereUIBagsAltsDB
 ## IconTexture: Interface\Icons\INV_Misc_Bag_10
 

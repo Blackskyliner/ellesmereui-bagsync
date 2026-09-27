@@ -7,6 +7,10 @@
 -------------------------------------------------------------------------------
 local ADDON_NAME, ns = ...
 
+-- EllesmereUI's pre-12.1 failsafe (EllesmereUI_ClientGate.lua): EUI Bags, our
+-- dependency, stays inert on such a client, and so does this companion.
+if EUI_CLIENT_BLOCKED then return end
+
 local boot = {}
 
 ns.RegisterEvent(boot, "ADDON_LOADED", function(_, _, name)

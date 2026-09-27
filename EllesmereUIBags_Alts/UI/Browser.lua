@@ -95,7 +95,7 @@ end
 
 -- Regroups all stacks of the given sections by EUI category, if available.
 local function ByEUICategory(sections)
-    if not ns.db.settings.ui.useEUICategories or not Ext:IsBagsLoaded() then return sections end
+    if not ns.db.settings.ui.useEUICategories then return sections end
     local groups, order = {}, {}
     for _, section in ipairs(sections) do
         for i, enc in ipairs(section.items) do

@@ -9,9 +9,12 @@
 --      * data: category classification of any item link
 --      * integration: buttons in the EUI bag header
 --
---  Every call feature-detects EUI at call time and degrades to a neutral
---  fallback when EUI (or the Bags module) is missing, disabled or changed:
---  a companion built on this layer never throws because of EUI.
+--  EllesmereUI Bags (and with it the EllesmereUI core) is a dependency of
+--  the companion. Every call still feature-detects the EUI function it uses
+--  and degrades quietly when one is missing or changed (an EUI update renames
+--  an internal): a companion built on this layer never throws because of EUI.
+--  The skin callback only fires when EUI's Blizzard skin module is enabled;
+--  callers keep their own plain look for the other case.
 --
 --  Upstream path: EllesmereUIBags can ship the native half (see
 --  ../../../upstream/EllesmereUIBags_ExtAPI.lua). When EUI_Bags exposes
@@ -138,15 +141,11 @@ function lib:L(s)
     return s
 end
 
+-- EUI's own widget tooltip (never Blizzard's shared GameTooltip).
 function lib:ShowTooltip(owner, text)
     local e = EUI()
     if e and type(e.ShowWidgetTooltip) == "function" then
-        if pcall(e.ShowWidgetTooltip, owner, text) then return end
-    end
-    if GameTooltip and owner then
-        GameTooltip:SetOwner(owner, "ANCHOR_TOP")
-        GameTooltip:SetText(text, 1, 1, 1, 1, true)
-        GameTooltip:Show()
+        pcall(e.ShowWidgetTooltip, owner, text)
     end
 end
 
@@ -155,61 +154,18 @@ function lib:HideTooltip()
     if e and type(e.HideWidgetTooltip) == "function" then
         pcall(e.HideWidgetTooltip)
     end
-    if GameTooltip then GameTooltip:Hide() end
 end
 
--- Minimal own popup for the no-EUI case (never StaticPopup: its dialogs are
--- shared with Blizzard code and are a classic taint path).
-local fallbackPopup
-local function GetFallbackPopup()
-    if fallbackPopup then return fallbackPopup end
-    local f = CreateFrame("Frame", "EllesmereUIBagsExtPopup", UIParent, "BackdropTemplate")
-    f:SetSize(340, 130)
-    f:SetPoint("CENTER", 0, 120)
-    f:SetFrameStrata("DIALOG")
-    f:SetBackdrop({ bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
-        edgeFile = "Interface\\ChatFrame\\ChatFrameBackground", edgeSize = 1 })
-    f:SetBackdropColor(0.06, 0.06, 0.06, 0.95)
-    f:SetBackdropBorderColor(0.25, 0.25, 0.25, 1)
-    f:EnableMouse(true)
-    f.title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    f.title:SetPoint("TOP", 0, -12)
-    f.msg = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    f.msg:SetPoint("TOPLEFT", 16, -40)
-    f.msg:SetPoint("TOPRIGHT", -16, -40)
-    f.msg:SetJustifyH("CENTER")
-    f.confirm = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-    f.confirm:SetSize(120, 24)
-    f.confirm:SetPoint("BOTTOMRIGHT", f, "BOTTOM", -6, 12)
-    f.cancel = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-    f.cancel:SetSize(120, 24)
-    f.cancel:SetPoint("BOTTOMLEFT", f, "BOTTOM", 6, 12)
-    f:Hide()
-    tinsert(UISpecialFrames, "EllesmereUIBagsExtPopup")
-    fallbackPopup = f
-    return f
-end
-
+-- EUI's confirm popup (never StaticPopup: its dialogs are shared with
+-- Blizzard code and are a classic taint path).
 -- opts = { title, message, confirmText, cancelText, onConfirm, onCancel }
+-- -> true when the popup was shown
 function lib:Confirm(opts)
     local e = EUI()
     if e and type(e.ShowConfirmPopup) == "function" then
-        if pcall(e.ShowConfirmPopup, e, opts) then return end
+        return pcall(e.ShowConfirmPopup, e, opts) == true
     end
-    local f = GetFallbackPopup()
-    f.title:SetText(opts.title or "Confirm")
-    f.msg:SetText(opts.message or "")
-    f.confirm:SetText(opts.confirmText or OKAY or "Okay")
-    f.cancel:SetText(opts.cancelText or CANCEL or "Cancel")
-    f.confirm:SetScript("OnClick", function()
-        f:Hide()
-        if opts.onConfirm then opts.onConfirm() end
-    end)
-    f.cancel:SetScript("OnClick", function()
-        f:Hide()
-        if opts.onCancel then opts.onCancel() end
-    end)
-    f:Show()
+    return false
 end
 
 -------------------------------------------------------------------------------

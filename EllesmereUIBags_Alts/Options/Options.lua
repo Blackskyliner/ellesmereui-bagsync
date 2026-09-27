@@ -115,7 +115,7 @@ local function AskFirstRun()
         cancelText = L["Not now"],
         onConfirm = function()
             s.tooltip.enabled = true
-            if Ext:IsBagsLoaded() then s.ui.headerButton = true end
+            s.ui.headerButton = true
             ns.SettingsChanged()
         end,
     })
@@ -125,18 +125,14 @@ Options.AskFirstRun = AskFirstRun
 function Options:MaybeAskFirstRun()
     if ns.db.settings.firstRunAsked then return end
     ns.Print(L["Tracking your characters' items. Type /alts to browse, /alts options for tooltip counts."])
-    if Ext:IsBagsLoaded() then
-        if not firstRunHookPending then
-            firstRunHookPending = true
-            EUI_Bags:HookScript("OnShow", function()
-                if firstRunHookPending then
-                    firstRunHookPending = false
-                    AskFirstRun()
-                end
-            end)
-        end
-    else
-        AskFirstRun()
+    if not firstRunHookPending then
+        firstRunHookPending = true
+        EUI_Bags:HookScript("OnShow", function()
+            if firstRunHookPending then
+                firstRunHookPending = false
+                AskFirstRun()
+            end
+        end)
     end
 end
 

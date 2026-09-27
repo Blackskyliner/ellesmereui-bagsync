@@ -5,7 +5,7 @@
 --  the current character, afterwards event driven). Until then the only
 --  things installed are the activation triggers themselves:
 --    * opening the bags: an OnShow hook on EllesmereUI's bag window. EUI
---      Bags is a requirement of this companion and routes every bag key and
+--      Bags is a dependency of this companion and routes every bag key and
 --      bag button there. Nothing hooks Blizzard's bag frames or functions:
 --      insecure code inside their Show() would put the item buttons Blizzard
 --      creates afterwards on a tainted path (blocked item use in combat).
@@ -57,7 +57,7 @@ function ns.ArmActivation()
     if armed or ns.activated then return end
     armed = true
     -- EllesmereUI's bag window is an addon frame: hooking it taints nothing of Blizzard's.
-    if _G.EllesmereUIBagsExt:IsBagsLoaded() then _G.EUI_Bags:HookScript("OnShow", OnBagsOpened) end
+    _G.EUI_Bags:HookScript("OnShow", OnBagsOpened)
     ns.RegisterEvent(trigger, "PLAYER_INTERACTION_MANAGER_FRAME_SHOW", function(_, _, interaction)
         local reason = NPC_TRIGGERS[interaction]
         if reason then ns.Activate(reason) end
