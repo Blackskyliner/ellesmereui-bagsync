@@ -59,7 +59,7 @@ function ns.ArmActivation()
     if armed or ns.activated then return end
     armed = true
     -- EllesmereUI's bag window is an addon frame: hooking it taints nothing of Blizzard's.
-    _G.EUI_Bags:HookScript("OnShow", OnBagsOpened)
+    _G.EllesmereUIBagsExt:HookBagsShown(OnBagsOpened)
     ns.RegisterEvent(trigger, "PLAYER_INTERACTION_MANAGER_FRAME_SHOW", function(_, _, interaction)
         local reason = INTERACTION_TRIGGERS[interaction]
         if reason then ns.Activate(reason) end

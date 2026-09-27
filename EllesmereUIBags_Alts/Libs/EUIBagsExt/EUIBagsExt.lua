@@ -4,10 +4,11 @@
 --
 --  One stable, versioned surface for everything a companion addon wants from
 --  EUI Bags, so companions never reach into EUI internals themselves:
---      * looks: skin registration, font, accent color, item-slot skin, border
+--      * looks: skin registration, font, accent color, item-slot skin, border,
+--        pixel size, close glyph
 --      * house UI: widget tooltip, confirm popup, localization
 --      * data: category classification of any item link
---      * integration: buttons in the EUI bag header
+--      * integration: buttons in the EUI bag header, bag window shown hook
 --
 --  EllesmereUI Bags (and with it the EllesmereUI core) is a dependency of
 --  the companion. Every call still feature-detects the EUI function it uses
@@ -24,7 +25,7 @@
 --  Embedding: copy this file; the highest MINOR loaded wins (LibStub-style
 --  guard without the LibStub dependency). ASCII only, Lua 5.1.
 -------------------------------------------------------------------------------
-local MAJOR, MINOR = "EllesmereUIBagsExt", 1
+local MAJOR, MINOR = "EllesmereUIBagsExt", 2
 
 local lib = _G[MAJOR]
 if lib and (lib.minor or 0) >= MINOR then return end
@@ -114,6 +115,18 @@ function lib:SkinItemButton(btn)
     end
     return false
 end
+
+-- One physical pixel in UI units (EllesmereUI.PP.mult), as EUI Bags sizes its
+-- header separator. 1 without EUI.
+function lib:GetPixelSize()
+    local e = EUI()
+    local pp = e and e.PP
+    local mult = type(pp) == "table" and pp.mult
+    return type(mult) == "number" and mult > 0 and mult or 1
+end
+
+-- EUI's close glyph, as EUI Bags' own close buttons use it.
+lib.CLOSE_ICON = "Interface\\AddOns\\EllesmereUI\\media\\icons\\eui-close.png"
 
 -- EUI's pixel-perfect 1 px border (EllesmereUI.PanelPP), as the bag header's
 -- search box uses. -> true when drawn.
@@ -339,6 +352,15 @@ end
 -------------------------------------------------------------------------------
 --  Search
 -------------------------------------------------------------------------------
+-- Runs fn each time EUI's bag window is shown (HookScript on an addon frame:
+-- taints nothing of Blizzard's). -> true when hooked.
+function lib:HookBagsShown(fn)
+    local bags = _G.EUI_Bags
+    if not self:IsBagsLoaded() or type(bags.HookScript) ~= "function" then return false end
+    bags:HookScript("OnShow", fn)
+    return true
+end
+
 function lib:GetBagSearchText()
     local bags = _G.EUI_Bags
     local box = type(bags) == "table" and bags._searchBox

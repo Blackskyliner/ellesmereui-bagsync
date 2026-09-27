@@ -185,6 +185,7 @@ def main():
         ("EllesmereUI.ShowWidgetTooltip", r"EllesmereUI\.ShowWidgetTooltip = ShowWidgetTooltip", eui_core),
         ("EllesmereUI.HideWidgetTooltip", r"EllesmereUI\.HideWidgetTooltip = HideWidgetTooltip", eui_core),
         ("EllesmereUI.GetAccentColor", r"EllesmereUI\.GetAccentColor = function\(\)", eui_core),
+        ("EllesmereUI.PP.mult", r"EllesmereUI\.PP = PP[\s\S]*PP\.mult = PP\.perfect /", eui_main),
         ("EllesmereUI.PanelPP.CreateBorder", r"PanelPP\.CreateBorder\s*=\s*PP\.CreateBorder", eui_main),
         ("PP.CreateBorder(frame, r, g, b, a, borderSize, drawLayer, subLevel)",
          r"function PP\.CreateBorder\(frame, r, g, b, a, borderSize, drawLayer, subLevel", eui_main),
@@ -206,6 +207,10 @@ def main():
     for label, pattern, text in contract:
         if not re.search(pattern, text, re.M):
             problems.append("EllesmereUI contract broken: " + label)
+    # Media files the connector points at.
+    for media in ("media/icons/eui-close.png",):
+        if not os.path.exists(os.path.join(EUI, media)):
+            problems.append("EllesmereUI contract broken: missing " + media)
 
     # ASCII-only source (EUI house rule). Locale files are the documented
     # exception (CONTRIBUTING_TRANSLATIONS.md): UTF-8 without BOM, real

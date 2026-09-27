@@ -242,6 +242,17 @@ describe("Acceptance criteria", function()
             end
         end)
 
+        it("reaches EllesmereUI only through the connector", function()
+            for rel, s in pairs(sources) do
+                if not rel:find("Libs/EUIBagsExt/", 1, true) and not rel:find("Locales/", 1, true) then
+                    for _, pat in ipairs({ "EllesmereUI[%.:%[]", "EUI_Bags", "EllesmereUIDB", "AddOns\\\\EllesmereUI",
+                        "EUI_CategoryManager", "_ModuleNS" }) do
+                        assert.is_nil(s:find(pat), rel .. ": " .. pat)
+                    end
+                end
+            end
+        end)
+
         it("never writes fields onto EUI or Blizzard frames", function()
             for rel, s in pairs(sources) do
                 assert.is_nil(s:match("EUI_Bags%.[%w_]+%s*=[^=]"), rel)

@@ -127,7 +127,7 @@ function Options:MaybeAskFirstRun()
     ns.Print(L["Tracking your characters' items. Type /alts to browse, /alts options for tooltip counts."])
     if not firstRunHookPending then
         firstRunHookPending = true
-        EUI_Bags:HookScript("OnShow", function()
+        Ext:HookBagsShown(function()
             if firstRunHookPending then
                 firstRunHookPending = false
                 AskFirstRun()

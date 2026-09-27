@@ -47,11 +47,26 @@ describe("EUIBagsExt connector when an EUI function is gone (API drift)", functi
         assert.are.same({}, env.__errors)
     end)
 
+    it("hands out EUI's pixel size and close glyph, and hooks the bag window", function()
+        local lib = env.EllesmereUIBagsExt
+        assert.are.equal(0.7111, lib:GetPixelSize())
+        assert.are.equal("Interface\\AddOns\\EllesmereUI\\media\\icons\\eui-close.png", lib.CLOSE_ICON)
+        local shown = 0
+        assert.is_true(lib:HookBagsShown(function() shown = shown + 1 end))
+        env.EUI_Bags:Hide()
+        env.EUI_Bags:Show()
+        assert.are.equal(1, shown)
+        local pp = env.EllesmereUI.PP
+        env.EllesmereUI.PP = nil                               -- drift: EUI renamed its PP
+        assert.are.equal(1, lib:GetPixelSize())
+        env.EllesmereUI.PP = pp
+    end)
+
     it("keeps the highest embedded version", function()
         local ns = env.__ns
         local _ = ns
         local lib = env.EllesmereUIBagsExt
-        assert.are.equal(1, lib.minor)
+        assert.are.equal(2, lib.minor)
         lib.minor = 99
         local chunk = assert(loadfile(wow.ROOT .. "/EllesmereUIBags_Alts/Libs/EUIBagsExt/EUIBagsExt.lua"))
         setfenv(chunk, env)

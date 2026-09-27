@@ -19,7 +19,6 @@ function W.GetSkin() return skin end
 -- Title row, as EllesmereUI Bags draws its bag header (EllesmereUIBags.lua
 -- CreateHeader): 35 px, inset 1 px, black 50 % bar, 1 px separator below.
 W.HEADER_H = 35
-local CLOSE_ICON = "Interface\\AddOns\\EllesmereUI\\media\\icons\\eui-close.png"
 
 local BG = { 0.06, 0.06, 0.06, 0.94 }
 local BORDER = { 0.25, 0.25, 0.25, 1 }
@@ -81,9 +80,8 @@ function W.Header(window)
     row.bg = row:CreateTexture(nil, "BACKGROUND")
     row.bg:SetAllPoints()
     row.bg:SetColorTexture(0, 0, 0, 0.5)
-    local PP = _G.EllesmereUI and _G.EllesmereUI.PP
     row.sep = row:CreateTexture(nil, "ARTWORK")
-    row.sep:SetHeight((PP and PP.mult) or 1)
+    row.sep:SetHeight(Ext:GetPixelSize())
     row.sep:SetPoint("BOTTOMLEFT")
     row.sep:SetPoint("BOTTOMRIGHT")
     row.sep:SetColorTexture(0.15, 0.15, 0.15, 1)
@@ -121,7 +119,7 @@ function W.CloseButton(parent)
     b:SetFrameLevel(parent:GetFrameLevel() + 10)
     b.icon = b:CreateTexture(nil, "OVERLAY")
     b.icon:SetAllPoints()
-    b.icon:SetTexture(CLOSE_ICON)
+    b.icon:SetTexture(Ext.CLOSE_ICON)
     b.icon:SetAlpha(0.7)
     b:SetScript("OnEnter", function(self) self.icon:SetAlpha(0.9) end)
     b:SetScript("OnLeave", function(self) self.icon:SetAlpha(0.7) end)
