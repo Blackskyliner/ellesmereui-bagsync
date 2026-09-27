@@ -18,16 +18,20 @@ local function richWorld()
     return s
 end
 
-describe("EUIBagsExt connector without EllesmereUI", function()
+describe("EUIBagsExt connector when an EUI function is gone (API drift)", function()
     local env, Ext
     before_each(function()
         env = wow.boot(wow.defaultState())
         Ext = env.EllesmereUIBagsExt
+        local E = env.EllesmereUI
+        E.RegisterSkin, E.GetFontPath, E.GetAccentColor, E.L = nil, nil, nil, nil
+        E.ShowWidgetTooltip, E.HideWidgetTooltip, E.ShowConfirmPopup = nil, nil, nil
+        E._ModuleNS = nil
+        env.EUI_CategoryManager = nil
+        env.EUI_Bags._searchBox = nil
     end)
 
-    it("reports EUI as absent and falls back everywhere", function()
-        assert.is_false(Ext:IsEUILoaded())
-        assert.is_false(Ext:IsBagsLoaded())
+    it("degrades quietly everywhere, without throwing", function()
         assert.is_false(Ext:RegisterSkin("x", function() end))
         assert.are.same({ env.STANDARD_TEXT_FONT, "" }, { Ext:GetFont() })
         local r, g, b = Ext:GetAccentColor()
@@ -35,24 +39,12 @@ describe("EUIBagsExt connector without EllesmereUI", function()
         assert.are.equal("Hello", Ext:L("Hello"))
         assert.is_false(Ext:SkinItemButton(env.CreateFrame("ItemButton")))
         assert.is_nil(Ext:ClassifyItem("x", 1))
-        assert.is_false(Ext:RegisterHeaderButton("k", {}))
         assert.are.equal("", Ext:GetBagSearchText())
-    end)
-
-    it("uses its own popup for confirmations", function()
-        local confirmed = false
-        Ext:Confirm({ title = "T", message = "M", onConfirm = function() confirmed = true end })
-        local popup = env.EllesmereUIBagsExtPopup
-        assert.is_true(popup:IsShown())
-        popup.confirm:Click()
-        assert.is_true(confirmed)
-        assert.is_false(popup:IsShown())
-    end)
-
-    it("shows plain GameTooltip text as widget tooltip fallback", function()
-        local owner = env.CreateFrame("Button")
-        Ext:ShowTooltip(owner, "hi")
-        assert.are.equal(owner, env.GameTooltip.owner)
+        assert.is_false(Ext:Confirm({ title = "T", message = "M" }))
+        Ext:ShowTooltip(env.CreateFrame("Button"), "hi")
+        Ext:HideTooltip()
+        assert.is_nil(env.GameTooltip.owner)                   -- never Blizzard's shared tooltip
+        assert.are.same({}, env.__errors)
     end)
 
     it("keeps the highest embedded version", function()
@@ -394,5 +386,20 @@ describe("Browser", function()
             assert.are.same({ t = true, w = false }, ns.db.currencyMeta[3100])
             assert.are.equal(10, ns.GetPlayerChar().currency[3100])
         end)
+    end)
+end)
+
+describe("Plain look (EUI Bags without EUI's Blizzard skin module)", function()
+    it("builds the browser with its own flat look", function()
+        local s = wow.defaultState()
+        wow.putItem(s, 0, 1, 2589, 20)
+        local env, ns = wow.boot(s, nil, { eui = { noSkin = true } })
+        assert.is_nil(ns.W.GetSkin())
+        ns.Browser:Open()
+        local f = env.EllesmereUIBagsAltsBrowser
+        assert.is_table(f.backdrop)                          -- flat backdrop instead of EUI's shell
+        assert.are.equal(1, f.grid.used)
+        assert.is_true(f.grid.buttons[1].euiSkinned)          -- slot look still from EUI Bags
+        assert.are.same({}, env.__errors)
     end)
 end)

@@ -18,10 +18,12 @@ function M.install(env, opts)
     local EUI = {
         _skinRegistry = {},
         _ModuleNS = {},
+        -- Without EUI's Blizzard skin module (opts.noSkin) the core only
+        -- queues the registration and the callback never fires.
         RegisterSkin = function(name, fn)
             if opts.skinThrows then error("boom") end
             table.insert(rec.skins, { "register", name })
-            fn(S)
+            if not opts.noSkin then fn(S) end
             return true
         end,
         GetFontPath = function(key) return "Interface\\AddOns\\EllesmereUI\\media\\fonts\\Expressway.ttf", key end,

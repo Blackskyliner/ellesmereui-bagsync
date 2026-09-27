@@ -950,26 +950,23 @@ local function CreateBagFrames(env)
     env.OpenBackpack = function() env.ContainerFrame1:Show() end
     env.ToggleBag = function(id) local f = env["ContainerFrame" .. ((id or 0) + 1)] if f then f:SetShown(not f:IsShown()) end end
     env.OpenBag = function(id) local f = env["ContainerFrame" .. ((id or 0) + 1)] if f then f:Show() end end
-    -- The player opens and closes the bags: EllesmereUI's bag window when
-    -- EUI is installed (it takes over every bag key), else Blizzard's.
-    function env.OpenBags()
-        if env.EUI_Bags then env.EUI_Bags:Show()
-        elseif not combined:IsShown() then env.ToggleAllBags() end
-    end
-    function env.CloseBags()
-        if env.EUI_Bags then env.EUI_Bags:Hide()
-        elseif combined:IsShown() then env.ToggleAllBags() end
-    end
+    -- The player opens and closes the bags: EllesmereUI's bag window, which
+    -- takes over every bag key.
+    function env.OpenBags() env.EUI_Bags:Show() end
+    function env.CloseBags() env.EUI_Bags:Hide() end
 end
 
--- Logs in. Unless opts.inactive, the addon is then used once: with EUI the
--- player opens the bags (the real trigger), without EUI (connector fallback
--- tests) a public API call activates it (Core/Activation.lua).
+-- Logs in with EllesmereUI + Bags (the addon's dependency): opts.beforeLoad
+-- may install EUI itself with options (fake_eui), otherwise the default fake
+-- (with EUI's skin module) is used; opts.eui = { ... } passes install options.
+-- Unless opts.inactive, the player then opens the bags once, the first use
+-- that activates the addon (Core/Activation.lua).
 function M.boot(state, savedVariables, opts)
     opts = opts or {}
     local env = M.newEnv(state, savedVariables)
     CreateBagFrames(env)
     if opts.beforeLoad then opts.beforeLoad(env) end
+    if not env.EllesmereUI then env.__eui = require("fake_eui").install(env, opts.eui) end
     local ns = M.loadAddon(env)
     env.FireEvent("ADDON_LOADED", ADDON)
     if opts.beforeLogin then opts.beforeLogin(env, ns) end
@@ -978,12 +975,8 @@ function M.boot(state, savedVariables, opts)
     env.FireEvent("PLAYER_ENTERING_WORLD", true, false)
     env.FireEvent("BAG_UPDATE_DELAYED")
     if not opts.inactive then
-        if env.EUI_Bags then
-            env.OpenBags()
-            env.CloseBags()
-        else
-            env.EllesmereUIBagsAlts.GetCharacters()
-        end
+        env.OpenBags()
+        env.CloseBags()
     end
     return env, ns
 end

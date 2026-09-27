@@ -100,10 +100,10 @@ describe("Options", function()
     end)
 
     it("declining the first-run prompt leaves everything off", function()
-        local env, ns = wow.boot(wow.defaultState())
-        local popup = env.EllesmereUIBagsExtPopup
-        assert.is_true(popup:IsShown())
-        popup.cancel:Click()
+        local env, ns = wow.boot(wow.defaultState())            -- first bag open: asked
+        local rec = env.__eui
+        assert.are.equal(1, #rec.popups)
+        if rec.popups[1].onCancel then rec.popups[1].onCancel() end
         assert.is_false(ns.db.settings.tooltip.enabled)
         assert.is_false(ns.db.settings.ui.headerButton)
         assert.is_true(ns.db.settings.firstRunAsked)

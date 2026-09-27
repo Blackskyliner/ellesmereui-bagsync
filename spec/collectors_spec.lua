@@ -344,15 +344,6 @@ describe("Character, equipment and currency", function()
         assert.are.same({}, env.__errors)
     end)
 
-    it("repairs nothing without EllesmereUI", function()
-        local sv = { schema = 1, chars = { ["Bob-Blackhand"] = { name = "Bob", realm = "Blackhand", realmName = "Blackhand", money = 0 } } }
-        local env, ns = wow.boot(wow.defaultState(), sv, { beforeLoad = function(e)
-            e.EllesmereUIDB = { characterGold = { ["Bob-Blackhand"] = { gold = 5 } } }   -- EUI itself not loaded
-        end })
-        assert.are.equal(0, ns.db.chars["Bob-Blackhand"].money)
-        assert.are.same({}, env.__errors)
-    end)
-
     it("does not store 0g from a teardown PLAYER_MONEY on a loading screen", function()
         local env, ns = wow.boot(wow.defaultState({ money = 777 }))
         env.FireEvent("PLAYER_LEAVING_WORLD")

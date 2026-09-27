@@ -26,13 +26,13 @@ local function world()
     return s
 end
 
--- Boots (with EllesmereUI, the supported setup) without using the addon;
--- the counters see everything from login on. extra.noEUI: EUI missing.
-local function bootUnused(state, sv, extra)
+-- Boots (with EllesmereUI + Bags, the dependency) without using the addon;
+-- the counters see everything from login on.
+local function bootUnused(state, sv)
     local calls
     local opts = { inactive = true, beforeLoad = function(env)
         calls = countCalls(env)
-        if not (extra and extra.noEUI) then fakeEUI.install(env) end
+        fakeEUI.install(env)
     end }
     local env, ns = wow.boot(state or world(), sv, opts)
     return env, ns, calls
@@ -87,13 +87,17 @@ describe("Activation", function()
     end)
 
     it("never hooks Blizzard's bag frames or bag functions", function()
-        local env, ns = bootUnused(nil, nil, { noEUI = true })
-        env.ToggleAllBags()                                    -- Blizzard's own bag window
-        assert.is_false(ns.IsActivated())                      -- EUI Bags is the supported bag UI
+        local originals = {}
+        local names = { "ToggleAllBags", "OpenAllBags", "OpenAllBagsMatchingContext",
+                        "ToggleBackpack", "OpenBackpack", "ToggleBag", "OpenBag" }
+        local env, ns = wow.boot(world(), nil, { inactive = true, beforeLoad = function(e)
+            for _, n in ipairs(names) do originals[n] = e[n] end
+        end })
+        for _, n in ipairs(names) do assert.are.equal(originals[n], env[n], n) end
         assert.is_nil(env.ContainerFrameCombinedBags.hooks.OnShow)
         for i = 1, env.NUM_CONTAINER_FRAMES do assert.is_nil(env["ContainerFrame" .. i].hooks.OnShow) end
-        ns.Browser:Open()                                      -- still usable through the browser
-        assert.are.equal("browser", ns.activatedBy)
+        env.ToggleAllBags()                                    -- Blizzard's own window: not a trigger
+        assert.is_false(ns.IsActivated())
     end)
 
     it("the browser, the public API and the self-test activate", function()
