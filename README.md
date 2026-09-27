@@ -1,7 +1,7 @@
 # EllesmereUI Bags: Alts
 
 Companion-Addon für **EllesmereUI Bags** (WoW Midnight 12.x). Es speichert Taschen,
-Ausrüstung, Bank, Kriegsmeutenbank, Post, Währungen und optional die Gildenbank
+Ausrüstung, Bank, Kriegsmeutenbank, Post, eigene Auktionen, Währungen und optional die Gildenbank
 aller deiner Charaktere. Die Bestände zeigt es auf Wunsch im Item-Tooltip und in
 einem eigenen Browser-Fenster an, ähnlich wie Baganator.
 
@@ -31,7 +31,7 @@ und nicht muttersprachlich geprüft. Korrekturen sind willkommen, der Test
 ## Installation
 
 1. Den Ordner `EllesmereUIBags_Alts` (oder den Inhalt von
-   `dist/EllesmereUIBags_Alts-0.1.1.zip`) nach
+   `dist/EllesmereUIBags_Alts-0.2.0.zip`) nach
    `World of Warcraft/_retail_/Interface/AddOns/` kopieren.
 2. Im Charakterauswahl-Bildschirm unter „AddOns“ prüfen, dass
    „EllesmereUI Bags: Alts“ aktiv ist.
@@ -62,7 +62,7 @@ und nicht muttersprachlich geprüft. Korrekturen sind willkommen, der Test
 | `/alts delete Name-Realm` | Daten eines anderen Charakters löschen (mit Rückfrage) |
 
 **Browser:** links die Charaktere nach Realm gruppiert, dazu Kriegsmeutenbank
-und Gildenbanken. Oben die Tabs Taschen, Bank, Angelegt, Post und Währungen,
+und Gildenbanken. Oben die Tabs Taschen, Bank, Angelegt, Post, Auktionen und Währungen,
 rechts die Items. Hover zeigt den Item-Tooltip, Shift-Klick verlinkt im Chat,
 Strg-Klick öffnet die Anprobe. Der Browser zeigt nur an und nimmt, verschiebt
 oder benutzt keine Items.
@@ -85,6 +85,7 @@ Realm oder alle), aktuellen Charakter ausblenden und maximale Zeilenzahl.
 | Gold, Level, Gilde | laufend | |
 | Charakterbank + Kriegsmeutenbank | **nur am Bankier** | Zeitstempel „Bank erfasst“ im Browser |
 | Post | **nur am Briefkasten** | Post an eigene Charaktere erscheint sofort als „Unterwegs“ beim Empfänger |
+| Eigene Auktionen | **nur im Auktionshaus** | Standardmäßig passiv: Gelesen wird, was der Client meldet, etwa beim Öffnen des Reiters „Auktionen“. Opt-in: beim Öffnen selbst abfragen. Abgebrochene und abgelaufene Auktionen wandern in „Post → Unterwegs“. |
 | Währungen | laufend | Die Erstliste enthält nur aufgeklappte Kategorien, danach wird jede Änderung erfasst |
 | Gildenbank (Opt-in) | **nur an der Gildenbank** | liest alle Fächer, die du sehen darfst |
 
@@ -117,14 +118,19 @@ Vorbereitung: [BugGrabber](https://www.curseforge.com/wow/addons/bug-grabber) un
 7. **Post:** Mit Charakter A etwas an Charakter B schicken. Im Browser taucht es
    bei B unter „Post → Unterwegs“ auf. Nach dem Einloggen von B und dem Öffnen
    des Briefkastens steht es unter „Posteingang“.
-8. **Gildenbank (optional):** In den Optionen „Gildenbank“ aktivieren und die
+8. **Auktionen:** Im Auktionshaus den Reiter „Auktionen“ öffnen (oder in den
+   Optionen „Eigene Auktionen beim Öffnen … abfragen“ aktivieren). Im Browser
+   unter „Auktionen“ erscheinen die aktiven Auktionen, und der Tooltip zeigt
+   „Auktionen: n“. Brichst du eine Auktion ab, steht das Item sofort unter
+   „Post → Unterwegs“.
+9. **Gildenbank (optional):** In den Optionen „Gildenbank“ aktivieren und die
    Gildenbank öffnen. Die Fächer erscheinen im Browser unter „Gildenbanken“.
-9. **Kampf/Instanz:** In einem Dungeon kämpfen, Taschen öffnen und `/alts`
+10. **Kampf/Instanz:** In einem Dungeon kämpfen, Taschen öffnen und `/alts`
    öffnen. BugSack bleibt leer, und `taint.log` enthält keine Zeile mit
    `EllesmereUIBags_Alts`.
-10. **Abschalten:** `/alts tooltip` blendet die Tooltip-Zeilen aus. Bei
+11. **Abschalten:** `/alts tooltip` blendet die Tooltip-Zeilen aus. Bei
     abgeschaltetem Button in den Optionen verschwindet er aus dem Taschen-Kopf.
-11. **Ohne EUI (optional):** EllesmereUI deaktivieren. Das Addon lädt weiter,
+12. **Ohne EUI (optional):** EllesmereUI deaktivieren. Das Addon lädt weiter,
     der Browser hat dann die schlichte eigene Optik.
 
 Falls etwas auffällt, bitte `/alts status` und `/alts selftest` ausführen und
@@ -138,7 +144,9 @@ die Ausgabe sowie die BugSack-Meldung festhalten.
   eingeloggt waren.
 - Die erste Währungsliste enthält keine zugeklappten Kategorien. Das Addon
   klappt keine UI-Elemente für dich auf.
-- Eigene Auktionen werden nicht erfasst.
+- Auktionen sind nur so aktuell wie die letzte Liste im Auktionshaus. Verkaufte
+  Auktionen verschwinden erst mit der nächsten Liste, abgelaufene beim nächsten
+  Login.
 
 ## Entwicklung
 
@@ -185,7 +193,7 @@ Struktur: `EllesmereUIBags_Alts/` (Addon), `spec/` (busted), `sim/`
 
 ```lua
 local total, byOwner = EllesmereUIBagsAlts.GetItemCount(itemID)
--- byOwner["Name-Realm"].bags / .bank / .equipped / .mail, byOwner["#warband"].warband, byOwner["@Gilde-Realm"].guild
+-- byOwner["Name-Realm"].bags / .bank / .equipped / .mail / .auctions, byOwner["#warband"].warband, byOwner["@Gilde-Realm"].guild
 EllesmereUIBagsAlts.GetCharacters()          -- { "Name-Realm", ... }
 EllesmereUIBagsAlts.GetCharacterInfo(key)    -- name, realm, class, level, money, lastSeen
 EllesmereUIBagsAlts.OpenBrowser(key) / .ToggleBrowser() / .Search(text)
@@ -196,7 +204,7 @@ EllesmereUIBagsAlts.OpenBrowser(key) / .ToggleBrowser() / .Search(text)
 | # | Kriterium | Umsetzung | Test |
 |---|---|---|---|
 | 1 | Nichts kostet, solange es aus ist | Features registrieren Events erst beim Einschalten. Der Browser wird erst beim ersten Öffnen gebaut. Der Tooltip-Hook entsteht erst beim ersten Einschalten. | `spec/options_criteria_spec.lua` (Criterion 1), Simulator |
-| 2 | Keine Verhaltensänderung ohne Opt-in | Tooltip, Header-Button, EUI-Kategorien und Gildenbank sind standardmäßig aus. Die Opt-in-Frage kommt erst beim ersten Taschen-Öffnen. | DB- und Options-Specs |
+| 2 | Keine Verhaltensänderung ohne Opt-in | Tooltip, Header-Button, EUI-Kategorien, Gildenbank und die aktive Auktionsabfrage sind standardmäßig aus. Die Opt-in-Frage kommt erst beim ersten Taschen-Öffnen. | DB- und Options-Specs |
 | 3 | Geringe Kosten im Betrieb | Dirty-Set statt Voll-Scan, keine Timer, kein OnUpdate-Polling. Tooltip-Zeilen kommen aus einem Cache. | Criterion 3: je ein Scan pro Burst, Test ohne Allokationen |
 | 4 | Kein Taint-Risiko | Keine secure Templates, kein `SetScript` auf fremden Frames, keine Feldzugriffe auf EUI- oder Blizzard-Frames, nur `hooksecurefunc`/`HookScript`, keine geschützten Aktionen | statische Criterion-4-Tests, Simulator |
 | 5 | Nur Midnight | Interface ab 120000, nur `C_*`-APIs, keine Legacy-Bank-Pfade | Criterion 5, API-Check |

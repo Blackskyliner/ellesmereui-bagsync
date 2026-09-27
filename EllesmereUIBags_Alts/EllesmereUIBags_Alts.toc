@@ -1,9 +1,9 @@
 ## Interface: 120000, 120001, 120005, 120007, 120100
 ## Title: |cff0cd29fEllesmereUI|r Bags: Alts
-## Notes: Cross-character inventory for EllesmereUI Bags: saved bags, bank, warband bank, mail and guild bank of all your characters, optional tooltip counts and a browser.
+## Notes: Cross-character inventory for EllesmereUI Bags: saved bags, bank, warband bank, mail, auctions and guild bank of all your characters, optional tooltip counts and a browser.
 ## Category: |cff0cd29fEllesmere|rUI
 ## Author: Blackskyliner
-## Version: 0.1.1
+## Version: 0.2.0
 ## OptionalDeps: EllesmereUI, EllesmereUIBags
 ## SavedVariables: EllesmereUIBagsAltsDB
 ## IconTexture: Interface\Icons\INV_Misc_Bag_10

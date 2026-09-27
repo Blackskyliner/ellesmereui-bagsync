@@ -5,7 +5,7 @@
 >
 > Abweichungen vom ursprünglichen Plan:
 > - **Name:** `EllesmereUIBags_Alts` (Titel „EllesmereUI Bags: Alts“), SavedVariable `EllesmereUIBagsAltsDB`.
-> - **Umfang:** ohne Auktionen und ohne LDB/Minimap-Button. Header-Button und Gildenbank sind drin (beide Opt-in).
+> - **Umfang:** ohne LDB/Minimap-Button. Header-Button und Gildenbank sind drin (beide Opt-in). Eigene Auktionen kamen in 0.2.0 dazu: standardmäßig passiv, eine aktive Abfrage ist Opt-in.
 > - **Erststart-Frage:** Mit EUI kommt sie erst beim ersten Öffnen der Tasche. EUI zeigt beim Login eigene Popups über denselben Dialog.
 > - **Settings-Button:** öffnet den Browser über dem Settings-Panel und schließt das Panel nicht (kein `HideUIPanel` aus Addon-Code, wegen Taint-Gefahr).
 > - **Gildenbank:** Jedes Slots-Event liest alle bisher angefragten Fächer neu, weil das Event nicht sagt, welches Fach geantwortet hat.

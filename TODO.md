@@ -69,5 +69,12 @@ Header-Button + Gildenbank. Keine Auktionen, kein LDB/Minimap.
 - [x] Härtung: Gildenbank-Fremdevents, Erststart ohne Popup-Kollision, kein HideUIPanel, Tooltip-ID-Fallback
 - [x] Layout-Prüfung über den dump-tree des Simulators (echter Anker-Solver)
 
+## 11. Auktionshaus-Tracking (0.2.0)
+- [x] API gegen 12.1-Doku (GetOwnedAuctions, OwnedAuctionInfo, AuctionStatus, TimeLeftBand, Events)
+- [x] Collector: passiv (OWNED_AUCTIONS_UPDATED), Opt-in-Abfrage, nur vollständige Ergebnisse, nur aktive Auktionen
+- [x] Abgebrochen/abgelaufen → „Post unterwegs“, Ablauf-Pruning beim Login
+- [x] Index, Tooltip, Browser-Tab, Optionen, Selbsttest, Locales (10 Sprachen)
+- [x] Tests: busted (Mock C_AuctionHouse), Simulator (echte C_AuctionHouse-Oberfläche, Kampf/Taint)
+
 ## Offen (braucht den echten Client)
-- [ ] Ingame-Testplan aus README.md durchgehen (Bank, Post, Gildenbank, Kampf/Instanz, taint.log)
+- [ ] Ingame-Testplan aus README.md durchgehen (Bank, Post, Auktionen, Gildenbank, Kampf/Instanz, taint.log)
