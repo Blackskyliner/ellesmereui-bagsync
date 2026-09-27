@@ -162,6 +162,7 @@ local function Usage()
     ns.Print("/alts tooltip - " .. L["toggle tooltip counts"])
     ns.Print("/alts selftest - " .. L["check this character's stored data against the game"])
     ns.Print("/alts status - " .. L["show status"])
+    ns.Print("/alts debug - " .. L["toggle diagnostic chat output"])
     ns.Print("/alts delete <Name-Realm> - " .. L["delete a character's data"])
 end
 
@@ -180,6 +181,9 @@ function Options:HandleSlash(msg)
         t.enabled = not t.enabled
         ns.SettingsChanged()
         ns.Print("%s: %s", L["Tooltip"], t.enabled and L["on"] or L["off"])
+    elseif cmd == "debug" then
+        ns.db.settings.debug = not ns.db.settings.debug
+        ns.Print("debug: %s", ns.db.settings.debug and L["on"] or L["off"])
     elseif cmd == "selftest" then
         ns.RunSelfTest(true)
     elseif cmd == "status" then

@@ -193,3 +193,13 @@ function ns.Print(fmt, ...)
         DEFAULT_CHAT_FRAME:AddMessage(PREFIX .. msg)
     end
 end
+
+-- Diagnostics for in-game troubleshooting (/alts debug). Arguments are only
+-- formatted while debugging is on, so the calls cost one table lookup otherwise.
+function ns.Debug(category, fmt, ...)
+    local s = ns.db and ns.db.settings
+    if not (s and s.debug) then return end
+    local args = { ... }
+    for i = 1, select("#", ...) do args[i] = tostring(args[i]) end
+    ns.Print("|cff999999[%s]|r " .. fmt, category, unpack(args, 1, select("#", ...)))
+end
