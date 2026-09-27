@@ -106,5 +106,12 @@ Header-Button + Gildenbank. Keine Auktionen, kein LDB/Minimap.
 - [x] Schließen-Button relativ zum Fenster gelevelt (Template setzt absolut 510), Fenster ist Toplevel
 - [x] Suche findet Währungen (Summe, Bestände pro Charakter, Tooltip, Chat-Link)
 
+## 16. Layout- und Visual-Regression-Tests
+- [x] wow-ui-sim zusätzlich mit GPU-Renderer (`target-gui/`), Python-venv mit Pillow
+- [x] Fixture mit drei Charakteren, zwei Realms, Kriegsmeuten- und Gildenbank
+- [x] Layout-Invarianten in jeder Browser-Ansicht (`sim/.../10_layout.lua`), Gegenprobe mit altem Kopf-Layout
+- [x] Screenshots von 11 Szenarien in zwei Modi, Vergleich mit Referenzbildern, Diff-Bilder und HTML-Bericht
+- [x] Gefunden und behoben: Qualitätsrahmen der ersten Grid-Spalte im Fallback-Look um 1,5 px abgeschnitten
+
 ## Offen (braucht den echten Client)
 - [ ] Ingame-Testplan aus README.md durchgehen (Bank, Post, Auktionen, Gildenbank, Kampf/Instanz, taint.log)

@@ -205,7 +205,10 @@ scripts/setup-tools.sh
 ```
 
 `setup-tools.sh` baut die projektlokale Toolchain in `.tools/`: Lua 5.1, busted,
-luacheck, Referenzquellen und den wow-ui-sim-Simulator.
+luacheck, Referenzquellen und den wow-ui-sim-Simulator. Den Simulator gibt es
+zweimal: headless für die Tests (`target/`) und mit GPU-Renderer für
+Screenshots (`target-gui/`). Dazu kommt eine Python-Umgebung (`.tools/venv`)
+mit Pillow für den Bildvergleich.
 
 ```bash
 scripts/test.sh
@@ -234,6 +237,30 @@ scripts/test.sh
    **Nicht abgedeckt:** Taint, der zur Laufzeit in Event-Handlern entsteht und
    sich in Blizzards sicheren Code ausbreitet. Der Simulator verwirft ihn, das
    deckt nur der Ingame-Schritt 9 mit `taint.log` ab.
+   `10_layout.lua` prüft Layout-Invarianten in jeder Browser-Ansicht (Charakter
+   mit allen Tabs, „Alle Charaktere“, Realm, Kriegsmeuten- und Gildenbank,
+   Suche) und bei zwei Skalierungen. Gemessen wird die Geometrie, die der
+   Simulator aus den echten Ankern berechnet. Nichts ragt aus dem Fenster
+   (Scrollinhalt nicht seitlich), Titel, Suche und Schließen-Button liegen in
+   EUIs 25-px-Titelleiste, Tabs, Grid-Slots und Textzeilen überlappen nicht,
+   und kein Frame liegt weit über dem Level seines Fensters. Die Testdaten
+   (`sim/.../Fixture.lua`) sind drei Charaktere auf zwei Realms mit Bank, Post,
+   Auktionen, Währungen, Kriegsmeuten- und Gildenbank.
+5. **Visual Regression** (`scripts/visual-test.sh`): Jedes Szenario in
+   `sim/visual/scenarios/` wird mit dem GPU-Build gerendert, mit und ohne EUI,
+   auf den Ziel-Frame zugeschnitten und mit `sim/visual/baselines/<modus>/`
+   verglichen. Ein Pixel zählt als verändert, wenn ein Kanal um mehr als 24
+   abweicht. Ein Szenario scheitert ab 0,1 % veränderten Pixeln, bei geänderter
+   Größe oder bei einem Lua-Fehler. Ergebnis, Diff-Bilder (Änderungen rot) und
+   `report.html` landen in `.tools/visual-out/`. Nach einer gewollten
+   Änderung übernimmt `scripts/visual-test.sh --update [szenario...]` die neuen
+   Bilder. Die Referenzbilder vor dem Commit ansehen.
+   **Grenzen:** Ohne lokale WoW-Installation fehlen Blizzards Texturen
+   (Item-Icons, Atlanten, Slot-Rahmen im Fallback-Look), und native
+   Tooltip-Zeilen erzeugt der Simulator nicht. Die Bilder zeigen Layout, EUIs
+   Skin und unsere Texte, nicht die exakte Optik im Spiel. Mit
+   `WOW_INSTALL_PATH` auf eine WoW-Installation zeigen die Renders auch die
+   Blizzard-Grafiken, dann müssen die Referenzbilder neu erzeugt werden.
 
 Struktur: `EllesmereUIBags_Alts/` (Addon), `spec/` (busted), `sim/`
 (Simulator-Tests), `upstream/` (Vorschlag für EllesmereUI), `scripts/`
