@@ -12,6 +12,15 @@ simtest("browser is built lazily with real Blizzard templates and EUI skin", fun
     assertTrue(f.sideRows.used >= 2)          -- current character + warband
 end)
 
+simtest("close button is levelled relative to the window (template pins 510)", function()
+    local f = _G.EllesmereUIBagsAltsBrowser
+    local level = f.close:GetFrameLevel()
+    assertTrue(level > f:GetFrameLevel())
+    assertTrue(level <= f:GetFrameLevel() + 10)
+    assertTrue(f.search:GetHeight() <= f.header:GetHeight())
+    assertTrue(f.close:GetHeight() <= f.header:GetHeight())
+end)
+
 simtest("grid buttons are plain ItemButtons, not secure container buttons", function()
     local b = _G.EllesmereUIBagsAltsBrowser.grid.buttons[1]
     assertTrue(b:IsObjectType("Button"))

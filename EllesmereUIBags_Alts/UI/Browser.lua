@@ -455,16 +455,23 @@ function Browser:Build()
     RestorePosition(f)
     frame = f
 
-    f.title = W.Text(f, 15)
-    f.title:SetPoint("TOPLEFT", PAD + 2, -PAD)
+    -- Title row: everything vertically centred in the shell's title bar.
+    f.header = CreateFrame("Frame", nil, f)
+    f.header:SetPoint("TOPLEFT")
+    f.header:SetPoint("TOPRIGHT")
+    f.header:SetHeight(W.HEADER_H)
+
+    f.title = W.Text(f, 14)
+    f.title:SetPoint("LEFT", f.header, "LEFT", PAD + 2, 0)
     f.title:SetText(L["Alts"] .. "  |cff888888" .. L["all characters"] .. "|r")
 
     f.close = W.CloseButton(f)
-    f.close:SetPoint("TOPRIGHT", -4, -4)
+    f.close:SetSize(22, 22)
+    f.close:SetPoint("RIGHT", f.header, "RIGHT", -2, 0)
     f.close:SetScript("OnClick", function() Browser:Close() end)
 
-    f.search = W.EditBox(f, 240, 22)
-    f.search:SetPoint("TOPRIGHT", -40, -PAD + 2)
+    f.search = W.EditBox(f, 240, W.HEADER_H - 5)
+    f.search:SetPoint("RIGHT", f.close, "LEFT", -8, 0)
     -- Hook (not replace) so SearchBoxTemplate keeps its clear button and
     -- instructions; the clear button changes text without user input too.
     f.search:HookScript("OnTextChanged", function(box)
@@ -474,7 +481,7 @@ function Browser:Build()
 
     -- Sidebar
     f.sidebar = W.Panel(f, true)
-    f.sidebar:SetPoint("TOPLEFT", PAD, -40)
+    f.sidebar:SetPoint("TOPLEFT", PAD, -(W.HEADER_H + PAD))
     f.sidebar:SetPoint("BOTTOMLEFT", PAD, 40)
     f.sidebar:SetWidth(SIDEBAR_W)
     f.sideScroll = W.Scroll(f.sidebar)

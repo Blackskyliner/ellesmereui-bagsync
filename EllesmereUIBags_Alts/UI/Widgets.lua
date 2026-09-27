@@ -16,6 +16,9 @@ local skin
 Ext:RegisterSkin(ADDON_NAME, function(S) skin = S end)
 function W.GetSkin() return skin end
 
+-- Title row height: EUI's shell draws a 25 px black bar behind the title.
+W.HEADER_H = 25
+
 local BG = { 0.06, 0.06, 0.06, 0.94 }
 local BORDER = { 0.25, 0.25, 0.25, 1 }
 
@@ -48,6 +51,7 @@ function W.Window(name, width, height)
     local f = CreateFrame("Frame", name, UIParent, "BackdropTemplate")
     f:SetSize(width, height)
     f:SetFrameStrata("HIGH")
+    f:SetToplevel(true)          -- a click raises it above other HIGH windows
     f:SetClampedToScreen(true)
     f:SetMovable(true)
     f:EnableMouse(true)
@@ -61,6 +65,11 @@ function W.Window(name, width, height)
         skin.Shell(f)
     else
         W.ApplyFlatBackdrop(f)
+        local bar = f:CreateTexture(nil, "BACKGROUND", nil, -5)
+        bar:SetColorTexture(0, 0, 0, 0.5)
+        bar:SetPoint("TOPLEFT", 1, -1)
+        bar:SetPoint("TOPRIGHT", -1, -1)
+        bar:SetHeight(W.HEADER_H - 1)
     end
     tinsert(UISpecialFrames, name)
     return f
@@ -87,8 +96,12 @@ function W.Button(parent, text, width, height)
     return b
 end
 
+-- UIPanelCloseButton pins frameLevel="510" (SharedUIPanelTemplates.xml): an
+-- absolute level that would draw it above every other window of the same
+-- strata. Re-level it relative to its window (above EUI's border overlay, +6).
 function W.CloseButton(parent)
     local b = CreateFrame("Button", nil, parent, "UIPanelCloseButton")
+    b:SetFrameLevel(parent:GetFrameLevel() + 10)
     if skin then skin.CloseButton(b) end
     return b
 end
