@@ -66,6 +66,18 @@ describe("Bags collector", function()
         assert.is_false(ns.IsEventRegistered(ns.featureByKey.bags, "PLAYER_REGEN_ENABLED"))
     end)
 
+    it("defers when only the bound flag is secret", function()
+        wow.putItem(S, 0, 3, 6948, 1)
+        S.bags[0].slots[3].bound = wow.Secret(true)
+        env.FireEvent("BAG_UPDATE", 0)
+        env.FireEvent("BAG_UPDATE_DELAYED")
+        assert.is_nil(wow.items(ns.GetPlayerChar().bags[0])[3])
+        assert.are.same({}, env.__errors)
+        S.bags[0].slots[3].bound = true
+        env.FireEvent("PLAYER_REGEN_ENABLED")
+        assert.are.equal("6948,1,!", ns.GetPlayerChar().bags[0].items:match("3:([^;]*)"))
+    end)
+
     it("tracks bag size changes on world entry", function()
         S.bags[2].size = 30
         env.FireEvent("PLAYER_ENTERING_WORLD", false, true)

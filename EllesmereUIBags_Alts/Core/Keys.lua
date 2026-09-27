@@ -193,7 +193,7 @@ end
 -- Bound state of a live item: nil while it may still move (unbound or
 -- "warbound until equipped"), else "soul" or "account" (warbound).
 function ns.BoundState(isBound, itemLocation, itemID)
-    if not isBound or ns.IsSecret(isBound) then return nil end
+    if ns.IsSecret(isBound) or not isBound then return nil end
     if itemLocation and C_Item.IsBoundToAccountUntilEquip(itemLocation) then return nil end
     local bindType = select(14, C_Item.GetItemInfo(itemID))
     if bindType == Enum.ItemBind.ToWoWAccount or bindType == Enum.ItemBind.ToBnetAccount then

@@ -65,7 +65,8 @@ function ns.ScanContainer(bagID, withSets)
         local info = C_Container.GetContainerItemInfo(bagID, slot)
         if info then
             local id = info.itemID
-            if ns.IsSecret(id) or ns.IsSecret(info.stackCount) or ns.IsSecret(info.hyperlink) then
+            if ns.IsSecret(id) or ns.IsSecret(info.stackCount) or ns.IsSecret(info.hyperlink)
+                or ns.IsSecret(info.isBound) then
                 return nil, true
             end
             if id then

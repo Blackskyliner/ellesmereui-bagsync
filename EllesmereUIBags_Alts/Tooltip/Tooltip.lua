@@ -19,6 +19,7 @@ local _, ns = ...
 local L = ns.L
 
 local pairs, ipairs, sort, format, wipe = pairs, ipairs, table.sort, string.format, wipe
+local issecretvalue = issecretvalue   -- direct: the refresh path stays within its call budget
 
 local hooked = false
 local active = false
@@ -163,7 +164,8 @@ local MODIFIER_TEST = {
 local function ItemIDFromData(data)
     if not data then return nil end
     local id = data.id
-    if id ~= nil then return id end
+    if issecretvalue(id) then return nil end
+    if id then return id end
     local link = data.hyperlink
     if link and not ns.IsSecret(link) then
         id = C_Item.GetItemInfoInstant(link)
