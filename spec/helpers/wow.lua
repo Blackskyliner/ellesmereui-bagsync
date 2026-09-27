@@ -500,6 +500,10 @@ function M.newEnv(state, savedVariables)
         return S.money
     end
     env.C_AutoComplete = { GetAutoCompleteRealms = function() return S.connectedRealms end }
+    S.interacting = S.interacting or {}
+    env.C_PlayerInteractionManager = {
+        IsInteractingWithNpcOfType = function(t) return S.interacting[t] == true end,
+    }
     env.C_ClassColor = { GetClassColor = function(class)
         return { r = 0.25, g = 0.78, b = 0.92, GenerateHexColor = function() return "ff3fc7eb" end, class = class }
     end }
@@ -852,7 +856,20 @@ function M.newEnv(state, savedVariables)
     env.CreateSettingsButtonInitializer = function(name, text, click) return { button = name, text = text, click = click } end
 
     -- Test helpers on the env
+    -- Which NPC window is open (C_PlayerInteractionManager), kept like the
+    -- client from the show/hide events the tests fire.
+    local INTERACTION_EVENTS = {
+        MAIL_SHOW = { 17, true }, MAIL_CLOSED = { 17, false },
+        AUCTION_HOUSE_SHOW = { 21, true }, AUCTION_HOUSE_CLOSED = { 21, false },
+        BANKFRAME_OPENED = { 8, true }, BANKFRAME_CLOSED = { 8, false },
+    }
     function env.FireEvent(event, ...)
+        if event == "PLAYER_INTERACTION_MANAGER_FRAME_SHOW" then S.interacting[(...)] = true
+        elseif event == "PLAYER_INTERACTION_MANAGER_FRAME_HIDE" then S.interacting[(...)] = nil
+        elseif INTERACTION_EVENTS[event] then
+            local e = INTERACTION_EVENTS[event]
+            S.interacting[e[1]] = e[2] or nil
+        end
         for _, f in ipairs(env.__eventOrder) do
             if f.events[event] then
                 local fn = f.scripts.OnEvent
@@ -914,9 +931,44 @@ function M.loadAddon(env)
 end
 
 -- Full client boot: load, ADDON_LOADED, PLAYER_LOGIN, PLAYER_ENTERING_WORLD.
+-- Blizzard's bag windows (ContainerFrame.xml): hidden until a bag opens.
+local function CreateBagFrames(env)
+    env.NUM_CONTAINER_FRAMES = 6
+    local combined = env.CreateFrame("Frame", "ContainerFrameCombinedBags", env.UIParent)
+    combined:Hide()
+    env.ContainerFrameCombinedBags = combined
+    for i = 1, env.NUM_CONTAINER_FRAMES do
+        local f = env.CreateFrame("Frame", "ContainerFrame" .. i, env.UIParent)
+        f:Hide()
+        env["ContainerFrame" .. i] = f
+    end
+    -- Blizzard's bag functions (ContainerFrame.lua), hookable with hooksecurefunc.
+    env.ToggleAllBags = function() combined:SetShown(not combined:IsShown()) end
+    env.OpenAllBags = function() combined:Show() end
+    env.OpenAllBagsMatchingContext = function() combined:Show() end
+    env.ToggleBackpack = function() env.ContainerFrame1:SetShown(not env.ContainerFrame1:IsShown()) end
+    env.OpenBackpack = function() env.ContainerFrame1:Show() end
+    env.ToggleBag = function(id) local f = env["ContainerFrame" .. ((id or 0) + 1)] if f then f:SetShown(not f:IsShown()) end end
+    env.OpenBag = function(id) local f = env["ContainerFrame" .. ((id or 0) + 1)] if f then f:Show() end end
+    -- The player opens and closes the bags: EllesmereUI's bag window when
+    -- EUI is installed (it takes over every bag key), else Blizzard's.
+    function env.OpenBags()
+        if env.EUI_Bags then env.EUI_Bags:Show()
+        elseif not combined:IsShown() then env.ToggleAllBags() end
+    end
+    function env.CloseBags()
+        if env.EUI_Bags then env.EUI_Bags:Hide()
+        elseif combined:IsShown() then env.ToggleAllBags() end
+    end
+end
+
+-- Logs in. Unless opts.inactive, the addon is then used once: with EUI the
+-- player opens the bags (the real trigger), without EUI (connector fallback
+-- tests) a public API call activates it (Core/Activation.lua).
 function M.boot(state, savedVariables, opts)
     opts = opts or {}
     local env = M.newEnv(state, savedVariables)
+    CreateBagFrames(env)
     if opts.beforeLoad then opts.beforeLoad(env) end
     local ns = M.loadAddon(env)
     env.FireEvent("ADDON_LOADED", ADDON)
@@ -925,6 +977,14 @@ function M.boot(state, savedVariables, opts)
     env.__state.moneyZeroUntilWorld = nil
     env.FireEvent("PLAYER_ENTERING_WORLD", true, false)
     env.FireEvent("BAG_UPDATE_DELAYED")
+    if not opts.inactive then
+        if env.EUI_Bags then
+            env.OpenBags()
+            env.CloseBags()
+        else
+            env.EllesmereUIBagsAlts.GetCharacters()
+        end
+    end
     return env, ns
 end
 
