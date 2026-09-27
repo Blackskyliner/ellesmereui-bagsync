@@ -82,5 +82,10 @@ Header-Button + Gildenbank. Keine Auktionen, kein LDB/Minimap.
 - [x] 0.3.0: Stückpreise, „Im Auktionshaus“-Summe im Auktionen-Footer, „Gold in der Post“ im Post-Footer
 - [x] 0.3.0: /alts debug
 
+## 12. Währungs-Kategorien (0.4.0)
+- [x] Charaktergebunden / Überweisbar (+ Kriegsmeutenweit, nur wenn vorhanden)
+- [x] Art accountweit gemerkt (db.currencyMeta) für Offline-Charaktere
+- [x] Locales, Tests
+
 ## Offen (braucht den echten Client)
 - [ ] Ingame-Testplan aus README.md durchgehen (Bank, Post, Auktionen, Gildenbank, Kampf/Instanz, taint.log)

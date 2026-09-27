@@ -31,7 +31,7 @@ und nicht muttersprachlich geprüft. Korrekturen sind willkommen, der Test
 ## Installation
 
 1. Den Ordner `EllesmereUIBags_Alts` (oder den Inhalt von
-   `dist/EllesmereUIBags_Alts-0.3.1.zip`) nach
+   `dist/EllesmereUIBags_Alts-0.4.0.zip`) nach
    `World of Warcraft/_retail_/Interface/AddOns/` kopieren.
 2. Im Charakterauswahl-Bildschirm unter „AddOns“ prüfen, dass
    „EllesmereUI Bags: Alts“ aktiv ist.
@@ -67,6 +67,13 @@ und Gildenbanken. Oben die Tabs Taschen, Bank, Angelegt, Post, Auktionen und Wä
 rechts die Items. Hover zeigt den Item-Tooltip, Shift-Klick verlinkt im Chat,
 Strg-Klick öffnet die Anprobe. Der Browser zeigt nur an und nimmt, verschiebt
 oder benutzt keine Items.
+
+**Währungen:** Der Tab gruppiert nach „Charaktergebunden“ und „Überweisbar“
+(in der Kriegsmeute übertragbar). Kriegsmeutenweite Währungen teilen alle
+Charaktere, sie sind also weder gebunden noch überweisbar. Sie stehen in einem
+eigenen Abschnitt „Kriegsmeutenweit (geteilt)“, der nur erscheint, wenn solche
+Währungen vorkommen. Die Art jeder Währung merkt sich das Addon accountweit,
+damit auch die Währungen anderer Charaktere richtig einsortiert werden.
 
 **Suche:** Wörter (Namensbestandteile), `12345` oder `id:12345` (Item-ID),
 `q:epic` oder `q:4` (Qualität), `t:rüstung` (Typ/Untertyp). Mehrere Begriffe
