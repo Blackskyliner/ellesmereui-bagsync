@@ -12,6 +12,9 @@ local W = ns.W
 local Ext = _G.EllesmereUIBagsExt
 
 local SLOT, GAP, HEADER_H = 34, 4, 20
+-- The stock quality border (IconBorder, 37 px) overhangs the 34 px slot by
+-- 1.5 px per side; inset the grid so the scroll frame never clips it.
+local INSET = 2
 
 local Grid = {}
 Grid.__index = Grid
@@ -184,7 +187,7 @@ end
 function Grid:Layout(sections, width, showOwners)
     self:Reset()
     self.showOwners = showOwners and true or nil
-    local columns = math.max(1, math.floor((width + GAP) / (SLOT + GAP)))
+    local columns = math.max(1, math.floor((width - 2 * INSET + GAP) / (SLOT + GAP)))
     local y = 0
     for _, section in ipairs(sections) do
         if #section.items > 0 then
@@ -200,11 +203,11 @@ function Grid:Layout(sections, width, showOwners)
                 local row = math.floor((i - 1) / columns)
                 local btn = self:AcquireButton()
                 btn:ClearAllPoints()
-                btn:SetPoint("TOPLEFT", self.parent, "TOPLEFT", col * (SLOT + GAP), -(y + row * (SLOT + GAP)))
+                btn:SetPoint("TOPLEFT", self.parent, "TOPLEFT", INSET + col * (SLOT + GAP), -(y + INSET + row * (SLOT + GAP)))
                 self:Paint(btn, enc, section.sets and section.sets[i])
             end
             local rows = math.ceil(#section.items / columns)
-            y = y + rows * (SLOT + GAP) + 6
+            y = y + INSET + rows * (SLOT + GAP) + 6
         end
     end
     return y
