@@ -3,7 +3,8 @@
 #   - Lua 5.1.5 (same language level as the WoW client)
 #   - LuaRocks + busted (unit/integration tests) + luacheck (lint)
 #   - reference sources: Gethe/wow-ui-source (Blizzard UI 12.x incl. generated API docs),
-#     Ketho/vscode-wow-api (API annotations), EllesmereGaming/EllesmereUI (host addon)
+#     Ketho/vscode-wow-api (API annotations), EllesmereGaming/EllesmereUI (host addon),
+#     Blizzard's GlobalStrings of every client locale (Ketho/BlizzardInterfaceResources)
 #   - Osso/wow-ui-sim (headless WoW UI simulator, Rust) + Blizzard UI cache for it
 # Requires: curl, git, a C compiler, make; cargo only for the simulator step.
 set -euo pipefail
@@ -33,6 +34,15 @@ clone https://github.com/Gethe/wow-ui-source.git wow-ui-source live
 clone https://github.com/Ketho/vscode-wow-api.git vscode-wow-api
 clone https://github.com/EllesmereGaming/EllesmereUI.git EllesmereUI
 clone https://github.com/Osso/wow-ui-sim.git wow-ui-sim
+
+# Blizzard's own strings per client locale: the reference for game terms in our translations
+# (spec/locales_spec.lua compares against them).
+GS="$T/vendor/globalstrings"
+mkdir -p "$GS"
+for loc in enUS deDE esES esMX frFR itIT koKR ptBR ruRU zhCN zhTW; do
+  [ -s "$GS/$loc.lua" ] || curl -sSfL -o "$GS/$loc.lua" \
+    "https://raw.githubusercontent.com/Ketho/BlizzardInterfaceResources/live/Resources/GlobalStrings/$loc.lua"
+done
 
 if command -v cargo >/dev/null 2>&1; then
   if [ ! -x "$T/vendor/wow-ui-sim/target/release/wow-sim" ]; then
