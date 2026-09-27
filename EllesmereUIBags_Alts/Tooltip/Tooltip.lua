@@ -3,9 +3,17 @@
 --  Adds "who has this item" lines to item tooltips.
 --
 --  TooltipDataProcessor post-calls cannot be removed, so the hook is installed
---  on the first enable only and starts with a single boolean test. Lines are
---  built once per itemID and cached; the cache entry is dropped when the index
---  reports a change for that item, so showing a tooltip allocates nothing.
+--  on the first enable only and starts with a single boolean test. It is
+--  registered for Enum.TooltipDataType.Item only: unit, spell and world-object
+--  tooltips never reach this file (no OnTooltipCleared hook either -- Blizzard
+--  refreshes every visible tooltip each TOOLTIP_UPDATE_TIME, so a clear hook
+--  would run constantly while you merely look at the world).
+--
+--  Counting is cached twice: the item index (itemID -> owner -> location) is
+--  built once and then only updated for items that changed, and the finished
+--  tooltip lines are cached per itemID until the index reports a change for
+--  that item. A tooltip refresh therefore costs a few table lookups and
+--  allocates nothing. Item tooltips of world loot objects are skipped.
 -------------------------------------------------------------------------------
 local _, ns = ...
 local L = ns.L
@@ -15,7 +23,10 @@ local pairs, ipairs, sort, format, wipe = pairs, ipairs, table.sort, string.form
 local hooked = false
 local active = false
 local lineCache = {}              -- itemID -> { left1, right1, left2, right2, ... } | false
-local lastAdded = setmetatable({}, { __mode = "k" })   -- tooltip -> itemID already appended
+-- tooltip -> processingInfo our lines were added for. Blizzard's ProcessInfo
+-- creates a new info table for every (re)build, so this blocks a second post-call
+-- within one build (embedded item tooltips) without hooking OnTooltipCleared.
+local lastAdded = setmetatable({}, { __mode = "k" })
 
 local LOCATION_ORDER = { "bags", "bank", "equipped", "mail", "auctions", "warband", "guild" }
 local LOCATION_LABEL = {
@@ -156,29 +167,35 @@ local function ItemIDFromData(data)
     return nil
 end
 
+-- World objects (loot lying in the world, game objects) are not inventory.
+local function IsWorldObject(data)
+    if data.worldLootObjectGUID ~= nil or data.worldLootObjectInventoryType ~= nil then return true end
+    local guid = data.guid
+    if guid == nil or ns.IsSecret(guid) then return false end
+    return type(guid) == "string" and guid:sub(1, 5) ~= "Item-"
+end
+
 local function OnTooltipItem(tooltip, data)
-    if not active then return end
+    if not active or not data then return end
     if not ALLOWED_TOOLTIPS[tooltip] then return end
     if tooltip.IsForbidden and tooltip:IsForbidden() then return end
+    local info = tooltip.processingInfo
+    if info ~= nil and lastAdded[tooltip] == info then return end
+    if IsWorldObject(data) then return end
     local itemID = ItemIDFromData(data)
     if not itemID or ns.IsSecret(itemID) then return end
-    if lastAdded[tooltip] == itemID then return end
     local modTest = MODIFIER_TEST[Settings().modifier]
     if modTest and not modTest() then return end
 
     local lines = GetLines(itemID)
     if not lines then return end
-    lastAdded[tooltip] = itemID
+    lastAdded[tooltip] = info
     tooltip:AddLine(" ")
     for i = 1, #lines, 2 do
         tooltip:AddDoubleLine(lines[i], lines[i + 1], 1, 0.82, 0, 1, 1, 1)
     end
 end
 ns.OnTooltipItem = OnTooltipItem   -- exposed for tests
-
-local function OnTooltipCleared(tooltip)
-    lastAdded[tooltip] = nil
-end
 
 local function InvalidateAll() wipe(lineCache) end
 
@@ -192,10 +209,7 @@ ns.RegisterFeature({
             -- Not the comparison (shopping) tooltips: counts there are noise.
             for _, name in ipairs({ "GameTooltip", "ItemRefTooltip" }) do
                 local tt = _G[name]
-                if tt then
-                    ALLOWED_TOOLTIPS[tt] = true
-                    tt:HookScript("OnTooltipCleared", OnTooltipCleared)
-                end
+                if tt then ALLOWED_TOOLTIPS[tt] = true end
             end
             TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, OnTooltipItem)
         end
