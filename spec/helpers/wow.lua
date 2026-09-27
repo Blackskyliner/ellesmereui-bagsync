@@ -541,13 +541,17 @@ function M.newEnv(state, savedVariables)
             local c = S.currencies[i]
             if not c then return nil end
             return { name = c.name, isHeader = c.header or false, quantity = c.quantity or 0,
-                     currencyID = c.id or 0, iconFileID = c.icon or 0 }
+                     currencyID = c.id or 0, iconFileID = c.icon or 0,
+                     isAccountTransferable = c.transferable or false, isAccountWide = c.accountWide or false }
         end,
         GetCurrencyListLink = function(i) local c = S.currencies[i]; return c and c.id and ("|Hcurrency:" .. c.id .. "|h[x]|h") end,
         GetCurrencyIDFromLink = function(link) return tonumber(link:match("currency:(%d+)")) end,
         GetCurrencyInfo = function(id)
             for _, c in ipairs(S.currencies) do
-                if c.id == id then return { name = c.name, quantity = c.quantity, iconFileID = c.icon, currencyID = id } end
+                if c.id == id then
+                    return { name = c.name, quantity = c.quantity, iconFileID = c.icon, currencyID = id,
+                             isAccountTransferable = c.transferable or false, isAccountWide = c.accountWide or false }
+                end
             end
             return nil
         end,

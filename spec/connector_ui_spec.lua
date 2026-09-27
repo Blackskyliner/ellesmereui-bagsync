@@ -325,4 +325,73 @@ describe("Browser", function()
         ns.Index:EnsureBuilt()
         assert.are.equal(20, ns.Index:GetTotal(2589))
     end)
+
+    describe("currency tab", function()
+        local CURRENCIES = {
+            { name = "Dungeon and Raid", header = true },
+            { id = 3008, name = "Valorstones", quantity = 1234, icon = 1 },
+            { id = 2815, name = "Resonance Crystals", quantity = 900, icon = 2, transferable = true },
+            { id = 3028, name = "Restored Coffer Key", quantity = 3, icon = 3, transferable = true },
+            { id = 2032, name = "Trader's Tender", quantity = 750, icon = 4, accountWide = true },
+            { id = 1792, name = "Honor", quantity = 15000, icon = 5 },
+        }
+
+        local function rendered(f)
+            local out = {}
+            for i = 1, f.grid.usedHeaders do out[#out + 1] = "#" .. f.grid.headers[i].text end
+            for i = 1, f.currencies.used do out[#out + 1] = f.currencies.items[i].name.text end
+            return out
+        end
+
+        it("groups currencies into character-bound, transferable and warband-wide", function()
+            local s = wow.defaultState({ currencies = CURRENCIES })
+            local env, ns = wow.boot(s)
+            ns.Browser:Open()
+            ns.Browser:SelectTab("currency")
+            local f = env.EllesmereUIBagsAltsBrowser
+            assert.are.same({ "#Character-bound", "#Transferable", "#Warband-wide (shared)",
+                "Honor", "Valorstones", "Resonance Crystals", "Restored Coffer Key", "Trader's Tender" }, rendered(f))
+            -- rows sit below their group header
+            local y = {}
+            for i = 1, f.currencies.used do y[f.currencies.items[i].name.text] = -f.currencies.items[i].points[1][3] end
+            assert.is_true(y["Honor"] < y["Resonance Crystals"])
+            assert.is_true(y["Restored Coffer Key"] < y["Trader's Tender"])
+            assert.are.same({}, env.__errors)
+        end)
+
+        it("hides the warband-wide group when no such currency is stored", function()
+            local list = {}
+            for i = 1, 4 do list[i] = CURRENCIES[i] end
+            local env, ns = wow.boot(wow.defaultState({ currencies = list }))
+            ns.Browser:Open()
+            ns.Browser:SelectTab("currency")
+            local headers = {}
+            local f = env.EllesmereUIBagsAltsBrowser
+            for i = 1, f.grid.usedHeaders do headers[#headers + 1] = f.grid.headers[i].text end
+            assert.are.same({ "Character-bound", "Transferable" }, headers)
+        end)
+
+        it("groups an offline character's currencies from the remembered kind", function()
+            local env = wow.boot(wow.defaultState({ currencies = CURRENCIES }))
+            -- Bob's client knows none of these currencies (no live info)
+            local env2, ns2 = wow.relog(env, { name = "Bob" }, { currencies = {} })
+            ns2.Browser:Open("Alice-Blackhand")
+            ns2.Browser:SelectTab("currency")
+            local f = env2.EllesmereUIBagsAltsBrowser
+            local headers = {}
+            for i = 1, f.grid.usedHeaders do headers[#headers + 1] = f.grid.headers[i].text end
+            assert.are.same({ "Character-bound", "Transferable", "Warband-wide (shared)" }, headers)
+            assert.is_true(ns2.db.currencyMeta[2815].t)
+            assert.is_true(ns2.db.currencyMeta[2032].w)
+            assert.is_false(ns2.db.currencyMeta[3008].t)
+        end)
+
+        it("learns the kind of a currency first seen through CURRENCY_DISPLAY_UPDATE", function()
+            local env, ns = wow.boot(wow.defaultState())
+            env.__state.currencies = { { id = 3100, name = "New Crest", quantity = 10, transferable = true } }
+            env.FireEvent("CURRENCY_DISPLAY_UPDATE", 3100, 10, 10)
+            assert.are.same({ t = true, w = false }, ns.db.currencyMeta[3100])
+            assert.are.equal(10, ns.GetPlayerChar().currency[3100])
+        end)
+    end)
 end)
