@@ -24,20 +24,51 @@ local function ResolveLink(ref)
     return link
 end
 
+-- The item tooltip is built through Blizzard's own TooltipDataHandler with a
+-- per-call linePreCall/tooltipPostCall (scoped to this one tooltip, no global
+-- hooks): a stored item that is bound shows "Soulbound"/"Warbound" instead of
+-- the generic "Binds when equipped", and equipment sets are listed.
+local BINDING_LINE = Enum.TooltipDataLineType.ItemBinding
+
+local function BindingPreCall(tooltip, lineData)
+    local info = tooltip.processingInfo
+    local bound = info and info.euiAltsBound
+    if not bound or lineData.type ~= BINDING_LINE then return false end
+    local text = bound == "account" and (ITEM_ACCOUNTBOUND or ns.L["Warbound"]) or (ITEM_SOULBOUND or ns.L["Soulbound"])
+    local c = lineData.leftColor
+    tooltip:AddLine(text, c and c.r or 1, c and c.g or 1, c and c.b or 1)
+    return true   -- consumed: the generic binding line is not added
+end
+
+local function SetsPostCall(tooltip)
+    local info = tooltip.processingInfo
+    local sets = info and info.euiAltsSets
+    if sets then
+        tooltip:AddLine(string.format(ns.L["Equipment sets: %s"], "|cffffffff" .. sets .. "|r"), 1, 0.82, 0, true)
+    end
+end
+
 local function Button_OnEnter(self)
     if not self.ref then return end
-    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    local tooltip = W.GetTooltip()
+    tooltip:SetOwner(self, "ANCHOR_RIGHT")
     if self.ref:find("battlepet:", 1, true) and BattlePetToolTip_ShowLink then
-        GameTooltip:Hide()
+        tooltip:Hide()
         BattlePetToolTip_ShowLink(self.ref)
         return
     end
-    GameTooltip:SetHyperlink(self.ref)
-    GameTooltip:Show()
+    tooltip:ProcessInfo({
+        getterName = "GetHyperlink",
+        getterArgs = { self.ref },
+        linePreCall = BindingPreCall,
+        tooltipPostCall = SetsPostCall,
+        euiAltsBound = self.bound,
+        euiAltsSets = self.sets,
+    })
 end
 
 local function Button_OnLeave()
-    GameTooltip:Hide()
+    W.GetTooltip():Hide()
     if BattlePetTooltip then BattlePetTooltip:Hide() end
 end
 
@@ -85,18 +116,19 @@ function Grid:Reset()
     for i = 1, self.used do
         local b = self.buttons[i]
         b:Hide()
-        b.ref, b.itemID = nil, nil
+        b.ref, b.itemID, b.bound, b.sets = nil, nil, nil, nil
     end
     for i = 1, self.usedHeaders do self.headers[i]:Hide() end
     self.used, self.usedHeaders = 0, 0
     wipe(self.byItem)
 end
 
--- Paints one button from an encoded stack.
-function Grid:Paint(b, enc)
-    local id, count, link = ns.DecodeItem(enc)
+-- Paints one button from an encoded stack (sets: equipment set names or nil).
+function Grid:Paint(b, enc, sets)
+    local id, count, link, bound = ns.DecodeItem(enc)
     b.itemID = id
     b.ref = link or ("item:" .. id)
+    b.bound, b.sets = bound, sets
     local _, _, _, _, icon = C_Item.GetItemInfoInstant(id)
     SetItemButtonTexture(b, icon or 134400)
     SetItemButtonCount(b, count)
@@ -157,7 +189,7 @@ function Grid:Layout(sections, width)
                 local btn = self:AcquireButton()
                 btn:ClearAllPoints()
                 btn:SetPoint("TOPLEFT", self.parent, "TOPLEFT", col * (SLOT + GAP), -(y + row * (SLOT + GAP)))
-                self:Paint(btn, enc)
+                self:Paint(btn, enc, section.sets and section.sets[i])
             end
             local rows = math.ceil(#section.items / columns)
             y = y + rows * (SLOT + GAP) + 6

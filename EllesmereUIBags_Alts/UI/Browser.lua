@@ -46,11 +46,20 @@ local function SortedIDs(map)
     return ids
 end
 
+-- -> list of encoded stacks in slot order, parallel list of set names (or nil)
 local function ItemsInSlotOrder(container)
-    local out = {}
-    if not container or not container.items then return out end
-    for _, slot in ipairs(SortedIDs(container.items)) do out[#out + 1] = container.items[slot] end
-    return out
+    local out, sets = {}, {}
+    if not container or not container.items then return out, sets end
+    for _, slot in ipairs(SortedIDs(container.items)) do
+        out[#out + 1] = container.items[slot]
+        sets[#out] = container.sets and container.sets[slot] or nil
+    end
+    return out, sets
+end
+
+local function Section(title, container)
+    local items, sets = ItemsInSlotOrder(container)
+    return { title = title, items = items, sets = sets }
 end
 
 local function MailItems(list)
@@ -64,18 +73,19 @@ local function ByEUICategory(sections)
     if not ns.db.settings.ui.useEUICategories or not Ext:IsBagsLoaded() then return sections end
     local groups, order = {}, {}
     for _, section in ipairs(sections) do
-        for _, enc in ipairs(section.items) do
+        for i, enc in ipairs(section.items) do
             local id, _, link = ns.DecodeItem(enc)
             local ref = link or select(2, C_Item.GetItemInfo(id))
             local idx, name = Ext:ClassifyItem(ref, id)
             if not idx then return sections end   -- categories unavailable: keep containers
             local g = groups[idx]
             if not g then
-                g = { title = name or ("#" .. idx), items = {}, idx = idx }
+                g = { title = name or ("#" .. idx), items = {}, sets = {}, idx = idx }
                 groups[idx] = g
                 order[#order + 1] = g
             end
             g.items[#g.items + 1] = enc
+            g.sets[#g.items] = section.sets and section.sets[i] or nil
         end
     end
     table.sort(order, function(a, b) return a.idx < b.idx end)
@@ -86,7 +96,7 @@ local function CharSections(c, tab)
     local sections = {}
     if tab == "bags" then
         for _, bagID in ipairs(SortedIDs(c.bags)) do
-            sections[#sections + 1] = { title = L[BAG_TITLES[bagID] or ("Bag " .. bagID)], items = ItemsInSlotOrder(c.bags[bagID]) }
+            sections[#sections + 1] = Section(L[BAG_TITLES[bagID] or ("Bag " .. bagID)], c.bags[bagID])
         end
         return ByEUICategory(sections)
     elseif tab == "bank" then
@@ -94,11 +104,11 @@ local function CharSections(c, tab)
         for _, tabID in ipairs(SortedIDs(c.bank)) do
             i = i + 1
             local cont = c.bank[tabID]
-            sections[#sections + 1] = { title = (cont.name and cont.name ~= "") and cont.name or string.format(L["Tab %d"], i), items = ItemsInSlotOrder(cont) }
+            sections[#sections + 1] = Section((cont.name and cont.name ~= "") and cont.name or string.format(L["Tab %d"], i), cont)
         end
         return ByEUICategory(sections)
     elseif tab == "equipped" then
-        sections[1] = { title = L["Equipped"], items = ItemsInSlotOrder(c.equipped) }
+        sections[1] = Section(L["Equipped"], c.equipped)
     elseif tab == "mail" then
         sections[1] = { title = L["Inbox"], items = MailItems(c.mail and c.mail.items) }
         sections[2] = { title = L["In transit"], items = MailItems(c.mailIncoming) }
@@ -114,7 +124,7 @@ local function TabSections(tabs)
     for _, id in ipairs(SortedIDs(tabs)) do
         i = i + 1
         local cont = tabs[id]
-        sections[#sections + 1] = { title = (cont.name and cont.name ~= "") and cont.name or string.format(L["Tab %d"], i), items = ItemsInSlotOrder(cont) }
+        sections[#sections + 1] = Section((cont.name and cont.name ~= "") and cont.name or string.format(L["Tab %d"], i), cont)
     end
     return sections
 end
@@ -180,11 +190,12 @@ local function CreateResultRow(parent)
     r.hl:SetColorTexture(1, 1, 1, 0.05)
     r:SetScript("OnEnter", function(self)
         if not self.itemID then return end
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetHyperlink("item:" .. self.itemID)
-        GameTooltip:Show()
+        local tooltip = W.GetTooltip()
+        tooltip:SetOwner(self, "ANCHOR_RIGHT")
+        tooltip:SetHyperlink("item:" .. self.itemID)
+        tooltip:Show()
     end)
-    r:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    r:SetScript("OnLeave", function() W.GetTooltip():Hide() end)
     r:SetScript("OnClick", function(self)
         if self.itemID and IsModifiedClick() then
             local _, link = C_Item.GetItemInfo(self.itemID)

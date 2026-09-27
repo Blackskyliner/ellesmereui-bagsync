@@ -136,6 +136,21 @@ function W.Tab(parent, text, onClick)
     return b
 end
 
+-- The browser's own item tooltip. Showing items through Blizzard's shared
+-- GameTooltip from addon code makes its TooltipDataHandler write its state
+-- (waitingForData, suppressAutomaticCompareItem, ...) in our execution
+-- context, i.e. tainted; a private GameTooltipTemplate frame keeps GameTooltip
+-- untouched. Created on first use.
+local browserTooltip
+function W.GetTooltip()
+    if not browserTooltip then
+        browserTooltip = CreateFrame("GameTooltip", "EllesmereUIBagsAltsTooltip", UIParent, "GameTooltipTemplate")
+        browserTooltip:SetFrameStrata("TOOLTIP")
+        ns.Fire("BROWSER_TOOLTIP_CREATED", browserTooltip)
+    end
+    return browserTooltip
+end
+
 -- Formats copper as "12,345g" (gold only; the browser is an overview).
 function W.FormatGold(copper)
     if not copper then return "-" end

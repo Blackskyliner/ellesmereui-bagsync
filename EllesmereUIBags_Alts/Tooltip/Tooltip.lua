@@ -207,10 +207,12 @@ ns.RegisterFeature({
             hooked = true
             ALLOWED_TOOLTIPS = {}
             -- Not the comparison (shopping) tooltips: counts there are noise.
-            for _, name in ipairs({ "GameTooltip", "ItemRefTooltip" }) do
+            for _, name in ipairs({ "GameTooltip", "ItemRefTooltip", "EllesmereUIBagsAltsTooltip" }) do
                 local tt = _G[name]
                 if tt then ALLOWED_TOOLTIPS[tt] = true end
             end
+            -- The browser's own tooltip may be created later.
+            ns.On("BROWSER_TOOLTIP_CREATED", ALLOWED_TOOLTIPS, function(_, tt) ALLOWED_TOOLTIPS[tt] = true end)
             TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, OnTooltipItem)
         end
         InvalidateAll()
