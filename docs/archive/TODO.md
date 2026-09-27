@@ -1,146 +1,152 @@
-# Arbeits-Checkliste: EllesmereUIBags_Alts
+# Work checklist: EllesmereUIBags_Alts (archived)
 
-Entscheidungen (2026-09-26): Name `EllesmereUIBags_Alts`, nur lokales Git (Feature-Branch,
-Commits in funktionalen Gruppen), Tools nur projektlokal (`.tools/`), Umfang MVP +
-Header-Button + Gildenbank. Keine Auktionen, kein LDB/Minimap.
+> **Archived.** This is the development checklist as it stood at version 0.8.0,
+> translated from German. It is kept as a record of how the addon was built;
+> the current state is described in the [README](../../README.md) and the
+> rules for further work in [CONTRIBUTING.md](../../CONTRIBUTING.md).
+
+Decisions (2026-09-26): name `EllesmereUIBags_Alts`, local git only (feature
+branches, commits in functional groups), tools project-local only (`.tools/`),
+scope MVP + header button + guild bank. No auctions, no LDB/minimap. (Auction
+tracking was added later, see section 11.)
 
 ## 0. Setup
-- [x] Git-Repo, .gitignore, Checkliste
-- [x] Lua 5.1 projektlokal gebaut
-- [x] LuaRocks projektlokal, busted + luacheck
-- [x] Referenzen: wow-ui-source (Blizzard API-Doku), Ketho vscode-wow-api, EllesmereUI-Quellcode
-- [x] Headless-Emulator: wowless nur per Docker (verworfen); wow-ui-sim (Osso) nativ gebaut, lädt Blizzard UI 12.1.0
+- [x] Git repository, .gitignore, checklist
+- [x] Lua 5.1 built project-locally
+- [x] LuaRocks project-locally, busted + luacheck
+- [x] References: wow-ui-source (Blizzard API docs), Ketho vscode-wow-api, EllesmereUI source
+- [x] Headless emulator: wowless only via Docker (rejected); wow-ui-sim (Osso) built natively, loads Blizzard UI 12.1.0
 
-## 1. API-Recherche (gegen wow-ui-source verifizieren)
-- [x] C_Container / Enum.BagIndex (Taschen, Bank-Tabs, Warband-Tabs)
-- [x] C_Bank (Tab-IDs, Geld), PlayerInteractionType
-- [x] Mail-API, Gildenbank-API
-- [x] C_CurrencyInfo, Inventar-Slots, C_Item.GetItemCount
+## 1. API research (verified against wow-ui-source)
+- [x] C_Container / Enum.BagIndex (bags, bank tabs, warband tabs)
+- [x] C_Bank (tab IDs, money), PlayerInteractionType
+- [x] Mail API, guild bank API
+- [x] C_CurrencyInfo, inventory slots, C_Item.GetItemCount
 - [x] TooltipDataProcessor, Settings API, ItemButton, issecretvalue
 
-## 2. Addon-Kern
-- [x] TOC, Init/Event-Dispatcher, Feature-Registry (lazy enable/disable)
-- [x] DB + Defaults + Schema/Migration
-- [x] Keys (Char-Key, Realm-Scope, Item-Kodierung)
+## 2. Addon core
+- [x] TOC, init/event dispatcher, feature registry (lazy enable/disable)
+- [x] DB + defaults + schema/migration
+- [x] Keys (character key, realm scope, item encoding)
 
-## 3. Collector
-- [x] Taschen (Dirty-Scan), Ausrüstung, Gold, Char-Meta
-- [x] Charakter-Bank + Warband-Bank
-- [x] Post (Posteingang + versendete Post an eigene Alts)
-- [x] Währungen
-- [x] Gildenbank
+## 3. Collectors
+- [x] Bags (dirty scan), equipped gear, gold, character meta
+- [x] Character bank + warband bank
+- [x] Mail (inbox + sent mail to own alts)
+- [x] Currencies
+- [x] Guild bank
 
-## 4. Index + Tooltip
-- [x] ItemIndex inkrementell
-- [x] Tooltip-Hook, Zeilen-Cache, Modifier, Realm-Scope, Live-Count
+## 4. Index + tooltip
+- [x] Incremental item index
+- [x] Tooltip hook, line cache, modifier, realm scope, live count
 
-## 5. Connector / Erweiterungs-API (upstream-fähig)
-- [x] EUIBagsExt-Schicht: Skin, Fonts, Akzent, Tooltip-/Popup-Helper, SkinItemButton, ClassifyItem
-- [x] RegisterHeaderButton (Shim + Upstream-Form)
+## 5. Connector / extension API (upstreamable)
+- [x] EUIBagsExt layer: skin, fonts, accent, tooltip/popup helpers, SkinItemButton, ClassifyItem
+- [x] RegisterHeaderButton (shim + upstream form)
 
 ## 6. UI
-- [x] Browser-Fenster, Char-Sidebar, Tabs
-- [x] Item-Grid (Pool, nicht secure), Item-Daten nachladen
-- [x] Suche über alle Chars + Ergebnisansicht
-- [x] Header-Button
+- [x] Browser window, character sidebar, tabs
+- [x] Item grid (pool, not secure), loading item data
+- [x] Search across all characters + result view
+- [x] Header button
 
-## 7. Optionen + Opt-in
-- [x] Settings-Seite, Slash-Commands, Erststart-Popup, Daten löschen
-- [x] Lokalisierung enUS/deDE (ASCII-escaped)
+## 7. Options + opt-in
+- [x] Settings page, slash commands, first-run popup, data deletion
+- [x] Localization enUS/deDE (ASCII-escaped at the time; later UTF-8 in all ten EUI locales)
 
 ## 8. Tests
-- [x] WoW-API-Mock-Umgebung (Frames, Events, APIs)
-- [x] Unit-Tests Keys/DB/Index
-- [x] Integrationstests Collector, Tooltip, UI, Optionen
-- [x] Kriterien-Tests (keine Events/Frames im Aus-Zustand, kein OnUpdate/C_Timer)
-- [x] Contract-Tests gegen echten EllesmereUI-Quellcode
-- [x] luacheck, ASCII-Check, Lua-5.1-Syntax
-- [x] In-Game-Selbsttest (/alts selftest)
+- [x] WoW API mock environment (frames, events, APIs)
+- [x] Unit tests keys/DB/index
+- [x] Integration tests collectors, tooltip, UI, options
+- [x] Criteria tests (no events/frames while off, no OnUpdate/C_Timer)
+- [x] Contract tests against the real EllesmereUI source
+- [x] luacheck, ASCII check, Lua 5.1 syntax
+- [x] In-game self-test (`/alts selftest`)
 
-## 9. Abschluss
-- [x] README (Installation, Ingame-Testanleitung)
-- [x] Paket-Zip
-- [x] PLAN.md aktualisieren
+## 9. Wrap-up
+- [x] README (installation, in-game test guide)
+- [x] Package zip
+- [x] Update PLAN.md
 
-## 10. Zusätzlich erledigt
-- [x] Öffentliche API `EllesmereUIBagsAlts` (GetItemCount, GetCharacters, ...)
-- [x] wow-ui-sim-Integrationstests: mit EUI, ohne EUI und mit gepatchtem EUI (Upstream-API)
-- [x] Upstream-Vorschlag `upstream/` (Drop-in-Datei, Patch, Begründung gegen die fünf Kriterien)
-- [x] Härtung: Gildenbank-Fremdevents, Erststart ohne Popup-Kollision, kein HideUIPanel, Tooltip-ID-Fallback
-- [x] Layout-Prüfung über den dump-tree des Simulators (echter Anker-Solver)
+## 10. Done in addition
+- [x] Public API `EllesmereUIBagsAlts` (GetItemCount, GetCharacters, ...)
+- [x] wow-ui-sim integration tests: with EUI, without EUI and with patched EUI (upstream API)
+- [x] Upstream proposal `upstream/` (drop-in file, patch, rationale against the five criteria)
+- [x] Hardening: foreign guild bank events, first run without popup collision, no HideUIPanel, tooltip ID fallback
+- [x] Layout check via the simulator's dump-tree (real anchor solver)
 
-## 11. Auktionshaus-Tracking (0.2.0)
-- [x] API gegen 12.1-Doku (GetOwnedAuctions, OwnedAuctionInfo, AuctionStatus, TimeLeftBand, Events)
-- [x] Collector: passiv (OWNED_AUCTIONS_UPDATED), Opt-in-Abfrage, nur vollständige Ergebnisse, nur aktive Auktionen
-- [x] Abgebrochen/abgelaufen → „Post unterwegs“, Ablauf-Pruning beim Login
-- [x] Index, Tooltip, Browser-Tab, Optionen, Selbsttest, Locales (10 Sprachen)
-- [x] Tests: busted (Mock C_AuctionHouse), Simulator (echte C_AuctionHouse-Oberfläche, Kampf/Taint)
-- [x] 0.2.1: Eingestellte Auktionen sofort (Post-Hooks + AUCTION_HOUSE_AUCTION_CREATED, Bestätigung, Multisell)
-- [x] 0.2.1: Abbruch robust per ID in die Post, Ablauf beim Login in die Post
-- [x] 0.3.0: Abbruch über CancelAuction-Hook + Warteschlange (live: AUCTION_CANCELED liefert „1“, keine ID), Fallback per Fehlen in der Liste, seitenweise Liste wie Blizzard
-- [x] 0.3.0: Verkauft → „Post → Verkauft“ mit Betrag (Benachrichtigung überall, Liste „Verkauft“, Diff, Commodity-Teilverkäufe)
-- [x] 0.3.0: Stückpreise, „Im Auktionshaus“-Summe im Auktionen-Footer, „Gold in der Post“ im Post-Footer
-- [x] 0.3.0: /alts debug
+## 11. Auction house tracking (0.2.0)
+- [x] API against the 12.1 docs (GetOwnedAuctions, OwnedAuctionInfo, AuctionStatus, TimeLeftBand, events)
+- [x] Collector: passive (OWNED_AUCTIONS_UPDATED), opt-in query, only complete results, only active auctions
+- [x] Cancelled/expired -> "mail in transit", expiry pruning at login
+- [x] Index, tooltip, browser tab, options, self-test, locales (10 languages)
+- [x] Tests: busted (mock C_AuctionHouse), simulator (real C_AuctionHouse surface, combat/taint)
+- [x] 0.2.1: posted auctions appear immediately (post hooks + AUCTION_HOUSE_AUCTION_CREATED, confirmation, multisell)
+- [x] 0.2.1: cancellation moves the item to mail reliably by ID, expiry at login moves it to mail
+- [x] 0.3.0: cancellation via CancelAuction hook + queue (live: AUCTION_CANCELED passes "1", no ID), fallback by absence from the list, paged list like Blizzard's
+- [x] 0.3.0: sold -> "Mail -> Sold" with amount (notification anywhere, "Sold" list, diff, partial commodity sales)
+- [x] 0.3.0: unit prices, "On the auction house" total in the auctions footer, "Gold in mail" in the mail footer
+- [x] 0.3.0: `/alts debug`
 
-## 12. Währungs-Kategorien (0.4.0)
-- [x] Charaktergebunden / Überweisbar (+ Kriegsmeutenweit, nur wenn vorhanden)
-- [x] Art accountweit gemerkt (db.currencyMeta) für Offline-Charaktere
-- [x] Locales, Tests
+## 12. Currency categories (0.4.0)
+- [x] Character-bound / transferable (+ warband-wide, only when present)
+- [x] Kind remembered account-wide (db.currencyMeta) for offline characters
+- [x] Locales, tests
 
-## 13. Bindung und Ausrüstungssets (0.4.0)
-- [x] Bindungsstatus pro Item (seelen-/kriegsmeutengebunden, Marker in der Kodierung, rückwärtskompatibel)
-- [x] Browser-Tooltip über ProcessInfo mit linePreCall (Bindungszeile) und tooltipPostCall (Sets)
-- [x] Ausrüstungssets pro Taschen-/Angelegt-Slot (C_EquipmentSet + EquipmentManager_GetLocationData)
-- [x] Eigener Tooltip-Frame für den Browser (kein Taint auf GameTooltip)
+## 13. Bound state and equipment sets (0.4.0)
+- [x] Bound state per item (soulbound/warbound, marker in the encoding, backwards compatible)
+- [x] Browser tooltip via ProcessInfo with linePreCall (binding line) and tooltipPostCall (sets)
+- [x] Equipment sets per bag/worn slot (C_EquipmentSet + EquipmentManager_GetLocationData)
+- [x] Own tooltip frame for the browser (no taint on GameTooltip)
 
-## 14. Übersichten und Währungs-Tooltip (0.6.0, Tab „Alles“ pro Charakter 0.6.1)
-- [x] Seitenleiste: „Alle Charaktere“ und anklickbare Realm-Überschriften
-- [x] Zusammengefasste Items (Link bzw. itemID), gruppiert nach Gegenstandsklasse/EUI-Kategorie, Tab „Alles“
-- [x] Tab „Alles“ auch für einzelne Charaktere (alle Orte des Charakters zusammengefasst)
-- [x] Besitzer-Zeilen im Browser-Tooltip der Übersichten (unabhängig von der Tooltip-Option, ohne Doppelung)
-- [x] Währungen: Summen in den Übersichten, Tooltip mit Aufteilung pro Charakter
-- [x] Locales, busted- und Simulator-Tests
+## 14. Overviews and currency tooltip (0.6.0, per-character "Everything" tab 0.6.1)
+- [x] Sidebar: "All characters" and clickable realm headers
+- [x] Merged items (link or itemID), grouped by item class/EUI category, "Everything" tab
+- [x] "Everything" tab for single characters too (all locations of the character merged)
+- [x] Owner lines in the browser tooltip of the overviews (independent of the tooltip option, no duplicates)
+- [x] Currencies: totals in the overviews, tooltip with per-character breakdown
+- [x] Locales, busted and simulator tests
 
-## 15. Fensterkopf und Währungssuche (0.6.2)
-- [x] Titel, Suche und Schließen-Button zentriert in EUIs 25-px-Titelleiste
-- [x] Schließen-Button relativ zum Fenster gelevelt (Template setzt absolut 510), Fenster ist Toplevel
-- [x] Suche findet Währungen (Summe, Bestände pro Charakter, Tooltip, Chat-Link)
+## 15. Title row and currency search (0.6.2)
+- [x] Title, search and close button centred in EUI's 25 px title bar (superseded in 0.7.2)
+- [x] Close button levelled relative to the window (the template pins 510), window is toplevel
+- [x] Search finds currencies (total, per-character amounts, tooltip, chat link)
 
-## 16. Layout- und Visual-Regression-Tests
-- [x] wow-ui-sim zusätzlich mit GPU-Renderer (`target-gui/`), Python-venv mit Pillow
-- [x] Fixture mit drei Charakteren, zwei Realms, Kriegsmeuten- und Gildenbank
-- [x] Layout-Invarianten in jeder Browser-Ansicht (`sim/.../10_layout.lua`), Gegenprobe mit altem Kopf-Layout
-- [x] Screenshots von 11 Szenarien in zwei Modi, Vergleich mit Referenzbildern, Diff-Bilder und HTML-Bericht
-- [x] Gefunden und behoben: Qualitätsrahmen der ersten Grid-Spalte im Fallback-Look um 1,5 px abgeschnitten
+## 16. Layout and visual regression tests
+- [x] wow-ui-sim additionally with the GPU renderer (`target-gui/`), Python venv with Pillow
+- [x] Fixture with three characters, two realms, warband and guild bank
+- [x] Layout invariants in every browser view (`sim/.../10_layout.lua`), counter-check with the old title layout
+- [x] Screenshots of 11 scenarios, comparison with baselines, diff images and HTML report
+- [x] Found and fixed: quality border of the first grid column clipped by 1.5 px in the fallback look
 
-## 17. Gildenbank-Scan (0.6.4)
-- [x] Fächerliste kommt beim ersten Besuch einer Sitzung erst mit GUILDBANK_UPDATE_TABS: Warteschlange von dort nachfüllen
-- [x] Gespeicherte Fächer nicht mehr löschen, solange der Client 0 Fächer meldet
-- [x] Offener Browser zeigt die Gilde sofort nach dem Öffnen der Gildenbank
-- [x] Debug-Ausgaben (`/alts debug`) für den Ablauf
+## 17. Guild bank scan (0.6.4)
+- [x] The tab list arrives with GUILDBANK_UPDATE_TABS on the first visit of a session: refill the queue from there
+- [x] Stored tabs are no longer wiped while the client reports 0 tabs
+- [x] An open browser shows the guild as soon as the guild bank opens
+- [x] Debug output (`/alts debug`) for the walk
 
-## 18. Aktivierung bei erster Benutzung (0.7.0)
-- [x] Login: nur Auslöser (EUI-Taschenfenster, ein NPC-Event, Browser, API, Tooltip bei aktiver Option), kein Scan, keine Datenprüfung
-- [x] Aktivierung genau einmal pro Sitzung, danach Collector event-getrieben; auslösendes NPC-Fenster wird im selben Besuch erfasst
-- [x] Keine Hooks an Blizzards Taschen (Taint), EUI Bags ist Voraussetzung
-- [x] Keine Rescans bei Ladebildschirmen, Taschenwechsel über BAG_CONTAINER_UPDATE
-- [x] `/alts status` zeigt die Aktivierung
+## 18. Activation on first use (0.7.0)
+- [x] Login: only triggers (EUI bag window, one NPC event, browser, API, tooltip when enabled), no scan, no data check
+- [x] Activation exactly once per session, then event-driven collectors; the NPC window that triggered it is read in the same visit
+- [x] No hooks on Blizzard's bags (taint), EUI Bags is a requirement
+- [x] No rescans on loading screens, bag swaps via BAG_CONTAINER_UPDATE
+- [x] `/alts status` shows the activation
 
-## 19. EllesmereUI Bags als Abhängigkeit (0.7.1)
-- [x] TOC `## Dependencies: EllesmereUIBags` (Standalone-Bags genügt), inert auf EUI_CLIENT_BLOCKED-Clients
-- [x] Standalone-Ballast entfernt: Ersatz-Popup, GameTooltip-Fallback, No-EUI-Zweige, No-EUI-Tests, Simulator-Modus `noeui`
-- [x] Bleibt: schlichte Optik ohne EUIs Blizzard-Skin-Modul, Drift-Schutz im Connector (fehlende EUI-Funktion -> leise)
-- [x] Simulator-Modus `skin` (EUI-Kern + Bags + BlizzardSkin); Visual nur `bags` (Simulator-Fehler bei Objekt-Hooks, festgehalten)
+## 19. EllesmereUI Bags as a dependency (0.7.1)
+- [x] TOC `## Dependencies: EllesmereUIBags` (standalone Bags suffices), inert on EUI_CLIENT_BLOCKED clients
+- [x] Standalone ballast removed: fallback popup, GameTooltip fallback, no-EUI branches, no-EUI tests, simulator mode `noeui`
+- [x] Kept: plain look without EUI's Blizzard skin module, drift guards in the connector (missing EUI function -> quiet)
+- [x] Simulator mode `skin` (EUI core + Bags + BlizzardSkin); visual tests `bags` only (simulator bug with object hooks, pinned by a test)
 
-## 20. Header wie EUI Bags (0.7.2)
-- [x] 35-px-Header mit EUI-Bags-Metriken (Titel 13/8 px, grauer Untertitel 11, Suche 22 px, EUI-Close-Glyph 12 px, Trennlinie)
-- [x] EUI-Skin ohne eigene 25-px-Titelleiste (noTopBar), Suchfeld ohne Skin im Stil der Bag-Suche (PanelPP-Rahmen)
+## 20. Header like EUI Bags (0.7.2)
+- [x] 35 px header with EUI Bags' metrics (title 13/8 px, grey subtitle 11, search 22 px, EUI close glyph 12 px, separator)
+- [x] EUI skin without its own 25 px title bar (noTopBar), search box without skin in the style of the bag search (PanelPP border)
 
-## 21. Kompaktes Speicherformat (0.8.0)
-- [x] Ein gepackter String pro Container (`slot:enc;...`), Index und Diff direkt auf dem String
-- [x] Item-Links nur als `item:`-Kern (Pet- und Keystone-Links vollständig), Name/Chat-Link aus dem Item-Cache
-- [x] Umwandlung alter Daten idempotent in der Datenprüfung bei der Aktivierung
-- [x] Tests: Format, Umwandlung, Links aus dem Kern, SV-Größe (20 Chars, 150/300/300)
+## 21. Compact storage format (0.8.0)
+- [x] One packed string per container (`slot:enc;...`), index and diff directly on the string
+- [x] Item links only as their `item:` core (pet and keystone links whole), name/chat link from the item cache
+- [x] Idempotent conversion of old data in the data check on activation
+- [x] Tests: format, conversion, links from the core, SV size (20 characters, 150/300/300)
 
-## Offen (braucht den echten Client)
-- [ ] Ingame-Testplan aus README.md durchgehen (Bank, Post, Auktionen, Gildenbank, Kampf/Instanz, taint.log)
+## In-game validation
+- [x] In-game test plan from the README (bank, mail, auctions, guild bank, combat/instance, taint.log): validated in the game by the maintainer
