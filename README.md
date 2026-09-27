@@ -31,7 +31,7 @@ und nicht muttersprachlich geprüft. Korrekturen sind willkommen, der Test
 ## Installation
 
 1. Den Ordner `EllesmereUIBags_Alts` (oder den Inhalt von
-   `dist/EllesmereUIBags_Alts-0.2.1.zip`) nach
+   `dist/EllesmereUIBags_Alts-0.3.0.zip`) nach
    `World of Warcraft/_retail_/Interface/AddOns/` kopieren.
 2. Im Charakterauswahl-Bildschirm unter „AddOns“ prüfen, dass
    „EllesmereUI Bags: Alts“ aktiv ist.
@@ -58,6 +58,7 @@ und nicht muttersprachlich geprüft. Korrekturen sind willkommen, der Test
 | `/alts options` | Einstellungen öffnen |
 | `/alts tooltip` | Tooltip-Anzahlen an/aus |
 | `/alts status` | Version, gespeicherte Charaktere, aktive Funktionen, registrierte Events |
+| `/alts debug` | Diagnose-Ausgaben im Chat an/aus, etwa zu Auktions-Events mit IDs. Hilfreich für Fehlerberichte. |
 | `/alts selftest` | Gleicht die gespeicherten Daten dieses Charakters mit dem Spiel ab (siehe unten) |
 | `/alts delete Name-Realm` | Daten eines anderen Charakters löschen (mit Rückfrage) |
 
@@ -85,7 +86,7 @@ Realm oder alle), aktuellen Charakter ausblenden und maximale Zeilenzahl.
 | Gold, Level, Gilde | laufend | |
 | Charakterbank + Kriegsmeutenbank | **nur am Bankier** | Zeitstempel „Bank erfasst“ im Browser |
 | Post | **nur am Briefkasten** | Post an eigene Charaktere erscheint sofort als „Unterwegs“ beim Empfänger |
-| Eigene Auktionen | **nur im Auktionshaus** | Standardmäßig passiv: Gelesen wird, was der Client meldet, etwa beim Öffnen des Reiters „Auktionen“. Opt-in: beim Öffnen selbst abfragen. **Neu eingestellte Auktionen erscheinen sofort**, auch mit Bestätigungsdialog und bei Mehrfach-Einstellungen. Abgebrochene Auktionen wandern sofort in „Post → Unterwegs“, abgelaufene spätestens beim nächsten Login. |
+| Eigene Auktionen | **nur im Auktionshaus** | Standardmäßig passiv: Gelesen wird, was der Client meldet, etwa beim Öffnen des Reiters „Auktionen“. Opt-in: beim Öffnen selbst abfragen. **Neu eingestellte Auktionen erscheinen sofort**, auch mit Bestätigungsdialog und bei Mehrfach-Einstellungen. Abgebrochene Auktionen wandern sofort in „Post → Unterwegs“, abgelaufene spätestens beim nächsten Login. **Verkaufte Auktionen** stehen mit dem erzielten Betrag unter „Post → Verkauft“, bis du den Briefkasten öffnest. Sie werden live erkannt (Verkaufsmeldung, auch außerhalb des AH) und beim Abgleich mit der Auktionsliste, bei Commodities auch Teilverkäufe. Der Footer im Auktionen-Tab zeigt den möglichen Erlös aller aktiven Auktionen. |
 | Währungen | laufend | Die Erstliste enthält nur aufgeklappte Kategorien, danach wird jede Änderung erfasst |
 | Gildenbank (Opt-in) | **nur an der Gildenbank** | liest alle Fächer, die du sehen darfst |
 
@@ -120,10 +121,13 @@ Vorbereitung: [BugGrabber](https://www.curseforge.com/wow/addons/bug-grabber) un
    des Briefkastens steht es unter „Posteingang“.
 8. **Auktionen:** Ein Item einstellen. Es erscheint sofort im Browser unter
    „Auktionen“, ohne dass du den Reiter „Auktionen“ öffnen musst, und der
-   Tooltip zeigt „Auktionen: n“. Den Reiter einmal öffnen, die Liste bleibt
-   gleich und ist nicht doppelt. Eine Auktion abbrechen, das Item steht sofort
-   unter „Post → Unterwegs“. Eine Auktion mit kurzer Laufzeit ablaufen lassen,
-   nach dem nächsten Login steht sie ebenfalls unter „Post → Unterwegs“.
+   Tooltip zeigt „Auktionen: n“. Der Footer zeigt „Im Auktionshaus: X (n)“.
+   Den Reiter einmal öffnen, die Liste bleibt gleich und ist nicht doppelt.
+   Eine Auktion abbrechen, das Item steht sofort unter „Post → Unterwegs“.
+   Wird etwas verkauft, steht es mit Betrag unter „Post → Verkauft“, und der
+   Footer zeigt „Gold in der Post“. Nach dem Öffnen des Briefkastens ist der
+   Eintrag weg. Bei Abweichungen `/alts debug` einschalten und die Chatzeilen
+   mitschicken.
 9. **Gildenbank (optional):** In den Optionen „Gildenbank“ aktivieren und die
    Gildenbank öffnen. Die Fächer erscheinen im Browser unter „Gildenbanken“.
 10. **Kampf/Instanz:** In einem Dungeon kämpfen, Taschen öffnen und `/alts`
@@ -145,9 +149,13 @@ die Ausgabe sowie die BugSack-Meldung festhalten.
   eingeloggt waren.
 - Die erste Währungsliste enthält keine zugeklappten Kategorien. Das Addon
   klappt keine UI-Elemente für dich auf.
-- Verkaufte Auktionen verschwinden erst mit der nächsten Auktionsliste. Ein
-  Verkauf wird nicht als eigenes Event gemeldet, solange du nicht im
-  Auktionshaus bist.
+- Commodity-Verkäufe außerhalb des AH erscheinen erst beim nächsten Blick in
+  die Auktionsliste. Die Verkaufsmeldung sagt nicht, wie viele Einheiten
+  verkauft wurden.
+- Beträge sind Brutto, die AH-Gebühr zieht erst die Post ab. Für Auktionen, die
+  nicht über dieses Addon eingestellt wurden, stammt der Preis aus der Liste.
+  Bei Commodities wird er als Stückpreis gewertet, das ist im Client zu
+  bestätigen.
 
 ## Entwicklung
 

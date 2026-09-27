@@ -77,6 +77,10 @@ Header-Button + Gildenbank. Keine Auktionen, kein LDB/Minimap.
 - [x] Tests: busted (Mock C_AuctionHouse), Simulator (echte C_AuctionHouse-Oberfläche, Kampf/Taint)
 - [x] 0.2.1: Eingestellte Auktionen sofort (Post-Hooks + AUCTION_HOUSE_AUCTION_CREATED, Bestätigung, Multisell)
 - [x] 0.2.1: Abbruch robust per ID in die Post, Ablauf beim Login in die Post
+- [x] 0.3.0: Abbruch über CancelAuction-Hook + Warteschlange (live: AUCTION_CANCELED liefert „1“, keine ID), Fallback per Fehlen in der Liste, seitenweise Liste wie Blizzard
+- [x] 0.3.0: Verkauft → „Post → Verkauft“ mit Betrag (Benachrichtigung überall, Liste „Verkauft“, Diff, Commodity-Teilverkäufe)
+- [x] 0.3.0: Stückpreise, „Im Auktionshaus“-Summe im Auktionen-Footer, „Gold in der Post“ im Post-Footer
+- [x] 0.3.0: /alts debug
 
 ## Offen (braucht den echten Client)
 - [ ] Ingame-Testplan aus README.md durchgehen (Bank, Post, Auktionen, Gildenbank, Kampf/Instanz, taint.log)
