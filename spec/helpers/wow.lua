@@ -231,6 +231,15 @@ function FrameMethods:GetHeight() return self.height or 0 end
 function FrameMethods:GetParent() return self.parent end
 function FrameMethods:SetParent(p) self.parent = p end
 function FrameMethods:GetFrameLevel() return self.level or 1 end
+function FrameMethods:SetFrameStrata(s) self.strata = s end
+function FrameMethods:GetFrameStrata()
+    local f = self
+    while f do
+        if f.strata then return f.strata end
+        f = f.parent
+    end
+    return "MEDIUM"
+end
 function FrameMethods:SetFrameLevel(l) self.level = l end
 function FrameMethods:SetText(t)
     self.text = t
@@ -315,6 +324,8 @@ end
 -- Backdrop
 function FrameMethods:SetBackdrop(b) self.backdrop = b end
 
+local TEMPLATE_FRAME_LEVEL = { UIPanelCloseButton = 510, UIPanelCloseButtonNoScripts = 510 }
+
 local function NewFrame(env, ftype, name, parent, template)
     local f = {
         __type = ftype, __name = name, env = env, parent = parent, template = template,
@@ -330,6 +341,9 @@ local function NewFrame(env, ftype, name, parent, template)
         return nil
     end })
     if parent and parent.children then table.insert(parent.children, f) end
+    -- Frame level as in the client: one above the parent, unless the template
+    -- pins an absolute level (SharedUIPanelTemplates.xml).
+    f.level = TEMPLATE_FRAME_LEVEL[template] or ((parent and parent.GetFrameLevel and parent:GetFrameLevel() or 0) + 1)
     -- Template / intrinsic children
     if ftype == "ItemButton" then
         f.icon = f:CreateTexture(nil, "BORDER")
