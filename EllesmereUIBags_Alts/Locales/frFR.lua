@@ -2,7 +2,8 @@
 --  Locales/frFR.lua -- French
 --  UTF-8 without BOM (EllesmereUI CONTRIBUTING_TRANSLATIONS.md). English is the
 --  key; entries equal to English are left out and fall back automatically.
---  Game terms follow Blizzard's / EllesmereUI's own translations.
+--  Game terms follow Blizzard's client strings (spec/locales_spec.lua checks
+--  them against GlobalStrings), interface wording follows EllesmereUI.
 -------------------------------------------------------------------------------
 if GetLocale() ~= "frFR" then return end
 local _, ns = ...
@@ -12,7 +13,7 @@ L["%d days ago"] = "il y a %d jours"
 L["%d h ago"] = "il y a %d h"
 L["%d min ago"] = "il y a %d min"
 L["%d results"] = "%d résultats"
-L["...and %d more"] = "...et %d de plus"
+L["...and %d more"] = "...et %d autres"
 L["Account"] = "Compte"
 L["Adds a line per character (and warband/guild bank) that owns the item."] = "Ajoute une ligne par personnage (et banque de bataillon/de guilde) qui possède l'objet."
 L["Adds a small button next to the item count that opens the browser."] = "Ajoute à côté du nombre d'objets un petit bouton qui ouvre le navigateur."
@@ -62,7 +63,7 @@ L["Not now"] = "Pas maintenant"
 L["Nothing stored here yet."] = "Rien n'est encore enregistré ici."
 L["Open"] = "Ouvrir"
 L["Opens the cross-character browser (/alts)."] = "Ouvre le navigateur multi-personnages (/alts)."
-L["Reagent Bag"] = "Sac à composants"
+L["Reagent Bag"] = "Sac de composants"
 L["Scanned"] = "Analysé"
 L["Scans the guild bank tabs you can view while the guild bank is open."] = "Analyse les onglets de la banque de guilde que vous pouvez voir, tant que la banque de guilde est ouverte."
 L["Searching... (loading item data)"] = "Recherche... (chargement des données d'objets)"
@@ -78,9 +79,9 @@ L["Tooltip"] = "Infobulle"
 L["Tracking your characters' items. Type /alts to browse, /alts options for tooltip counts."] = "Les objets de vos personnages sont suivis. Tapez /alts pour les parcourir, /alts options pour les quantités dans l'infobulle."
 L["Unknown character: %s"] = "Personnage inconnu : %s"
 L["Warband Bank"] = "Banque de bataillon"
-L["While Alt is held"] = "Tant que Alt est maintenu"
-L["While Ctrl is held"] = "Tant que Ctrl est maintenu"
-L["While Shift is held"] = "Tant que Maj est maintenu"
+L["While Alt is held"] = "En maintenant Alt"
+L["While Ctrl is held"] = "En maintenant Ctrl"
+L["While Shift is held"] = "En maintenant Maj"
 L["active features"] = "fonctions actives"
 L["all characters"] = "tous les personnages"
 L["characters stored"] = "personnages enregistrés"
@@ -100,17 +101,17 @@ L["toggle the browser"] = "afficher/masquer le navigateur"
 L["toggle tooltip counts"] = "activer/désactiver les quantités dans l'infobulle"
 
 -- Auction house tracking (0.2.0)
-L["Auctions"] = "Enchères"
-L["Active auctions"] = "Enchères actives"
-L["Auctions scanned"] = "Enchères analysées"
-L["Own auctions"] = "Mes enchères"
-L["Stores your active auctions whenever the auction house shows them (Auctions tab)."] = "Enregistre vos enchères actives dès que l'hôtel des ventes les affiche (onglet Enchères)."
-L["Request own auctions when the auction house opens"] = "Demander mes enchères à l'ouverture de l'hôtel des ventes"
-L["Sends one owned-auctions request when you open the auction house, so the Auctions tab does not need to be opened."] = "Envoie une requête pour vos enchères à l'ouverture de l'hôtel des ventes, sans devoir ouvrir l'onglet Enchères."
-L["No auctions stored. Open the Auctions tab of the auction house with this character."] = "Aucune enchère enregistrée. Ouvrez l'onglet Enchères de l'hôtel des ventes avec ce personnage."
+L["Auctions"] = "Ventes"
+L["Active auctions"] = "Ventes actives"
+L["Auctions scanned"] = "Ventes analysées"
+L["Own auctions"] = "Mes ventes"
+L["Stores your active auctions whenever the auction house shows them (Auctions tab)."] = "Enregistre vos ventes actives dès que l'hôtel des ventes les affiche (onglet Ventes)."
+L["Request own auctions when the auction house opens"] = "Demander mes ventes à l'ouverture de l'hôtel des ventes"
+L["Sends one owned-auctions request when you open the auction house, so the Auctions tab does not need to be opened."] = "Envoie une requête pour vos ventes à l'ouverture de l'hôtel des ventes, sans devoir ouvrir l'onglet Ventes."
+L["No auctions stored. Open the Auctions tab of the auction house with this character."] = "Aucune vente enregistrée. Ouvrez l'onglet Ventes de l'hôtel des ventes avec ce personnage."
 L["toggle diagnostic chat output"] = "activer/désactiver les messages de diagnostic dans le chat"
 L["Sold (gold waiting in the mailbox)"] = "Vendu (or en attente dans la boîte aux lettres)"
-L["Gold in mail"] = "Or au courrier"
+L["Gold in mail"] = "Or dans le courrier"
 L["On the auction house"] = "À l'hôtel des ventes"
 
 -- Currency groups (0.4.0)

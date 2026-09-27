@@ -99,10 +99,20 @@ Rules for translation files:
 - The English text is the key (`L["..."]`); every translation file starts with
   `if GetLocale() ~= "xxXX" then return end`.
 - Keep placeholders (`%d`, `%s`) intact and in order.
-- Game terms follow Blizzard's and EllesmereUI's own translations.
+- **Game terms are spelled exactly like the game client** in that language: bags,
+  bank, warband bank, guild bank and its tabs, mailbox, the auction house's
+  Auctions tab, soulbound/warbound, equipment sets. Blizzard's own strings for
+  every locale are vendored by `scripts/setup-tools.sh` into
+  `.tools/vendor/globalstrings/` (from Ketho/BlizzardInterfaceResources); look a
+  term up there, e.g. `grep '^GUILD_BANK = ' .tools/vendor/globalstrings/esMX.lua`.
+- **Interface wording** (tooltip, button, enable, options) follows EllesmereUI's
+  own locale (`.tools/vendor/EllesmereUI/EllesmereUILocales/`), so the companion
+  reads like its parent addon.
 - `spec/locales_spec.lua` checks coverage, stale keys, placeholders and encoding
-  for all ten locales. A new key needs a translation in every locale (or an entry
-  in the test's short list of words that may stay English).
+  for all ten locales, and compares the game terms with Blizzard's strings. A new
+  key needs a translation in every locale (or an entry in the test's short list
+  of words that may stay English); a new game term also goes into the test's
+  `GAME_TERMS` list.
 
 ## Git workflow
 
@@ -131,7 +141,8 @@ needs adjusting. It builds or fetches:
 
 - Lua 5.1, LuaRocks, busted and luacheck;
 - reference sources: Blizzard's UI source (Gethe/wow-ui-source, live), Ketho's API
-  annotations and EllesmereUI's source;
+  annotations, EllesmereUI's source and Blizzard's GlobalStrings of every client
+  locale (Ketho/BlizzardInterfaceResources);
 - [wow-ui-sim](https://github.com/Osso/wow-ui-sim) twice: headless for the test
   runs (`target/`) and with the GPU renderer for screenshots (`target-gui/`);
 - a Python venv with Pillow for the image comparison.

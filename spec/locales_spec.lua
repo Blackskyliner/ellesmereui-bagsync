@@ -16,6 +16,47 @@ local INDIRECT_KEYS = { "Backpack", "Bag 1", "Bag 2", "Bag 3", "Bag 4", "Reagent
     "Bags", "Bank", "Equipped", "Mail", "Auctions", "Warband Bank", "Guild Bank",
     "Character-bound", "Transferable", "Warband-wide (shared)", "Soulbound", "Warbound", "Everything" }
 
+-- Game terms and the Blizzard GlobalStrings that must spell them (any of them).
+-- Interface wording (tooltip, button, enable, ...) follows EllesmereUI instead
+-- and is not listed; neither are terms Blizzard itself spells differently
+-- across its UI (currency, tab).
+local GAME_TERMS = {
+    ["Backpack"] = { "BAG_NAME_BACKPACK" },
+    ["Bag 1"] = { "BAG_NAME_BAG_1" }, ["Bag 2"] = { "BAG_NAME_BAG_2" },
+    ["Bag 3"] = { "BAG_NAME_BAG_3" }, ["Bag 4"] = { "BAG_NAME_BAG_4" },
+    ["Bags"] = { "HUD_EDIT_MODE_BAGS_LABEL" },
+    ["Bank"] = { "BANK" },
+    ["Warband Bank"] = { "ACCOUNT_BANK_PANEL_TITLE" },
+    ["Guild Bank"] = { "GUILD_BANK" }, ["Guild bank"] = { "GUILD_BANK" },
+    ["Inbox"] = { "INBOX" },
+    ["Mail"] = { "MAIL_LABEL", "BUTTON_LAG_MAIL" },
+    ["Auctions"] = { "AUCTION_HOUSE_AUCTIONS_SUB_TAB" },
+    ["Equipped"] = { "EQUIPPED", "CURRENTLY_EQUIPPED" },
+    ["Soulbound"] = { "ITEM_SOULBOUND" },
+    ["Warbound"] = { "ITEM_ACCOUNTBOUND" },
+    ["Equipment sets: %s"] = { "EQUIPMENT_SETS" },
+    ["Items"] = { "ITEMS" },
+}
+
+-- name -> text of the GlobalStrings names above for one client locale, colour
+-- codes stripped and no-break spaces (French typography) made plain; nil
+-- without the vendored files (scripts/setup-tools.sh).
+local function blizzardStrings(code)
+    local fh = io.open(wow.ROOT .. "/.tools/vendor/globalstrings/" .. code .. ".lua", "rb")
+    if not fh then return nil end
+    local wanted = {}
+    for _, names in pairs(GAME_TERMS) do for _, n in ipairs(names) do wanted[n] = true end end
+    local out = {}
+    for line in fh:lines() do
+        local name, text = line:match('^([%w_]+) = "(.*)";%s*$')
+        if name and wanted[name] then
+            out[name] = text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("\194\160", " ")
+        end
+    end
+    fh:close()
+    return out
+end
+
 local function readAll(path)
     local fh = assert(io.open(path, "rb"))
     local s = fh:read("*a")
@@ -104,6 +145,25 @@ describe("Locales", function()
                     assert.has_no.errors(function() string.format(v, unpack(args)) end, k)
                 end
             end)
+
+            local blizzard = blizzardStrings(code)
+            if blizzard then
+                it("spells game terms like the game client", function()
+                    local _, ns = loadLocale(code)
+                    for key, names in pairs(GAME_TERMS) do
+                        local ok, want = false, {}
+                        for _, n in ipairs(names) do
+                            local spelled = assert(blizzard[n], code .. ": no GlobalString " .. n)
+                            want[#want + 1] = spelled
+                            if spelled == ns.L[key] then ok = true end
+                        end
+                        assert.is_true(ok, code .. ": " .. key .. " = " .. ns.L[key]
+                            .. ", Blizzard: " .. table.concat(want, " / "))
+                    end
+                end)
+            else
+                pending("game terms: Blizzard's GlobalStrings are not vendored (scripts/setup-tools.sh)")
+            end
 
             it("boots, renders the browser and tooltip in this language", function()
                 local s = wow.defaultState({ locale = code })

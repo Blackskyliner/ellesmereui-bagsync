@@ -2,7 +2,8 @@
 --  Locales/zhCN.lua -- Chinese (Simplified)
 --  UTF-8 without BOM (EllesmereUI CONTRIBUTING_TRANSLATIONS.md). English is the
 --  key; entries equal to English are left out and fall back automatically.
---  Game terms follow Blizzard's / EllesmereUI's own translations.
+--  Game terms follow Blizzard's client strings (spec/locales_spec.lua checks
+--  them against GlobalStrings), interface wording follows EllesmereUI.
 -------------------------------------------------------------------------------
 if GetLocale() ~= "zhCN" then return end
 local _, ns = ...
@@ -64,14 +65,14 @@ L["Open"] = "打开"
 L["Opens the cross-character browser (/alts)."] = "打开跨角色浏览器（/alts）。"
 L["Reagent Bag"] = "材料背包"
 L["Scanned"] = "记录"
-L["Scans the guild bank tabs you can view while the guild bank is open."] = "公会银行打开时，记录你可查看的公会银行标签页。"
+L["Scans the guild bank tabs you can view while the guild bank is open."] = "公会银行打开时，记录你可查看的公会银行标签。"
 L["Searching... (loading item data)"] = "搜索中……（正在加载物品数据）"
 L["Self-test"] = "自检"
 L["Show counts"] = "显示数量"
 L["Show item counts of all characters in tooltips"] = "在鼠标提示中显示所有角色的物品数量"
 L["Show item counts of your other characters in tooltips and add a browser button to the EllesmereUI bag header? You can change this any time in the options or with /alts."] = "在鼠标提示中显示你其他角色的物品数量，并在EllesmereUI背包标题栏添加浏览器按钮？你可以随时在设置中或通过 /alts 更改。"
 L["Show total"] = "显示总计"
-L["Tab %d"] = "标签页%d"
+L["Tab %d"] = "标签%d"
 L["The current character cannot be deleted."] = "无法删除当前角色。"
 L["This realm only"] = "仅当前服务器"
 L["Tooltip"] = "鼠标提示"
@@ -121,9 +122,9 @@ L["Transferable"] = "可转移"
 L["Warband-wide (shared)"] = "战团通用（共享）"
 
 -- Bound state and equipment sets (0.4.0)
-L["Soulbound"] = "已绑定"
+L["Soulbound"] = "灵魂绑定"
 L["Warbound"] = "战团绑定"
-L["Equipment sets: %s"] = "装备方案：%s"
+L["Equipment sets: %s"] = "装备配置方案：%s"
 
 -- All characters / realm overview (0.6.0)
 L["All characters"] = "所有角色"

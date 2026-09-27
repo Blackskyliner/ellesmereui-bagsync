@@ -2,7 +2,8 @@
 --  Locales/zhTW.lua -- Chinese (Traditional)
 --  UTF-8 without BOM (EllesmereUI CONTRIBUTING_TRANSLATIONS.md). English is the
 --  key; entries equal to English are left out and fall back automatically.
---  Game terms follow Blizzard's / EllesmereUI's own translations.
+--  Game terms follow Blizzard's client strings (spec/locales_spec.lua checks
+--  them against GlobalStrings), interface wording follows EllesmereUI.
 -------------------------------------------------------------------------------
 if GetLocale() ~= "zhTW" then return end
 local _, ns = ...
@@ -18,8 +19,8 @@ L["Adds a line per character (and warband/guild bank) that owns the item."] = "�
 L["Adds a small button next to the item count that opens the browser."] = "在物品數量旁新增一個開啟瀏覽器的小按鈕。"
 L["All realms"] = "所有伺服器"
 L["Alts: browse all characters"] = "Alts：瀏覽所有角色"
-L["Always"] = "總是"
-L["Backpack"] = "行囊"
+L["Always"] = "永遠"
+L["Backpack"] = "背包"
 L["Bag 1"] = "背包1"
 L["Bag 2"] = "背包2"
 L["Bag 3"] = "背包3"
@@ -50,13 +51,13 @@ L["Guild Banks"] = "公會銀行"
 L["Guild bank"] = "公會銀行"
 L["Hide the current character"] = "隱藏目前角色"
 L["In transit"] = "寄送中"
-L["Inbox"] = "收件匣"
+L["Inbox"] = "收件箱"
 L["Include guild banks"] = "包含公會銀行"
 L["Include the warband bank"] = "包含戰隊銀行"
 L["Last seen"] = "上次上線"
-L["Mail"] = "信件"
-L["Mail scanned"] = "信件紀錄"
-L["No bank data yet. Visit a banker with this character."] = "尚無銀行資料。請用此角色拜訪銀行員。"
+L["Mail"] = "郵件"
+L["Mail scanned"] = "郵件紀錄"
+L["No bank data yet. Visit a banker with this character."] = "尚無銀行資料。請用此角色拜訪銀行職員。"
 L["Nothing found."] = "找不到任何結果。"
 L["Not now"] = "稍後再說"
 L["Nothing stored here yet."] = "這裡還沒有儲存任何內容。"
@@ -64,7 +65,7 @@ L["Open"] = "開啟"
 L["Opens the cross-character browser (/alts)."] = "開啟跨角色瀏覽器（/alts）。"
 L["Reagent Bag"] = "材料背包"
 L["Scanned"] = "紀錄"
-L["Scans the guild bank tabs you can view while the guild bank is open."] = "公會銀行開啟時，記錄你可檢視的公會銀行分頁。"
+L["Scans the guild bank tabs you can view while the guild bank is open."] = "公會銀行開啟時，記錄你可檢視的公會銀行欄頁。"
 L["Searching... (loading item data)"] = "搜尋中……（正在載入物品資料）"
 L["Self-test"] = "自我檢查"
 L["Show counts"] = "顯示數量"
@@ -111,8 +112,8 @@ L["Request own auctions when the auction house opens"] = "開啟拍賣場時請�
 L["Sends one owned-auctions request when you open the auction house, so the Auctions tab does not need to be opened."] = "開啟拍賣場時發送一次我的拍賣請求，無需開啟拍賣分頁。"
 L["No auctions stored. Open the Auctions tab of the auction house with this character."] = "沒有已儲存的拍賣。請用此角色開啟拍賣場的拍賣分頁。"
 L["toggle diagnostic chat output"] = "開關聊天框診斷訊息"
-L["Sold (gold waiting in the mailbox)"] = "已售出（金幣在信箱中等待領取）"
-L["Gold in mail"] = "信件中的金幣"
+L["Sold (gold waiting in the mailbox)"] = "已售出（金幣在郵箱中等待領取）"
+L["Gold in mail"] = "郵件中的金幣"
 L["On the auction house"] = "拍賣場中"
 
 -- Currency groups (0.4.0)
@@ -121,7 +122,7 @@ L["Transferable"] = "可轉移"
 L["Warband-wide (shared)"] = "戰隊通用（共享）"
 
 -- Bound state and equipment sets (0.4.0)
-L["Soulbound"] = "已綁定"
+L["Soulbound"] = "靈魂綁定"
 L["Warbound"] = "戰隊綁定"
 L["Equipment sets: %s"] = "裝備設定：%s"
 

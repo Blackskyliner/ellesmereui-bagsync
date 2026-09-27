@@ -2,7 +2,8 @@
 --  Locales/koKR.lua -- Korean
 --  UTF-8 without BOM (EllesmereUI CONTRIBUTING_TRANSLATIONS.md). English is the
 --  key; entries equal to English are left out and fall back automatically.
---  Game terms follow Blizzard's / EllesmereUI's own translations.
+--  Game terms follow Blizzard's client strings (spec/locales_spec.lua checks
+--  them against GlobalStrings), interface wording follows EllesmereUI.
 -------------------------------------------------------------------------------
 if GetLocale() ~= "koKR" then return end
 local _, ns = ...
@@ -41,7 +42,7 @@ L["Delete all stored data of %s?"] = "%s의 저장된 데이터를 모두 삭제
 L["Delete data"] = "데이터 삭제"
 L["EllesmereUI integration"] = "EllesmereUI 연동"
 L["Enable"] = "활성화"
-L["Equipped"] = "착용"
+L["Equipped"] = "장착"
 L["Equipped gear"] = "착용 장비"
 L["Gold"] = "골드"
 L["Group browser items by EllesmereUI categories"] = "탐색기 아이템을 EllesmereUI 분류별로 묶기"
@@ -64,14 +65,14 @@ L["Open"] = "열기"
 L["Opens the cross-character browser (/alts)."] = "캐릭터 통합 탐색기를 엽니다(/alts)."
 L["Reagent Bag"] = "재료 가방"
 L["Scanned"] = "기록"
-L["Scans the guild bank tabs you can view while the guild bank is open."] = "길드 은행이 열려 있는 동안 볼 수 있는 길드 은행 탭을 기록합니다."
+L["Scans the guild bank tabs you can view while the guild bank is open."] = "길드 은행이 열려 있는 동안 볼 수 있는 길드 은행 보관함을 기록합니다."
 L["Searching... (loading item data)"] = "검색 중... (아이템 정보 불러오는 중)"
 L["Self-test"] = "자체 점검"
 L["Show counts"] = "개수 표시"
 L["Show item counts of all characters in tooltips"] = "툴팁에 모든 캐릭터의 아이템 개수 표시"
 L["Show item counts of your other characters in tooltips and add a browser button to the EllesmereUI bag header? You can change this any time in the options or with /alts."] = "툴팁에 다른 캐릭터의 아이템 개수를 표시하고 EllesmereUI 가방 상단에 탐색기 버튼을 추가하시겠습니까? 설정 또는 /alts로 언제든지 변경할 수 있습니다."
 L["Show total"] = "합계 표시"
-L["Tab %d"] = "탭 %d"
+L["Tab %d"] = "%d번 보관함"
 L["The current character cannot be deleted."] = "현재 캐릭터는 삭제할 수 없습니다."
 L["This realm only"] = "이 서버만"
 L["Tooltip"] = "툴팁"
@@ -117,12 +118,12 @@ L["On the auction house"] = "경매장에 등록됨"
 
 -- Currency groups (0.4.0)
 L["Character-bound"] = "캐릭터 귀속"
-L["Transferable"] = "전송 가능"
+L["Transferable"] = "이전 가능"
 L["Warband-wide (shared)"] = "전투부대 공유"
 
 -- Bound state and equipment sets (0.4.0)
-L["Soulbound"] = "귀속됨"
-L["Warbound"] = "전투부대 귀속"
+L["Soulbound"] = "귀속 아이템"
+L["Warbound"] = "전투귀속"
 L["Equipment sets: %s"] = "장비 구성: %s"
 
 -- All characters / realm overview (0.6.0)

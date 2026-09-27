@@ -2,7 +2,8 @@
 --  Locales/deDE.lua -- German
 --  UTF-8 without BOM (EllesmereUI CONTRIBUTING_TRANSLATIONS.md). English is the
 --  key; entries equal to English are left out and fall back automatically.
---  Game terms follow Blizzard's / EllesmereUI's own translations.
+--  Game terms follow Blizzard's client strings (spec/locales_spec.lua checks
+--  them against GlobalStrings), interface wording follows EllesmereUI.
 -------------------------------------------------------------------------------
 if GetLocale() ~= "deDE" then return end
 local _, ns = ...
@@ -13,7 +14,7 @@ L["%d h ago"] = "vor %d Std."
 L["%d min ago"] = "vor %d Min."
 L["%d results"] = "%d Treffer"
 L["...and %d more"] = "...und %d weitere"
-L["Adds a line per character (and warband/guild bank) that owns the item."] = "Fügt pro Charakter (und Kriegsmeuten-/Gildenbank), der den Gegenstand besitzt, eine Zeile hinzu."
+L["Adds a line per character (and warband/guild bank) that owns the item."] = "Fügt für jeden Charakter (sowie Kriegsmeuten- und Gildenbank), der den Gegenstand besitzt, eine Zeile hinzu."
 L["Adds a small button next to the item count that opens the browser."] = "Fügt neben der Gegenstandsanzahl einen kleinen Button hinzu, der den Browser öffnet."
 L["All realms"] = "Alle Realms"
 L["Alts: browse all characters"] = "Alts: alle Charaktere durchsuchen"
@@ -31,14 +32,14 @@ L["Characters"] = "Charaktere"
 L["Connected realms"] = "Verbundene Realms"
 L["Counts"] = "Anzahlen"
 L["Currencies"] = "Währungen"
-L["Currency"] = "Währungen"
+L["Currency"] = "Währung"
 L["Data collection"] = "Datenerfassung"
 L["Delete"] = "Löschen"
 L["Delete all stored data of %s?"] = "Alle gespeicherten Daten von %s löschen?"
 L["Delete data"] = "Daten löschen"
 L["EllesmereUI integration"] = "EllesmereUI-Integration"
 L["Enable"] = "Aktivieren"
-L["Equipped"] = "Angelegt"
+L["Equipped"] = "Ausgerüstet"
 L["Equipped gear"] = "Angelegte Ausrüstung"
 L["Group browser items by EllesmereUI categories"] = "Gegenstände im Browser nach EllesmereUI-Kategorien gruppieren"
 L["Guild Bank"] = "Gildenbank"
@@ -106,7 +107,7 @@ L["Request own auctions when the auction house opens"] = "Eigene Auktionen beim 
 L["Sends one owned-auctions request when you open the auction house, so the Auctions tab does not need to be opened."] = "Sendet beim Öffnen des Auktionshauses eine Anfrage nach deinen Auktionen, damit der Reiter „Auktionen“ nicht geöffnet werden muss."
 L["No auctions stored. Open the Auctions tab of the auction house with this character."] = "Keine Auktionen gespeichert. Öffne mit diesem Charakter im Auktionshaus den Reiter „Auktionen“."
 L["toggle diagnostic chat output"] = "Diagnose-Ausgaben im Chat ein-/ausschalten"
-L["Sold (gold waiting in the mailbox)"] = "Verkauft (Gold im Postfach)"
+L["Sold (gold waiting in the mailbox)"] = "Verkauft (Gold wartet im Briefkasten)"
 L["Gold in mail"] = "Gold in der Post"
 L["On the auction house"] = "Im Auktionshaus"
 
@@ -118,7 +119,7 @@ L["Warband-wide (shared)"] = "Kriegsmeutenweit (geteilt)"
 -- Bound state and equipment sets (0.4.0)
 L["Soulbound"] = "Seelengebunden"
 L["Warbound"] = "Kriegsmeutengebunden"
-L["Equipment sets: %s"] = "Ausrüstungssets: %s"
+L["Equipment sets: %s"] = "Ausrüstungs-Sets: %s"
 
 -- All characters / realm overview (0.6.0)
 L["All characters"] = "Alle Charaktere"
