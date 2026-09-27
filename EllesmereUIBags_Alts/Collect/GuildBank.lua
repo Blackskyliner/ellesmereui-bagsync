@@ -39,7 +39,7 @@ local function ScanTab(guildKey, g, tab)
             if id then items[slot] = ns.EncodeItem(id, count or 1, link) end
         end
     end
-    local container = { size = MAX_GUILDBANK_SLOTS_PER_TAB, name = name, icon = icon, items = items }
+    local container = { size = MAX_GUILDBANK_SLOTS_PER_TAB, name = name, icon = icon, items = ns.PackItems(items) }
     local changed = ns.StoreContainer(g.tabs, tab, container, ns.GuildOwner(guildKey), "guild")
     if changed then
         local n = 0

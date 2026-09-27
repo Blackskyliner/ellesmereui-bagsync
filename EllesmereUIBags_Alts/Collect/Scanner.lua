@@ -79,12 +79,13 @@ function ns.ScanContainer(bagID, withSets)
             end
         end
     end
-    return { size = size, items = items, sets = sets }
+    return { size = size, items = ns.PackItems(items), sets = sets }
 end
 
+-- Packed item strings compare directly; set maps (tables) by content.
 local function ItemsEqual(a, b)
     if a == b then return true end
-    if not a or not b then return false end
+    if type(a) ~= "table" or type(b) ~= "table" then return false end
     for k, v in pairs(a) do
         if b[k] ~= v then return false end
     end

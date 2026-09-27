@@ -75,8 +75,8 @@ end
 local function ItemsInSlotOrder(container)
     local out, sets = {}, {}
     if not container or not container.items then return out, sets end
-    for _, slot in ipairs(SortedIDs(container.items)) do
-        out[#out + 1] = container.items[slot]
+    for slot, enc in ns.EachItem(container.items) do     -- packed in slot order
+        out[#out + 1] = enc
         sets[#out] = container.sets and container.sets[slot] or nil
     end
     return out, sets
@@ -194,9 +194,8 @@ end
 local function MergedStacks(scope, tab)
     local merged, list = {}, {}
     CollectAll(scope, tab, function(items)
-        if type(items) ~= "table" then return end
-        for _, v in pairs(items) do
-            local enc = type(v) == "table" and v.e or v
+        if items == nil then return end
+        for enc in ns.Stacks(items) do
             if type(enc) == "string" then
                 local id, count, link, bound = ns.DecodeItem(enc)
                 if id then
@@ -835,7 +834,13 @@ local function RenderSold(f, c, width, y)
         r.itemID = id
         local _, _, _, _, icon = C_Item.GetItemInfoInstant(id)
         r.icon:SetTexture(icon or 134400)
-        local name = (link and link:match("|h%[(.-)%]|h")) or C_Item.GetItemInfo(id) or ("item:" .. id)
+        -- stored links are item: cores without a name: the name comes from the item cache
+        local name = (link and link:match("|h%[(.-)%]|h")) or C_Item.GetItemInfo(link or id)
+        if not name then
+            pendingSearch[id] = true                    -- re-rendered on ITEM_DATA_LOAD_RESULT
+            C_Item.RequestLoadItemDataByID(id)
+            name = "item:" .. id
+        end
         r.name:SetText((count and count > 1) and (count .. "x " .. name) or name)
         local quality = C_Item.GetItemQualityByID(link or id)
         local color = quality and ITEM_QUALITY_COLORS and ITEM_QUALITY_COLORS[quality]

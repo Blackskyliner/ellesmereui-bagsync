@@ -58,7 +58,7 @@ local function CheckCounts(report)
     end
     local stored = {}
     local function add(items)
-        for _, enc in pairs(items or {}) do
+        for enc in ns.Stacks(items or "") do
             local id, count = ns.DecodeItemIDCount(enc)
             if id then stored[id] = (stored[id] or 0) + count end
         end

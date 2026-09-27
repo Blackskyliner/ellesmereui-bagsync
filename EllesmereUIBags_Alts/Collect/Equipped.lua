@@ -31,7 +31,7 @@ local function Scan()
         end
     end
     local holder = { equipped = c.equipped }
-    if ns.StoreContainer(holder, "equipped", { size = LAST_SLOT, items = items, sets = sets }, key, "equipped") then
+    if ns.StoreContainer(holder, "equipped", { size = LAST_SLOT, items = ns.PackItems(items), sets = sets }, key, "equipped") then
         c.equipped = holder.equipped
         ns.Fire("CHAR_UPDATED", key, "equipped")
     end

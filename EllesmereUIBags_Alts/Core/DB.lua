@@ -13,7 +13,7 @@
 --    guilds   = { ["Guild-Realm"] = { name, realm, faction, money, scannedAt, tabs = { [tab] = Container } } }
 --    currencyMeta = { [currencyID] = { t = transferable, w = warbandWide } }
 --
---  Container = { size = n, name = str?, icon = fileID?, items = { [slot] = enc },
+--  Container = { size = n, name = str?, icon = fileID?, items = "slot:enc;..." (packed, Keys.lua),
 --                sets = { [slot] = "Set A, Set B" }? }   -- equipment sets (bags, worn)
 --  CharRecord = { name, realm, realmName, class, race, faction, level, guild,
 --                 money, lastSeen, bags = {[bagID]=Container}, bank = {[tabID]=Container},
@@ -87,14 +87,40 @@ end
 ns.MergeDefaults = MergeDefaults
 
 -- Drops anything that is not shaped like our data instead of erroring later.
+-- Re-encodes a stored stack (item links shortened to their "item:" core);
+-- nil when it does not decode.
+local function Recode(enc)
+    if type(enc) ~= "string" then return nil end
+    local id, count, link, bound = ns.DecodeItem(enc)
+    if not id then return nil end
+    return ns.EncodeItem(id, count, link, bound)
+end
+
+-- Up to 0.7.x containers kept a table { [slot] = enc }: packed here once.
+-- Packed strings are re-packed only when they hold something malformed.
+local function SanitizeItems(items)
+    local map, clean = {}, true
+    if type(items) == "table" then
+        clean = false
+        for slot, enc in pairs(items) do
+            if type(slot) == "number" then map[slot] = Recode(enc) end
+        end
+    elseif type(items) == "string" then
+        for slot, enc in ns.EachItem(items) do
+            local good = Recode(enc)
+            if good ~= enc then clean = false end
+            map[slot] = good
+        end
+    else
+        return ""
+    end
+    if clean then return items end
+    return ns.PackItems(map)
+end
+
 local function SanitizeContainer(c)
     if type(c) ~= "table" then return nil end
-    if type(c.items) ~= "table" then c.items = {} end
-    for slot, enc in pairs(c.items) do
-        if type(slot) ~= "number" or type(enc) ~= "string" or not ns.DecodeItem(enc) then
-            c.items[slot] = nil
-        end
-    end
+    c.items = SanitizeItems(c.items)
     if type(c.size) ~= "number" then c.size = 0 end
     if c.sets ~= nil then
         if type(c.sets) ~= "table" then
@@ -121,7 +147,9 @@ local function SanitizeMailList(list)
     local out = {}
     for i = 1, #list do
         local m = list[i]
-        if type(m) == "table" and type(m.e) == "string" and ns.DecodeItem(m.e) then
+        local e = type(m) == "table" and Recode(m.e)
+        if e then
+            m.e = e
             out[#out + 1] = m
         end
     end

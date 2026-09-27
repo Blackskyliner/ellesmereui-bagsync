@@ -12,11 +12,18 @@
 --      "<itemID>,<count>,<link>"     items whose link carries identity beyond
 --                                    the ID (gear with bonus IDs/enchants/gems,
 --                                    caged battle pets, keystones)
---  An optional bound marker follows the count: "!" soulbound, "~" warbound
---  (bound to the warband), e.g. "230000,1,!|cffa335ee|Hitem:..." or "6948,1,!".
---  No marker = not bound (free to move). Links start with "|", so the marker
---  is unambiguous and older data without markers still decodes.
---  Commas never occur in item links, so decoding is a single match.
+--  Item links are stored as their "item:..." core only (no colour, no name:
+--  both come back from the item cache); battle pet and keystone links stay
+--  whole. An optional bound marker follows the count: "!" soulbound, "~"
+--  warbound, e.g. "230000,1,!item:230000:..." or "6948,1,!". No marker = not
+--  bound (free to move). Commas never occur in item links, so decoding is a
+--  single match.
+--
+--  Containers store all their stacks in ONE string, in slot order:
+--      "<slot>:<enc>;<slot>:<enc>;..."        ("" = empty container)
+--  One string per container instead of a table with a string per slot makes
+--  the saved variables smaller and loading them cheaper; the index and the
+--  change detection walk the string directly.
 -------------------------------------------------------------------------------
 local _, ns = ...
 
@@ -149,6 +156,13 @@ local function LinkIsRich(link)
 end
 ns.LinkIsRich = LinkIsRich
 
+-- "|cff...|Hitem:...|h[Name]|h|r" -> "item:..."; other links unchanged.
+local function CompactLink(link)
+    if type(link) ~= "string" then return link end
+    return strmatch(link, "|H(item:[^|]+)|h") or link
+end
+ns.CompactLink = CompactLink
+
 local BOUND_MARKER = { soul = "!", account = "~" }
 local MARKER_BOUND = { ["!"] = "soul", ["~"] = "account" }
 
@@ -157,7 +171,8 @@ function ns.EncodeItem(itemID, count, link, bound)
     if not itemID then return nil end
     count = count or 1
     local marker = BOUND_MARKER[bound] or ""
-    if LinkIsRich(link) then
+    link = CompactLink(link)
+    if LinkIsRich(link) and not strfind(link, ";", 1, true) then   -- ";" separates packed stacks
         return itemID .. "," .. count .. "," .. marker .. link
     end
     if marker ~= "" then return itemID .. "," .. count .. "," .. marker end
@@ -191,6 +206,38 @@ end
 function ns.DecodeItemIDCount(enc)
     local id, count = strmatch(enc, "^(%d+),(%d+)")
     return tonumber(id), tonumber(count)
+end
+
+-------------------------------------------------------------------------------
+--  Packed containers
+-------------------------------------------------------------------------------
+-- { [slot] = enc } -> "slot:enc;slot:enc;..." in slot order
+function ns.PackItems(map)
+    if type(map) ~= "table" then return "" end
+    local slots = {}
+    for slot, enc in pairs(map) do
+        if type(slot) == "number" and type(enc) == "string" then slots[#slots + 1] = slot end
+    end
+    table.sort(slots)
+    local parts = {}
+    for i, slot in ipairs(slots) do parts[i] = slot .. ":" .. map[slot] end
+    return table.concat(parts, ";")
+end
+
+-- Iterator over a packed container: for slot, enc in ns.EachItem(packed)
+function ns.EachItem(packed)
+    local nextMatch = string.gmatch(type(packed) == "string" and packed or "", "(%d+):([^;]+)")
+    return function()
+        local slot, enc = nextMatch()
+        if slot then return tonumber(slot), enc end
+    end
+end
+
+-- packed -> { [slot] = enc }
+function ns.UnpackItems(packed)
+    local map = {}
+    for slot, enc in ns.EachItem(packed) do map[slot] = enc end
+    return map
 end
 
 -- Link to use for tooltips/chat for an encoded stack (rich link or plain ID).

@@ -23,12 +23,31 @@ ns.Index = Index
 ns.WARBAND_OWNER = "#warband"
 function ns.GuildOwner(guildKey) return "@" .. guildKey end
 
+local EachItem = ns.EachItem
+
+-- The stacks of an item collection: a packed container string or a list of
+-- records { { e = enc }, ... } (mail, auctions). -> iterator of enc
+local function Stacks(items)
+    if type(items) == "string" then
+        local each = EachItem(items)
+        return function()
+            local _, enc = each()
+            return enc
+        end
+    end
+    local i = 0
+    return function()
+        i = i + 1
+        local v = items[i]
+        return v and (type(v) == "table" and v.e or v)
+    end
+end
+ns.Stacks = Stacks
+
 -- Adds (sign = 1) or removes (sign = -1) every stack of an item collection.
--- items: { [slot] = enc } or { { e = enc }, ... } (mail lists).
 local function Accumulate(data, owner, loc, items, sign, touched)
     if not items then return end
-    for _, v in pairs(items) do
-        local enc = type(v) == "table" and v.e or v
+    for enc in Stacks(items) do
         if type(enc) == "string" then
             local id, count = DecodeItemIDCount(enc)
             if id then
