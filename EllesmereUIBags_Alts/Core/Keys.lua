@@ -12,6 +12,10 @@
 --      "<itemID>,<count>,<link>"     items whose link carries identity beyond
 --                                    the ID (gear with bonus IDs/enchants/gems,
 --                                    caged battle pets, keystones)
+--  An optional bound marker follows the count: "!" soulbound, "~" warbound
+--  (bound to the warband), e.g. "230000,1,!|cffa335ee|Hitem:..." or "6948,1,!".
+--  No marker = not bound (free to move). Links start with "|", so the marker
+--  is unambiguous and older data without markers still decodes.
 --  Commas never occur in item links, so decoding is a single match.
 -------------------------------------------------------------------------------
 local _, ns = ...
@@ -145,22 +149,42 @@ local function LinkIsRich(link)
 end
 ns.LinkIsRich = LinkIsRich
 
-function ns.EncodeItem(itemID, count, link)
+local BOUND_MARKER = { soul = "!", account = "~" }
+local MARKER_BOUND = { ["!"] = "soul", ["~"] = "account" }
+
+-- bound: nil (free) | "soul" | "account"
+function ns.EncodeItem(itemID, count, link, bound)
     if not itemID then return nil end
     count = count or 1
+    local marker = BOUND_MARKER[bound] or ""
     if LinkIsRich(link) then
-        return itemID .. "," .. count .. "," .. link
+        return itemID .. "," .. count .. "," .. marker .. link
     end
+    if marker ~= "" then return itemID .. "," .. count .. "," .. marker end
     return itemID .. "," .. count
 end
 
--- -> itemID (number), count (number), link (string or nil)
+-- -> itemID (number), count (number), link (string or nil), bound (nil | "soul" | "account")
 function ns.DecodeItem(enc)
     if type(enc) ~= "string" then return nil end
-    local id, count, link = strmatch(enc, "^(%d+),(%d+),?(.*)$")
+    local id, count, rest = strmatch(enc, "^(%d+),(%d+),?(.*)$")
     if not id then return nil end
-    if link == "" then link = nil end
-    return tonumber(id), tonumber(count), link
+    local bound = MARKER_BOUND[rest:sub(1, 1)]
+    if bound then rest = rest:sub(2) end
+    if rest == "" then rest = nil end
+    return tonumber(id), tonumber(count), rest, bound
+end
+
+-- Bound state of a live item: nil while it may still move (unbound or
+-- "warbound until equipped"), else "soul" or "account" (warbound).
+function ns.BoundState(isBound, itemLocation, itemID)
+    if not isBound or ns.IsSecret(isBound) then return nil end
+    if itemLocation and C_Item.IsBoundToAccountUntilEquip(itemLocation) then return nil end
+    local bindType = select(14, C_Item.GetItemInfo(itemID))
+    if bindType == Enum.ItemBind.ToWoWAccount or bindType == Enum.ItemBind.ToBnetAccount then
+        return "account"
+    end
+    return "soul"
 end
 
 -- Cheap variant for hot paths that only need the numbers.

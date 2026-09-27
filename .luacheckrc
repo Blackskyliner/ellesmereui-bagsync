@@ -29,7 +29,8 @@ files["EllesmereUIBags_Alts/**/*.lua"] = {
         "Settings", "CreateSettingsListSectionHeaderInitializer", "CreateSettingsButtonInitializer",
         "TooltipDataProcessor", "Enum", "GetLocale",
         -- Namespaced APIs
-        "C_AddOns", "C_Container", "C_Bank", "C_Item", "C_AuctionHouse", "C_CurrencyInfo", "C_AutoComplete", "C_ClassColor",
+        "C_AddOns", "C_Container", "C_Bank", "C_Item", "C_AuctionHouse", "C_EquipmentSet",
+        "ItemLocation", "EquipmentManager_GetLocationData", "ITEM_SOULBOUND", "ITEM_ACCOUNTBOUND", "C_CurrencyInfo", "C_AutoComplete", "C_ClassColor",
         -- Character / world
         "UnitName", "UnitClass", "UnitRace", "UnitFactionGroup", "UnitLevel", "GetRealmName",
         "GetNormalizedRealmName", "GetMoney", "IsInGuild", "GetGuildInfo",

@@ -11,18 +11,27 @@ local function Scan()
     local key = ns.GetPlayerKey()
     local c = key and ns.GetChar(key, true)
     if not c then return end
-    local items = {}
+    ns.InvalidateEquipmentSets()
+    local lookup = ns.GetEquipmentSetLookup()
+    local items, sets = {}, nil
     for slot = FIRST_SLOT, LAST_SLOT do
         local link = GetInventoryItemLink("player", slot)
         if link and not ns.IsSecret(link) then
             local id = GetInventoryItemID("player", slot)
             if id and not ns.IsSecret(id) then
-                items[slot] = ns.EncodeItem(id, 1, link)
+                -- Worn gear is always bound; warbound stays warbound.
+                local bound = ns.BoundState(true, ItemLocation:CreateFromEquipmentSlot(slot), id)
+                items[slot] = ns.EncodeItem(id, 1, link, bound)
+                local setNames = lookup["e" .. slot]
+                if setNames then
+                    sets = sets or {}
+                    sets[slot] = setNames
+                end
             end
         end
     end
     local holder = { equipped = c.equipped }
-    if ns.StoreContainer(holder, "equipped", { size = LAST_SLOT, items = items }, key, "equipped") then
+    if ns.StoreContainer(holder, "equipped", { size = LAST_SLOT, items = items, sets = sets }, key, "equipped") then
         c.equipped = holder.equipped
         ns.Fire("CHAR_UPDATED", key, "equipped")
     end
@@ -34,6 +43,7 @@ ns.RegisterFeature({
     OnEnable = function(self)
         Scan()
         ns.RegisterEvent(self, "PLAYER_EQUIPMENT_CHANGED", Scan)
+        ns.RegisterEvent(self, "EQUIPMENT_SETS_CHANGED", Scan)
         -- Item links can be incomplete right at login; the first world entry fixes them.
         ns.RegisterEvent(self, "PLAYER_ENTERING_WORLD", Scan)
     end,

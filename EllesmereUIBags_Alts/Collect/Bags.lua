@@ -22,7 +22,7 @@ local function ScanOne(bagID)
     local key = ns.GetPlayerKey()
     local c = key and ns.GetChar(key, true)
     if not c then return "retry" end
-    local container, secret = ns.ScanContainer(bagID)
+    local container, secret = ns.ScanContainer(bagID, true)
     if secret then
         -- Restricted data (combat/instance): keep dirty, retry after combat.
         if not deferredForCombat then
@@ -48,6 +48,11 @@ feature = ns.RegisterFeature({
             if IsInventoryBag(bagID) then dirty:Mark(bagID) end
         end)
         ns.RegisterEvent(self, "BAG_UPDATE_DELAYED", function() self:Flush() end)
+        -- Set membership changes without item events; rescan every bag once.
+        ns.RegisterEvent(self, "EQUIPMENT_SETS_CHANGED", function()
+            for bagID = FIRST_BAG, LAST_BAG do dirty:Mark(bagID) end
+            self:Flush()
+        end)
         -- Bag slots can change size (bag swapped) without item events.
         ns.RegisterEvent(self, "PLAYER_ENTERING_WORLD", function()
             for bagID = FIRST_BAG, LAST_BAG do dirty:Mark(bagID) end
@@ -62,6 +67,7 @@ feature = ns.RegisterFeature({
 
 function feature:Flush()
     if dirty:IsEmpty() then return end
+    ns.InvalidateEquipmentSets()   -- items moved: set locations changed
     local changed = false
     dirty:Flush(function(bagID)
         local result = ScanOne(bagID)

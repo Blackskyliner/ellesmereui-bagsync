@@ -11,12 +11,56 @@ local _, ns = ...
 
 local pairs, next = pairs, next
 
+-------------------------------------------------------------------------------
+--  Equipment sets: location -> set names, built on demand from
+--  C_EquipmentSet and Blizzard's EquipmentManager_GetLocationData. Rebuilt
+--  after items move (each bag flush), on EQUIPMENT_SETS_CHANGED and on
+--  equipment changes; costs nothing for characters without sets.
+--  Keys: "b<bag>:<slot>" (bags) and "e<slot>" (worn).
+-------------------------------------------------------------------------------
+local setLookup   -- nil = stale
+
+function ns.InvalidateEquipmentSets() setLookup = nil end
+
+function ns.GetEquipmentSetLookup()
+    if setLookup then return setLookup end
+    local lookup = {}
+    local ids = C_EquipmentSet.GetEquipmentSetIDs()
+    if type(ids) == "table" then
+        for _, setID in ipairs(ids) do
+            local name = C_EquipmentSet.GetEquipmentSetInfo(setID)
+            local locations = C_EquipmentSet.GetItemLocations(setID)
+            if type(name) == "string" and type(locations) == "table" then
+                for _, location in pairs(locations) do
+                    -- 0/1/-1 are "empty"/"ignored" markers, not item locations
+                    if type(location) == "number" and location > 1 then
+                        local data = EquipmentManager_GetLocationData(location)
+                        local key
+                        if data.isBags and not data.isBank then
+                            key = "b" .. data.bag .. ":" .. data.slot
+                        elseif data.isPlayer and not data.isBags and not data.isBank then
+                            key = "e" .. data.slot
+                        end
+                        if key then
+                            lookup[key] = lookup[key] and (lookup[key] .. ", " .. name) or name
+                        end
+                    end
+                end
+            end
+        end
+    end
+    setLookup = lookup
+    return lookup
+end
+
 -- -> Container or nil; second return true when the data was secret (retry later).
-function ns.ScanContainer(bagID)
+-- withSets: also record equipment set membership (character bags).
+function ns.ScanContainer(bagID, withSets)
     local size = C_Container.GetContainerNumSlots(bagID)
     if ns.IsSecret(size) then return nil, true end
     size = size or 0
-    local items = {}
+    local items, sets = {}, nil
+    local lookup = withSets and ns.GetEquipmentSetLookup() or nil
     for slot = 1, size do
         local info = C_Container.GetContainerItemInfo(bagID, slot)
         if info then
@@ -25,11 +69,17 @@ function ns.ScanContainer(bagID)
                 return nil, true
             end
             if id then
-                items[slot] = ns.EncodeItem(id, info.stackCount, info.hyperlink)
+                local bound = info.isBound and ns.BoundState(true, ItemLocation:CreateFromBagAndSlot(bagID, slot), id) or nil
+                items[slot] = ns.EncodeItem(id, info.stackCount, info.hyperlink, bound)
+                local setNames = lookup and lookup["b" .. bagID .. ":" .. slot]
+                if setNames then
+                    sets = sets or {}
+                    sets[slot] = setNames
+                end
             end
         end
     end
-    return { size = size, items = items }
+    return { size = size, items = items, sets = sets }
 end
 
 local function ItemsEqual(a, b)
@@ -49,7 +99,8 @@ ns.ItemsEqual = ItemsEqual
 -- Returns true when the contents changed.
 function ns.StoreContainer(map, id, container, owner, loc)
     local old = map[id]
-    if old and container and old.size == container.size and ItemsEqual(old.items, container.items) then
+    if old and container and old.size == container.size and ItemsEqual(old.items, container.items)
+        and ItemsEqual(old.sets, container.sets) then
         return false
     end
     ns.Index:Replace(owner, loc, old and old.items, container and container.items)

@@ -13,7 +13,8 @@
 --    guilds   = { ["Guild-Realm"] = { name, realm, faction, money, scannedAt, tabs = { [tab] = Container } } }
 --    currencyMeta = { [currencyID] = { t = transferable, w = warbandWide } }
 --
---  Container = { size = n, name = str?, icon = fileID?, items = { [slot] = enc } }
+--  Container = { size = n, name = str?, icon = fileID?, items = { [slot] = enc },
+--                sets = { [slot] = "Set A, Set B" }? }   -- equipment sets (bags, worn)
 --  CharRecord = { name, realm, realmName, class, race, faction, level, guild,
 --                 money, lastSeen, bags = {[bagID]=Container}, bank = {[tabID]=Container},
 --                 bankAt, equipped = Container, mail = { items = { {e=enc, x=expires} } },
@@ -95,6 +96,15 @@ local function SanitizeContainer(c)
         end
     end
     if type(c.size) ~= "number" then c.size = 0 end
+    if c.sets ~= nil then
+        if type(c.sets) ~= "table" then
+            c.sets = nil
+        else
+            for slot, names in pairs(c.sets) do
+                if type(slot) ~= "number" or type(names) ~= "string" then c.sets[slot] = nil end
+            end
+        end
+    end
     return c
 end
 
