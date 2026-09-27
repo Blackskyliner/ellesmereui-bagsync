@@ -4,3 +4,6 @@
 ## Dependencies: EllesmereUIBags_Alts
 
 SimTests.lua
+
+Fixture.lua
+Layout.lua
