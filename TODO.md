@@ -96,6 +96,7 @@ Header-Button + Gildenbank. Keine Auktionen, kein LDB/Minimap.
 ## 14. Übersichten und Währungs-Tooltip (0.6.0)
 - [x] Seitenleiste: „Alle Charaktere“ und anklickbare Realm-Überschriften
 - [x] Zusammengefasste Items (Link bzw. itemID), gruppiert nach Gegenstandsklasse/EUI-Kategorie, Tab „Alles“
+- [x] Tab „Alles“ auch für einzelne Charaktere (alle Orte des Charakters zusammengefasst)
 - [x] Besitzer-Zeilen im Browser-Tooltip der Übersichten (unabhängig von der Tooltip-Option, ohne Doppelung)
 - [x] Währungen: Summen in den Übersichten, Tooltip mit Aufteilung pro Charakter
 - [x] Locales, busted- und Simulator-Tests

@@ -73,8 +73,11 @@ Realm-Überschrift ist ebenfalls anklickbar. Beide zeigen alle gespeicherten
 Items zusammengefasst: gleiche Items ergeben einen Platz mit der Gesamtzahl,
 Ausrüstung mit unterschiedlichem Link bleibt getrennt. Die Items sind nach
 Gegenstandsklasse gruppiert (oder nach EUI-Kategorien, wenn die Option an ist).
-Der zusätzliche Tab „Alles“ umfasst Taschen, Banken, Angelegtes, Post,
-Auktionen und Gildenbanken, die übrigen Tabs filtern nach Ort. Der Tooltip
+Der Tab „Alles“ umfasst Taschen, Banken, Angelegtes, Post,
+Auktionen und Gildenbanken, die übrigen Tabs filtern nach Ort. Auch jeder
+einzelne Charakter hat den Tab „Alles“: dieselbe zusammengefasste Ansicht über
+alle Orte dieses Charakters, der Tooltip nennt die Orte (z. B. „Taschen: 20,
+Bank: 5“). Der Tooltip
 zeigt hier immer, wer wie viel hat, auch wenn die Tooltip-Option aus ist. Die
 Realm-Übersicht enthält nur die Charaktere und Gildenbanken dieses Realms. Die
 Kriegsmeutenbank ist accountweit und gehört nur zu „Alle Charaktere“. Im
