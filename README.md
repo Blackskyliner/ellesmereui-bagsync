@@ -17,7 +17,7 @@ window across all characters, similar to Baganator, in EllesmereUI's look.
 > and have not been reviewed by native speakers. **Corrections are very welcome**, see
 > [Languages](#languages).
 
-Version 0.8.0, by Blackskyliner.
+Version 0.8.1, by Blackskyliner.
 
 ## What it does
 
