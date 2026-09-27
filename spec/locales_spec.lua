@@ -15,7 +15,7 @@ local MAY_STAY_ENGLISH = {
 -- Keys reached through lookup tables instead of literal L["..."] in the code.
 local INDIRECT_KEYS = { "Backpack", "Bag 1", "Bag 2", "Bag 3", "Bag 4", "Reagent Bag", "Currency",
     "Bags", "Bank", "Equipped", "Mail", "Auctions", "Warband Bank", "Guild Bank",
-    "Character-bound", "Transferable", "Warband-wide (shared)", "Soulbound", "Warbound", "Everything" }
+    "Character-bound", "Transferable", "Warband-wide (shared)", "Everything" }
 
 -- Game terms and the Blizzard GlobalStrings that must spell them (any of them).
 -- Interface wording (tooltip, button, enable, ...) follows EllesmereUI instead
@@ -33,8 +33,6 @@ local GAME_TERMS = {
     ["Mail"] = { "MAIL_LABEL", "BUTTON_LAG_MAIL" },
     ["Auctions"] = { "AUCTION_HOUSE_AUCTIONS_SUB_TAB" },
     ["Equipped"] = { "EQUIPPED", "CURRENTLY_EQUIPPED" },
-    ["Soulbound"] = { "ITEM_SOULBOUND" },
-    ["Warbound"] = { "ITEM_ACCOUNTBOUND" },
     ["Equipment sets: %s"] = { "EQUIPMENT_SETS" },
     ["Items"] = { "ITEMS" },
 }

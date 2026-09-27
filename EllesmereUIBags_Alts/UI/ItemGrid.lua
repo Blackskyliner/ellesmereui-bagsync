@@ -38,7 +38,7 @@ local function BindingPreCall(tooltip, lineData)
     local info = tooltip.processingInfo
     local bound = info and info.euiAltsBound
     if not bound or lineData.type ~= BINDING_LINE then return false end
-    local text = bound == "account" and (ITEM_ACCOUNTBOUND or ns.L["Warbound"]) or (ITEM_SOULBOUND or ns.L["Soulbound"])
+    local text = bound == "account" and ITEM_ACCOUNTBOUND or ITEM_SOULBOUND
     local c = lineData.leftColor
     tooltip:AddLine(text, c and c.r or 1, c and c.g or 1, c and c.b or 1)
     return true   -- consumed: the generic binding line is not added

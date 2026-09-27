@@ -121,9 +121,7 @@ L["Character-bound"] = "Привязана к персонажу"
 L["Transferable"] = "Передаваемая"
 L["Warband-wide (shared)"] = "Общая для отряда"
 
--- Bound state and equipment sets (0.4.0)
-L["Soulbound"] = "Персональный предмет"
-L["Warbound"] = "Привязано к отряду"
+-- Equipment sets (0.4.0)
 L["Equipment sets: %s"] = "Комплекты экипировки: %s"
 
 -- All characters / realm overview (0.6.0)

@@ -18,8 +18,8 @@ local PIT = Enum.PlayerInteractionType
 
 local BANKER_TYPES = {
     [PIT.Banker] = true,
-    [PIT.CharacterBanker or -1] = true,
-    [PIT.AccountBanker or -1] = true,
+    [PIT.CharacterBanker] = true,
+    [PIT.AccountBanker] = true,
 }
 
 local isOpen = false

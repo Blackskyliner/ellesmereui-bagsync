@@ -28,8 +28,8 @@ local PIT = Enum.PlayerInteractionType
 -- auction house, guild bank.
 local INTERACTION_TRIGGERS = {
     [PIT.Banker] = "bank",
-    [PIT.CharacterBanker or -1] = "bank",
-    [PIT.AccountBanker or -1] = "bank",
+    [PIT.CharacterBanker] = "bank",
+    [PIT.AccountBanker] = "bank",
     [PIT.MailInfo] = "mail",
     [PIT.Auctioneer] = "auctions",
     [PIT.GuildBanker] = "guildbank",

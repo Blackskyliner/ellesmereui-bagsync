@@ -438,6 +438,12 @@ function M.newEnv(state, savedVariables)
     env.Mixin = function(obj, ...) for i = 1, select("#", ...) do for k, v in pairs((select(i, ...))) do obj[k] = v end end return obj end
     env.CreateFromMixins = function(...) return env.Mixin({}, ...) end
     env.geterrorhandler = function() return function(err) table.insert(env.__errors, tostring(err)) end end
+    -- Calls fn; an error goes to the error handler and the caller keeps running.
+    env.securecallfunction = function(fn, ...)
+        local r = { pcall(fn, ...) }
+        if not r[1] then env.geterrorhandler()(r[2]) return end
+        return unpack(r, 2, table.maxn(r))
+    end
     env.issecretvalue = function(v) return getmetatable(v) == SecretMT end
     env.hooksecurefunc = function(a, b, c)
         local tbl, name, fn = env, a, b

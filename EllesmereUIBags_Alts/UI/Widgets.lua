@@ -259,7 +259,7 @@ function W.FormatAgo(timestamp)
 end
 
 function W.ClassColor(class)
-    local c = class and C_ClassColor and C_ClassColor.GetClassColor(class)
+    local c = class and C_ClassColor.GetClassColor(class)
     if c then return c.r, c.g, c.b end
     return 1, 1, 1
 end

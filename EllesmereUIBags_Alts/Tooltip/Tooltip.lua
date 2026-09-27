@@ -39,7 +39,7 @@ local ALLOWED_TOOLTIPS
 local function Settings() return ns.db.settings.tooltip end
 
 local function ClassColorHex(class)
-    local color = class and (C_ClassColor and C_ClassColor.GetClassColor(class))
+    local color = class and C_ClassColor.GetClassColor(class)
     if color and color.GenerateHexColor then return color:GenerateHexColor() end
     return "ffffffff"
 end

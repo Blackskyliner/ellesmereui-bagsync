@@ -10,24 +10,18 @@
 local ADDON_NAME, ns = ...
 
 ns.ADDON_NAME = ADDON_NAME
-ns.VERSION = (C_AddOns and C_AddOns.GetAddOnMetadata and C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version")) or "dev"
+ns.VERSION = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or "dev"
 
-local pairs, type, select, pcall = pairs, type, select, pcall
+local pairs, type, select = pairs, type, select
 
 -------------------------------------------------------------------------------
 --  Error-isolated calls: one failing handler must never stop the others.
 --  securecallfunction reports through the active error handler (BugSack etc.)
---  and keeps the caller running; pcall + geterrorhandler is the same contract.
+--  and keeps the caller running.
 -------------------------------------------------------------------------------
+local securecallfunction = securecallfunction
 local function SafeCall(fn, ...)
-    if securecallfunction then
-        return securecallfunction(fn, ...)
-    end
-    local ok, err = pcall(fn, ...)
-    if not ok then
-        local handler = geterrorhandler and geterrorhandler()
-        if handler then handler(err) end
-    end
+    return securecallfunction(fn, ...)
 end
 ns.SafeCall = SafeCall
 
@@ -36,7 +30,7 @@ ns.SafeCall = SafeCall
 -------------------------------------------------------------------------------
 local issecretvalue = issecretvalue
 function ns.IsSecret(v)
-    return issecretvalue ~= nil and issecretvalue(v) == true
+    return issecretvalue(v) == true
 end
 
 -------------------------------------------------------------------------------

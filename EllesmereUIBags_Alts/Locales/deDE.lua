@@ -116,9 +116,7 @@ L["Character-bound"] = "Charaktergebunden"
 L["Transferable"] = "Überweisbar"
 L["Warband-wide (shared)"] = "Kriegsmeutenweit (geteilt)"
 
--- Bound state and equipment sets (0.4.0)
-L["Soulbound"] = "Seelengebunden"
-L["Warbound"] = "Kriegsmeutengebunden"
+-- Equipment sets (0.4.0)
 L["Equipment sets: %s"] = "Ausrüstungs-Sets: %s"
 
 -- All characters / realm overview (0.6.0)

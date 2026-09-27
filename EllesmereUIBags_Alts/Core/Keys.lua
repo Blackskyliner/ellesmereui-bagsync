@@ -37,7 +37,7 @@ local playerKey, playerRealm
 
 function ns.GetPlayerRealm()
     if playerRealm then return playerRealm end
-    local realm = GetNormalizedRealmName and GetNormalizedRealmName()
+    local realm = GetNormalizedRealmName()
     if realm and realm ~= "" then playerRealm = realm end
     return playerRealm
 end
@@ -98,7 +98,7 @@ function ns.GetConnectedRealms()
     local set = {}
     local own = ns.GetPlayerRealm()
     if own then set[own] = true end
-    local list = C_AutoComplete and C_AutoComplete.GetAutoCompleteRealms and C_AutoComplete.GetAutoCompleteRealms()
+    local list = C_AutoComplete.GetAutoCompleteRealms()
     if type(list) == "table" then
         for i = 1, #list do set[strgsub(list[i], "[%s%-']", "")] = true end
     end
@@ -121,7 +121,7 @@ end
 --  Guild key
 -------------------------------------------------------------------------------
 function ns.GetPlayerGuildKey()
-    if not IsInGuild or not IsInGuild() then return nil end
+    if not IsInGuild() then return nil end
     local guildName, _, _, guildRealm = GetGuildInfo("player")
     if not guildName or guildName == "" then return nil end
     local realm = guildRealm and guildRealm ~= "" and strgsub(guildRealm, "[%s%-']", "") or ns.GetPlayerRealm()

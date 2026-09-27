@@ -4,8 +4,8 @@
 -------------------------------------------------------------------------------
 local _, ns = ...
 
-local FIRST_SLOT = INVSLOT_FIRST_EQUIPPED or 1
-local LAST_SLOT  = INVSLOT_LAST_EQUIPPED or 19
+local FIRST_SLOT = INVSLOT_FIRST_EQUIPPED
+local LAST_SLOT  = INVSLOT_LAST_EQUIPPED
 
 local function Scan()
     local key = ns.GetPlayerKey()

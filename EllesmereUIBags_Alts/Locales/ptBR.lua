@@ -120,9 +120,7 @@ L["Character-bound"] = "Vinculada ao personagem"
 L["Transferable"] = "Transferível"
 L["Warband-wide (shared)"] = "De todo o Bando de Guerra (compartilhada)"
 
--- Bound state and equipment sets (0.4.0)
-L["Soulbound"] = "Vinculado"
-L["Warbound"] = "Vinculado ao Bando"
+-- Equipment sets (0.4.0)
 L["Equipment sets: %s"] = "Conjuntos de Equipamentos: %s"
 
 -- All characters / realm overview (0.6.0)

@@ -121,9 +121,7 @@ L["Character-bound"] = "角色绑定"
 L["Transferable"] = "可转移"
 L["Warband-wide (shared)"] = "战团通用（共享）"
 
--- Bound state and equipment sets (0.4.0)
-L["Soulbound"] = "灵魂绑定"
-L["Warbound"] = "战团绑定"
+-- Equipment sets (0.4.0)
 L["Equipment sets: %s"] = "装备配置方案：%s"
 
 -- All characters / realm overview (0.6.0)

@@ -121,9 +121,7 @@ L["Character-bound"] = "캐릭터 귀속"
 L["Transferable"] = "이전 가능"
 L["Warband-wide (shared)"] = "전투부대 공유"
 
--- Bound state and equipment sets (0.4.0)
-L["Soulbound"] = "귀속 아이템"
-L["Warbound"] = "전투귀속"
+-- Equipment sets (0.4.0)
 L["Equipment sets: %s"] = "장비 구성: %s"
 
 -- All characters / realm overview (0.6.0)

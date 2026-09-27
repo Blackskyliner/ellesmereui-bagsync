@@ -334,7 +334,7 @@ local function CharLabel(key)
 end
 
 local function FormatQty(n)
-    return BreakUpLargeNumbers and BreakUpLargeNumbers(n) or tostring(n)
+    return BreakUpLargeNumbers(n)
 end
 
 -- Characters holding a currency, most first -> rows { key, qty }, total.

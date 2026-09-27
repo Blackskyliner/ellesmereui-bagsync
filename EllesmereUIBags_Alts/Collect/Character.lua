@@ -59,7 +59,7 @@ local function UpdateMeta()
     if not key then return end
     local c = ns.GetChar(key, true)
     c.name, c.realm = ns.SplitKey(key)
-    c.realmName = GetRealmName and GetRealmName() or c.realm
+    c.realmName = GetRealmName() or c.realm
     local _, classFile = UnitClass("player")
     c.class = classFile or c.class
     local _, raceFile = UnitRace("player")
