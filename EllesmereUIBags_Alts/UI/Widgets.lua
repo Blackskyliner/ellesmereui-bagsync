@@ -198,6 +198,35 @@ function W.GetTooltip()
     return browserTooltip
 end
 
+-- Caged battle pets. Blizzard's BattlePetToolTip_ShowLink fills its shared
+-- BattlePetTooltip through a shared state table; the browser fills a private
+-- frame of the same template instead. -> true when a pet tooltip is shown.
+local petTooltip
+function W.ShowPetTooltip(owner, link)
+    local speciesID, level, quality, health, power, speed = BattlePetToolTip_UnpackBattlePetLink(link)
+    if not speciesID or speciesID <= 0 then return false end
+    local name, _, petType = C_PetJournal.GetPetInfoBySpeciesID(speciesID)
+    if not petType then return false end
+    if not petTooltip then
+        petTooltip = CreateFrame("Frame", "EllesmereUIBagsAltsPetTooltip", UIParent, "BattlePetTooltipTemplate")
+    end
+    BattlePetTooltipTemplate_SetBattlePet(petTooltip, {
+        speciesID = speciesID, name = name, level = level, breedQuality = quality, petType = petType,
+        maxHealth = health, power = power, speed = speed,
+    })
+    local owned = C_PetJournal.GetOwnedBattlePetString(speciesID)
+    petTooltip.Owned:SetText(owned)
+    petTooltip:SetSize(260, owned and 136 or 122)
+    petTooltip:ClearAllPoints()
+    petTooltip:SetPoint("TOPLEFT", owner, "TOPRIGHT")
+    petTooltip:Show()
+    return true
+end
+
+function W.HidePetTooltip()
+    if petTooltip then petTooltip:Hide() end
+end
+
 -- Formats copper as "12,345g" (gold only; the browser is an overview).
 function W.FormatGold(copper)
     if not copper then return "-" end

@@ -63,9 +63,9 @@ local function Button_OnEnter(self)
     if not self.ref then return end
     local tooltip = W.GetTooltip()
     tooltip:SetOwner(self, "ANCHOR_RIGHT")
-    if self.ref:find("battlepet:", 1, true) and BattlePetToolTip_ShowLink then
+    if self.ref:find("battlepet:", 1, true) then
         tooltip:Hide()
-        BattlePetToolTip_ShowLink(self.ref)
+        W.ShowPetTooltip(self, self.ref)
         return
     end
     tooltip:ProcessInfo({
@@ -81,7 +81,7 @@ end
 
 local function Button_OnLeave()
     W.GetTooltip():Hide()
-    if BattlePetTooltip then BattlePetTooltip:Hide() end
+    W.HidePetTooltip()
 end
 
 local function Button_OnClick(self)

@@ -82,3 +82,18 @@ simtest("hovering a grid item uses the private tooltip through Blizzard's Proces
     b:GetScript("OnLeave")(b)
     ns.Browser:Close()
 end)
+
+simtest("caged pets show on a private BattlePetTooltipTemplate frame", function()
+    -- species 39 (Mechanical Squirrel) is in the simulator's pet journal
+    local link = "|cff0070dd|Hbattlepet:39:25:3:1627:289:289:0000000000000000:0|h[Pet]|h|r"
+    local owner = CreateFrame("Frame", nil, UIParent)
+    assertTrue(ns.W.ShowPetTooltip(owner, link))
+    local pet = _G.EllesmereUIBagsAltsPetTooltip
+    assertNotNil(pet)
+    assertTrue(pet:IsShown())
+    assertTrue(pet ~= _G.BattlePetTooltip)
+    assertEquals("Mechanical Squirrel", pet.Name:GetText())
+    assertTrue(not (_G.BattlePetTooltip and _G.BattlePetTooltip:IsShown()))
+    ns.W.HidePetTooltip()
+    assertTrue(not pet:IsShown())
+end)

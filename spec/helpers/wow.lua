@@ -354,6 +354,9 @@ local function NewFrame(env, ftype, name, parent, template)
     if template and template:find("ScrollFrameTemplate", 1, true) then
         f.ScrollBar = NewFrame(env, "EventFrame", nil, f)
     end
+    if template == "BattlePetTooltipTemplate" then
+        f.Owned = f:CreateFontString(nil, "ARTWORK")
+    end
     if template and template:find("BackdropTemplate", 1, true) then
         f.SetBackdropColor = function() end
         f.SetBackdropBorderColor = function() end
@@ -458,6 +461,25 @@ function M.newEnv(state, savedVariables)
     for _, name in ipairs({ "GameTooltip", "ItemRefTooltip", "ShoppingTooltip1", "ShoppingTooltip2", "BattlePetTooltip" }) do
         NewFrame(env, "GameTooltip", name, env.UIParent)
     end
+    -- Battle pet tooltip API (Blizzard_FrameXML/BattlePetTooltip.lua,
+    -- FloatingPetBattleTooltip.lua). The shared BattlePetTooltip path records
+    -- its use so tests can prove the browser never takes it.
+    env.BattlePetToolTip_UnpackBattlePetLink = function(link)
+        local opts, name = tostring(link):match("|Hbattlepet:([^|]*)|h%[(.-)%]|h")
+        if not opts then return nil end
+        local species, level, quality, health, power, speed = env.strsplit(":", opts)
+        return tonumber(species), tonumber(level), tonumber(quality), tonumber(health), tonumber(power),
+            tonumber(speed), name
+    end
+    env.BattlePetToolTip_ShowLink = function() env.__sharedPetTooltipUsed = true; return true end
+    env.BattlePetTooltipTemplate_SetBattlePet = function(frame, data)
+        assert(data.petType, "BattlePetTooltipTemplate_SetBattlePet needs petType")
+        frame.petData = data
+    end
+    env.C_PetJournal = {
+        GetPetInfoBySpeciesID = function(speciesID) return "Species " .. speciesID, 1, 3 end,
+        GetOwnedBattlePetString = function() return "Collected (1/3)" end,
+    }
     env.UISpecialFrames = {}
     env.DEFAULT_CHAT_FRAME = { AddMessage = function(_, msg) table.insert(env.__chat, msg) end }
     env.STANDARD_TEXT_FONT = "Fonts\\FRIZQT__.TTF"

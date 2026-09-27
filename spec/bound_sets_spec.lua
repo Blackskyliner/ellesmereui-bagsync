@@ -200,3 +200,24 @@ describe("Browser tooltip", function()
     end)
 end)
 
+
+describe("Caged battle pets", function()
+    local PET_LINK = "|cff0070dd|Hbattlepet:1387:25:3:1627:289:289:0000000000000000:0|h[Pet]|h|r"
+
+    it("show on the browser's own pet tooltip, never on Blizzard's shared one", function()
+        local s = wow.defaultState()
+        wow.putItem(s, 0, 1, 82800, 1, PET_LINK)
+        local env, ns = wow.boot(s)
+        local _, b = hoverFirst(env, ns, "bags", "battlepet:")
+        local pet = env.EllesmereUIBagsAltsPetTooltip
+        assert.is_true(pet:IsShown())
+        assert.are.same({ 1387, 25, 3, 1627, 289, 289, "Species 1387" },
+            { pet.petData.speciesID, pet.petData.level, pet.petData.breedQuality, pet.petData.maxHealth,
+              pet.petData.power, pet.petData.speed, pet.petData.name })
+        assert.are.equal("Collected (1/3)", pet.Owned:GetText())
+        assert.is_nil(env.__sharedPetTooltipUsed)
+        b:RunScript("OnLeave")
+        assert.is_false(pet:IsShown())
+        assert.are.same({}, env.__errors)
+    end)
+end)
