@@ -1,6 +1,7 @@
 -------------------------------------------------------------------------------
 --  UI/Search.lua
---  Search across every character, the warband bank and guild banks.
+--  Search across every character, the warband bank and guild banks, plus the
+--  names of the currencies stored for any character.
 --  Own matcher on purpose: C_Container.SetItemSearch only filters live slots
 --  and is client-global (it would also filter the EUI bag window).
 --
@@ -9,6 +10,8 @@
 --      12345 / id:12345 exact itemID
 --      q:epic / q:4     quality (english keyword, localized name or number)
 --      t:armor          item type or subtype contains the text
+--  Currencies match on words and a bare number only; id:, q: and t: filter
+--  items and exclude currencies.
 -------------------------------------------------------------------------------
 local _, ns = ...
 
@@ -55,6 +58,15 @@ function Search.Parse(text)
         end
     end
     return q
+end
+
+-- Currency name (lower-cased) against the words and the bare number.
+local function NameMatches(q, name)
+    if q.numericToken and not strfind(name, q.numericToken, 1, true) then return false end
+    for i = 1, #q.words do
+        if not strfind(name, q.words[i], 1, true) then return false end
+    end
+    return true
 end
 
 -- -> matches (bool), pending (true when item data is not cached yet)
@@ -104,4 +116,28 @@ function Search.Run(q, limit)
     end)
     for i = #results, limit + 1, -1 do results[i] = nil end
     return results, pending
+end
+
+-- -> { { currencyID, name, info }, ... } sorted by name
+function Search.RunCurrencies(q)
+    local out = {}
+    if not q or q.invalid or q.quality ~= nil or q.typeText or (q.itemID and not q.numericToken) then return out end
+    local seen = {}
+    for _, c in pairs(ns.db.chars) do
+        for id in pairs(c.currency or {}) do
+            if not seen[id] then
+                seen[id] = true
+                local info = C_CurrencyInfo.GetCurrencyInfo(id)
+                local name = info and info.name
+                if type(name) == "string" and not ns.IsSecret(name) and name ~= "" and NameMatches(q, strlower(name)) then
+                    out[#out + 1] = { currencyID = id, name = name, info = info }
+                end
+            end
+        end
+    end
+    sort(out, function(a, b)
+        if a.name ~= b.name then return a.name < b.name end
+        return a.currencyID < b.currencyID
+    end)
+    return out
 end

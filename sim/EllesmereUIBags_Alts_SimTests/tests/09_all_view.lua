@@ -46,3 +46,32 @@ simtest("currency rows show Blizzard's currency tooltip plus the holders", funct
     ns.Browser:SelectTab("bags")
     ns.Browser:Close()
 end)
+
+simtest("search lists matching currencies with the holder tooltip", function()
+    local c = ns.GetPlayerChar()
+    local id, info
+    for cid in pairs(c.currency) do
+        info = C_CurrencyInfo.GetCurrencyInfo(cid)
+        if info and info.name and info.name ~= "" then id = cid break end
+    end
+    local injected
+    if not id then
+        id, injected = 3008, true
+        info = C_CurrencyInfo.GetCurrencyInfo(id)
+        c.currency[id] = 1234
+    end
+    if not (info and info.name and info.name ~= "") then
+        if injected then c.currency[id] = nil end
+        return                                             -- client has no currency names
+    end
+    ns.Browser:OpenSearch(info.name)
+    local f = _G.EllesmereUIBagsAltsBrowser
+    local row = f.results.items[1]
+    assertEquals(id, row.currencyID)
+    row:GetScript("OnEnter")(row)
+    assertTrue(_G.EllesmereUIBagsAltsTooltip:IsShown())
+    row:GetScript("OnLeave")(row)
+    ns.Browser:OpenSearch("")
+    ns.Browser:Close()
+    if injected then c.currency[id] = nil end
+end)

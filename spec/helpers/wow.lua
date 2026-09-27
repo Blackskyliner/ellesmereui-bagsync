@@ -660,6 +660,9 @@ function M.newEnv(state, savedVariables)
         end,
         GetCurrencyListLink = function(i) local c = S.currencies[i]; return c and c.id and ("|Hcurrency:" .. c.id .. "|h[x]|h") end,
         GetCurrencyIDFromLink = function(link) return tonumber(link:match("currency:(%d+)")) end,
+        GetCurrencyLink = function(id, amount)
+            return "|cffffffff|Hcurrency:" .. id .. ":" .. (amount or 0) .. "|h[currency]|h|r"
+        end,
         GetCurrencyInfo = function(id)
             for _, c in ipairs(S.currencies) do
                 if c.id == id then

@@ -305,42 +305,6 @@ local function CreateSidebarRow(parent)
     return b
 end
 
-local function CreateResultRow(parent)
-    local r = CreateFrame("Button", nil, parent)
-    r:SetHeight(RESULT_H)
-    r.icon = r:CreateTexture(nil, "ARTWORK")
-    r.icon:SetSize(RESULT_H - 6, RESULT_H - 6)
-    r.icon:SetPoint("LEFT", 2, 0)
-    -- Corner anchors on both sides keep each line one text row high.
-    r.name = W.Text(r, 13)
-    r.name:SetPoint("TOPLEFT", r.icon, "TOPRIGHT", 8, -2)
-    r.name:SetPoint("TOPRIGHT", r, "TOPRIGHT", -80, -5)
-    r.detail = W.Text(r, 11, nil, 0.75, 0.75, 0.75)
-    r.detail:SetPoint("BOTTOMLEFT", r.icon, "BOTTOMRIGHT", 8, 2)
-    r.detail:SetPoint("BOTTOMRIGHT", r, "BOTTOMRIGHT", -8, 5)
-    r.total = W.Text(r, 14)
-    r.total:SetPoint("TOPRIGHT", -8, -4)
-    r.total:SetJustifyH("RIGHT")
-    r.hl = r:CreateTexture(nil, "HIGHLIGHT")
-    r.hl:SetAllPoints()
-    r.hl:SetColorTexture(1, 1, 1, 0.05)
-    r:SetScript("OnEnter", function(self)
-        if not self.itemID then return end
-        local tooltip = W.GetTooltip()
-        tooltip:SetOwner(self, "ANCHOR_RIGHT")
-        tooltip:SetHyperlink("item:" .. self.itemID)
-        tooltip:Show()
-    end)
-    r:SetScript("OnLeave", function() W.GetTooltip():Hide() end)
-    r:SetScript("OnClick", function(self)
-        if self.itemID and IsModifiedClick() then
-            local _, link = C_Item.GetItemInfo(self.itemID)
-            if link then HandleModifiedItemClick(link) end
-        end
-    end)
-    return r
-end
-
 -- Currency groups, in display order. Warband-wide currencies are shared by all
 -- characters (neither bound nor transferable); that group shows only if used.
 local CURRENCY_GROUPS = {
@@ -374,13 +338,8 @@ local function FormatQty(n)
     return BreakUpLargeNumbers and BreakUpLargeNumbers(n) or tostring(n)
 end
 
--- Currency tooltip: Blizzard's own currency tooltip plus who holds how many.
-local function CurrencyRow_OnEnter(self)
-    if not self.currencyID then return end
-    local id = self.currencyID
-    local tooltip = W.GetTooltip()
-    tooltip:SetOwner(self, "ANCHOR_RIGHT")
-    tooltip:SetCurrencyByID(id)
+-- Characters holding a currency, most first -> rows { key, qty }, total.
+local function CurrencyHolders(id)
     local rows, total = {}, 0
     for key, c in pairs(ns.db.chars) do
         local qty = c.currency and c.currency[id]
@@ -393,6 +352,17 @@ local function CurrencyRow_OnEnter(self)
         if a.qty ~= b.qty then return a.qty > b.qty end
         return a.key < b.key
     end)
+    return rows, total
+end
+
+-- Currency tooltip: Blizzard's own currency tooltip plus who holds how many.
+-- self: a currency or search result row with currencyID and kind.
+local function CurrencyRow_OnEnter(self)
+    if not self.currencyID then return end
+    local tooltip = W.GetTooltip()
+    tooltip:SetOwner(self, "ANCHOR_RIGHT")
+    tooltip:SetCurrencyByID(self.currencyID)
+    local rows, total = CurrencyHolders(self.currencyID)
     if self.kind == "warband" then
         tooltip:AddLine(" ")
         tooltip:AddLine(L["Warband-wide (shared)"], 0.31, 0.76, 0.97)
@@ -404,6 +374,47 @@ local function CurrencyRow_OnEnter(self)
         if #rows > 1 then tooltip:AddDoubleLine(L["Total"], FormatQty(total), 1, 0.82, 0, 1, 1, 1) end
     end
     tooltip:Show()
+end
+
+local function CreateResultRow(parent)
+    local r = CreateFrame("Button", nil, parent)
+    r:SetHeight(RESULT_H)
+    r.icon = r:CreateTexture(nil, "ARTWORK")
+    r.icon:SetSize(RESULT_H - 6, RESULT_H - 6)
+    r.icon:SetPoint("LEFT", 2, 0)
+    -- Corner anchors on both sides keep each line one text row high.
+    r.name = W.Text(r, 13)
+    r.name:SetPoint("TOPLEFT", r.icon, "TOPRIGHT", 8, -2)
+    r.name:SetPoint("TOPRIGHT", r, "TOPRIGHT", -80, -5)
+    r.detail = W.Text(r, 11, nil, 0.75, 0.75, 0.75)
+    r.detail:SetPoint("BOTTOMLEFT", r.icon, "BOTTOMRIGHT", 8, 2)
+    r.detail:SetPoint("BOTTOMRIGHT", r, "BOTTOMRIGHT", -8, 5)
+    r.total = W.Text(r, 14)
+    r.total:SetPoint("TOPRIGHT", -8, -4)
+    r.total:SetJustifyH("RIGHT")
+    r.hl = r:CreateTexture(nil, "HIGHLIGHT")
+    r.hl:SetAllPoints()
+    r.hl:SetColorTexture(1, 1, 1, 0.05)
+    r:SetScript("OnEnter", function(self)
+        if self.currencyID then return CurrencyRow_OnEnter(self) end
+        if not self.itemID then return end
+        local tooltip = W.GetTooltip()
+        tooltip:SetOwner(self, "ANCHOR_RIGHT")
+        tooltip:SetHyperlink("item:" .. self.itemID)
+        tooltip:Show()
+    end)
+    r:SetScript("OnLeave", function() W.GetTooltip():Hide() end)
+    r:SetScript("OnClick", function(self)
+        if not IsModifiedClick() then return end
+        local link
+        if self.currencyID then
+            link = C_CurrencyInfo.GetCurrencyLink(self.currencyID)
+        elseif self.itemID then
+            link = select(2, C_Item.GetItemInfo(self.itemID))
+        end
+        if link then HandleModifiedItemClick(link) end
+    end)
+    return r
 end
 
 local function CreateCurrencyRow(parent)
@@ -736,19 +747,66 @@ local function DescribeOwners(itemID)
     return table.concat(out, ", ")
 end
 
+-- Accent-coloured section title in the content area -> y below it.
+local function ContentHeader(f, text, y)
+    local h = f.grid:AcquireHeader()
+    h:ClearAllPoints()
+    h:SetPoint("TOPLEFT", f.scroll.content, "TOPLEFT", 2, -y - 2)
+    h:SetText(text)
+    h:SetTextColor(Ext:GetAccentColor())
+    return y + 20
+end
+
+local function AcquireResult(f, y, width)
+    local r = PoolAcquire(f.results)
+    r:ClearAllPoints()
+    r:SetPoint("TOPLEFT", 0, -y)
+    r:SetWidth(width)
+    r.itemID, r.currencyID, r.kind = nil, nil, nil
+    return r
+end
+
+-- "Alice 1,000, Bob 200"
+local function DescribeCurrencyHolders(id)
+    local rows = CurrencyHolders(id)
+    local out = {}
+    for i, row in ipairs(rows) do out[i] = CharLabel(row.key) .. " " .. FormatQty(row.qty) end
+    return table.concat(out, ", ")
+end
+
+-- Matching currencies first (their own section), then the items.
 local function RenderResults(f, width)
     local results, pending = ns.Search.Run(state.query, 300)
+    local currencies = ns.Search.RunCurrencies(state.query)
     wipe(pendingSearch)
     for i = 1, math.min(#pending, 200) do
         pendingSearch[pending[i]] = true
         C_Item.RequestLoadItemDataByID(pending[i])
     end
     local y = 0
+    if #currencies > 0 then
+        local totals, shared = AllCurrencyTotals({})
+        y = ContentHeader(f, L["Currency"], y)
+        for _, cur in ipairs(currencies) do
+            local r = AcquireResult(f, y, width)
+            local id = cur.currencyID
+            r.currencyID, r.kind = id, CurrencyKind(id, cur.info)
+            r.icon:SetTexture(cur.info.iconFileID or 134400)
+            r.name:SetText(cur.name)
+            r.name:SetTextColor(1, 1, 1)
+            if r.kind == "warband" then
+                r.total:SetText(FormatQty(shared[id] or 0))
+                r.detail:SetText(L["Warband-wide (shared)"])
+            else
+                r.total:SetText(FormatQty(totals[id] or 0))
+                r.detail:SetText(DescribeCurrencyHolders(id))
+            end
+            y = y + RESULT_H
+        end
+        if #results > 0 then y = ContentHeader(f, L["Items"], y + 6) end
+    end
     for _, res in ipairs(results) do
-        local r = PoolAcquire(f.results)
-        r:ClearAllPoints()
-        r:SetPoint("TOPLEFT", 0, -y)
-        r:SetWidth(width)
+        local r = AcquireResult(f, y, width)
         r.itemID = res.itemID
         local _, _, _, _, icon = C_Item.GetItemInfoInstant(res.itemID)
         r.icon:SetTexture(icon or 134400)
@@ -760,7 +818,7 @@ local function RenderResults(f, width)
         r.detail:SetText(DescribeOwners(res.itemID))
         y = y + RESULT_H
     end
-    return y, #results, #pending
+    return y, #results + #currencies, #pending
 end
 
 -- Sold auctions waiting as gold in the mailbox, newest first, as result rows.
@@ -769,19 +827,10 @@ local function RenderSold(f, c, width, y)
     for _, m in ipairs(c.mailSold or {}) do list[#list + 1] = m end
     table.sort(list, function(a, b) return (a.at or 0) > (b.at or 0) end)
     if #list == 0 then return y, 0 end
-    local h = f.grid:AcquireHeader()
-    h:ClearAllPoints()
-    h:SetPoint("TOPLEFT", f.scroll.content, "TOPLEFT", 2, -y - 2)
-    h:SetText(L["Sold (gold waiting in the mailbox)"])
-    local ar, ag, ab = Ext:GetAccentColor()
-    h:SetTextColor(ar, ag, ab)
-    y = y + 20
+    y = ContentHeader(f, L["Sold (gold waiting in the mailbox)"], y)
     for _, m in ipairs(list) do
         local id, count, link = ns.DecodeItem(m.e)
-        local r = PoolAcquire(f.results)
-        r:ClearAllPoints()
-        r:SetPoint("TOPLEFT", 0, -y)
-        r:SetWidth(width)
+        local r = AcquireResult(f, y, width)
         r.itemID = id
         local _, _, _, _, icon = C_Item.GetItemInfoInstant(id)
         r.icon:SetTexture(icon or 134400)
@@ -901,7 +950,7 @@ function Browser:Refresh()
         local n, pend
         height, n, pend = RenderResults(f, width)
         if n == 0 then
-            f.empty:SetText(pend > 0 and L["Searching... (loading item data)"] or L["No items found."])
+            f.empty:SetText(pend > 0 and L["Searching... (loading item data)"] or L["Nothing found."])
         end
         f.footer:SetText(string.format(L["%d results"], n))
     else
