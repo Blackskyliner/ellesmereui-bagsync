@@ -139,6 +139,12 @@ end
 -------------------------------------------------------------------------------
 --  Slash commands
 -------------------------------------------------------------------------------
+-- ns.activatedBy -> label key (the reasons are ns.Activate's arguments)
+local ACTIVATION_REASON = {
+    bags = "Bags", bank = "Bank", mail = "Mail", auctions = "Auctions", guildbank = "Guild Bank",
+    browser = "Browser", tooltip = "Tooltip", selftest = "Self-test",
+}
+
 local function PrintStatus()
     local count = 0
     for _ in pairs(ns.db.chars) do count = count + 1 end
@@ -147,8 +153,10 @@ local function PrintStatus()
     for _, def in ipairs(ns.features) do
         if def.active then active[#active + 1] = def.key end
     end
-    ns.Print("%s: %s", L["activated"], ns.activated and (L["yes"] .. " (" .. tostring(ns.activatedBy) .. ")")
-        or L["no (waiting for the bags, bank, browser or a tooltip)"])
+    local reason = ACTIVATION_REASON[ns.activatedBy]
+    reason = reason and L[reason] or tostring(ns.activatedBy)
+    ns.Print("%s: %s", L["activated"], ns.activated and (L["yes"] .. " (" .. reason .. ")")
+        or L["no (waiting for the first use: bags, bank, mailbox, auction house, guild bank, browser or tooltip)"])
     ns.Print("%s: %s", L["active features"], table.concat(active, ", "))
     ns.Print("%s: %s", L["events"], table.concat(ns.GetRegisteredEvents(), ", "))
 end

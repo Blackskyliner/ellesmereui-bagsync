@@ -137,4 +137,11 @@ L["Items"] = "아이템"
 -- Activation on first use (0.7.0)
 L["activated"] = "활성화됨"
 L["yes"] = "예"
-L["no (waiting for the bags, bank, browser or a tooltip)"] = "아니요 (가방, 은행, 브라우저 또는 툴팁을 기다리는 중)"
+L["no (waiting for the first use: bags, bank, mailbox, auction house, guild bank, browser or tooltip)"] = "아니요 (처음 사용 대기 중: 가방, 은행, 우체통, 경매장, 길드 은행, 탐색기 또는 툴팁)"
+
+-- Self-test output (0.8.2)
+L["OK"] = "정상"
+L["FAILED"] = "실패"
+L["missing"] = "누락"
+L["inconsistent (rebuilt)"] = "불일치 (다시 생성함)"
+L["Index"] = "색인"

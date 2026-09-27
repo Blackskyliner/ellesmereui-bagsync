@@ -124,8 +124,8 @@ function ns.RunSelfTest(verbose)
     ns.lastSelfTest = report
 
     if verbose then
-        ns.Print("%s: %s", L["Self-test"], ok and "|cff40ff40OK|r" or "|cffff4040FAILED|r")
-        ns.Print("  APIs: %s", apiOK and "ok" or ("missing " .. table.concat(report.missingAPIs, ", ")))
+        ns.Print("%s: %s", L["Self-test"], ok and ("|cff40ff40" .. L["OK"] .. "|r") or ("|cffff4040" .. L["FAILED"] .. "|r"))
+        ns.Print("  APIs: %s", apiOK and L["OK"] or (L["missing"] .. ": " .. table.concat(report.missingAPIs, ", ")))
         if report.countError then
             ns.Print("  %s: %s", L["Counts"], report.countError)
         else
@@ -133,7 +133,7 @@ function ns.RunSelfTest(verbose)
                 #report.countMismatches, L["mismatches"])
             for i = 1, math.min(5, #report.countMismatches) do ns.Print("    %s", report.countMismatches[i]) end
         end
-        ns.Print("  Index: %s", indexOK and "ok" or "inconsistent (rebuilt)")
+        ns.Print("  %s: %s", L["Index"], indexOK and L["OK"] or L["inconsistent (rebuilt)"])
     end
     return ok, report
 end

@@ -137,4 +137,10 @@ L["Items"] = "Предметы"
 -- Activation on first use (0.7.0)
 L["activated"] = "активировано"
 L["yes"] = "да"
-L["no (waiting for the bags, bank, browser or a tooltip)"] = "нет (ожидает сумки, банк, обозреватель или подсказку)"
+L["no (waiting for the first use: bags, bank, mailbox, auction house, guild bank, browser or tooltip)"] = "нет (ожидает первого использования: сумки, банк, почтовый ящик, аукционный дом, гильдейский банк, обозреватель или подсказка)"
+
+-- Self-test output (0.8.2)
+L["FAILED"] = "ОШИБКА"
+L["missing"] = "отсутствуют"
+L["inconsistent (rebuilt)"] = "несогласован (перестроен)"
+L["Index"] = "Индекс"

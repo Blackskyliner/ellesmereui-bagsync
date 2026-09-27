@@ -132,4 +132,9 @@ L["Items"] = "Gegenstände"
 -- Activation on first use (0.7.0)
 L["activated"] = "aktiviert"
 L["yes"] = "ja"
-L["no (waiting for the bags, bank, browser or a tooltip)"] = "nein (wartet auf Taschen, Bank, Browser oder einen Tooltip)"
+L["no (waiting for the first use: bags, bank, mailbox, auction house, guild bank, browser or tooltip)"] = "nein (wartet auf die erste Nutzung: Taschen, Bank, Briefkasten, Auktionshaus, Gildenbank, Browser oder Tooltip)"
+
+-- Self-test output (0.8.2)
+L["FAILED"] = "FEHLGESCHLAGEN"
+L["missing"] = "fehlt"
+L["inconsistent (rebuilt)"] = "inkonsistent (neu aufgebaut)"

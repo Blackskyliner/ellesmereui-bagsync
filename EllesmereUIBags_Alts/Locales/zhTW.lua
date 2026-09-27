@@ -137,4 +137,11 @@ L["Items"] = "物品"
 -- Activation on first use (0.7.0)
 L["activated"] = "已啟用"
 L["yes"] = "是"
-L["no (waiting for the bags, bank, browser or a tooltip)"] = "否（等待開啟背包、銀行、瀏覽器或滑鼠提示）"
+L["no (waiting for the first use: bags, bank, mailbox, auction house, guild bank, browser or tooltip)"] = "否（等待首次使用：背包、銀行、郵箱、拍賣場、公會銀行、瀏覽器或提示資訊）"
+
+-- Self-test output (0.8.2)
+L["OK"] = "正常"
+L["FAILED"] = "失敗"
+L["missing"] = "缺少"
+L["inconsistent (rebuilt)"] = "不一致（已重建）"
+L["Index"] = "索引"

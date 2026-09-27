@@ -9,6 +9,7 @@ local LOCALES = { "deDE", "esES", "esMX", "frFR", "itIT", "koKR", "ptBR", "ruRU"
 local MAY_STAY_ENGLISH = {
     ["Alts"] = true, ["EllesmereUI Bags: Alts"] = true, ["Account"] = true, ["Bank"] = true,
     ["Browser"] = true, ["Gold"] = true, ["Tooltip"] = true, ["Total"] = true, ["version"] = true,
+    ["OK"] = true, ["Index"] = true,
 }
 
 -- Keys reached through lookup tables instead of literal L["..."] in the code.
@@ -181,6 +182,23 @@ describe("Locales", function()
             end)
         end)
     end
+
+    it("the status names every activation trigger and the reason in the client's language", function()
+        local env = wow.boot(wow.defaultState({ locale = "deDE" }), nil, { inactive = true })
+        env.Slash("status")
+        local text = table.concat(env.__chat, "\n")
+        for _, word in ipairs({ "Taschen", "Bank", "Briefkasten", "Auktionshaus", "Gildenbank", "Browser", "Tooltip" }) do
+            assert.truthy(text:find(word, 1, true), word)
+        end
+        env.EUI_Bags:Show()
+        env.Slash("status")
+        assert.truthy(env.__chat[#env.__chat - 2]:find("aktiviert: ja (Taschen)", 1, true), env.__chat[#env.__chat - 2])
+        env.Slash("selftest")
+        text = table.concat(env.__chat, "\n")
+        assert.falsy(text:find("inconsistent", 1, true))
+        assert.truthy(text:find("Selbsttest: |cff40ff40OK|r", 1, true))
+        assert.are.same({}, env.__errors)
+    end)
 
     it("an English client builds no translation", function()
         local _, ns = loadLocale("enUS")
