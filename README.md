@@ -31,7 +31,7 @@ und nicht muttersprachlich geprüft. Korrekturen sind willkommen, der Test
 ## Installation
 
 1. Den Ordner `EllesmereUIBags_Alts` (oder den Inhalt von
-   `dist/EllesmereUIBags_Alts-0.3.0.zip`) nach
+   `dist/EllesmereUIBags_Alts-0.3.1.zip`) nach
    `World of Warcraft/_retail_/Interface/AddOns/` kopieren.
 2. Im Charakterauswahl-Bildschirm unter „AddOns“ prüfen, dass
    „EllesmereUI Bags: Alts“ aktiv ist.
@@ -73,7 +73,8 @@ oder benutzt keine Items.
 müssen alle zutreffen.
 
 **Tooltip:** Pro Charakter eine Zeile mit Aufteilung nach Ort, dazu
-Kriegsmeutenbank, Gildenbank und Summe. Einstellbar sind: nur bei gedrückter
+Kriegsmeutenbank, Gildenbank und Summe. Er erscheint nur an Item-Tooltips aus
+Taschen, Bank, Chat-Links, AH usw., nicht an Units oder Objekten in der Welt. Einstellbar sind: nur bei gedrückter
 Umschalt-, Strg- oder Alt-Taste, Realm-Umfang (verbundene Realms, nur dieser
 Realm oder alle), aktuellen Charakter ausblenden und maximale Zeilenzahl.
 
@@ -214,6 +215,6 @@ EllesmereUIBagsAlts.OpenBrowser(key) / .ToggleBrowser() / .Search(text)
 |---|---|---|---|
 | 1 | Nichts kostet, solange es aus ist | Features registrieren Events erst beim Einschalten. Der Browser wird erst beim ersten Öffnen gebaut. Der Tooltip-Hook entsteht erst beim ersten Einschalten. | `spec/options_criteria_spec.lua` (Criterion 1), Simulator |
 | 2 | Keine Verhaltensänderung ohne Opt-in | Tooltip, Header-Button, EUI-Kategorien, Gildenbank und die aktive Auktionsabfrage sind standardmäßig aus. Die Opt-in-Frage kommt erst beim ersten Taschen-Öffnen. | DB- und Options-Specs |
-| 3 | Geringe Kosten im Betrieb | Dirty-Set statt Voll-Scan, keine Timer, kein OnUpdate-Polling. Tooltip-Zeilen kommen aus einem Cache. | Criterion 3: je ein Scan pro Burst, Test ohne Allokationen |
+| 3 | Geringe Kosten im Betrieb | Dirty-Set statt Voll-Scan, keine Timer, kein OnUpdate-Polling. Der Tooltip hängt nur an Item-Tooltips, es gibt keinen Clear-Hook. Unit-, NPC- und Welt-Tooltips kosten null Addon-Aufrufe. Die Anzahlen kommen aus dem Index-Cache, die Zeilen aus einem Cache pro Item. | Criterion 3: je ein Scan pro Burst. Tooltip: 0 Aufrufe bei 1000 Unit-Refreshes, kein Neuzählen bei 1000 Item-Refreshes. |
 | 4 | Kein Taint-Risiko | Keine secure Templates, kein `SetScript` auf fremden Frames, keine Feldzugriffe auf EUI- oder Blizzard-Frames, nur `hooksecurefunc`/`HookScript`, keine geschützten Aktionen | statische Criterion-4-Tests, Simulator |
 | 5 | Nur Midnight | Interface ab 120000, nur `C_*`-APIs, keine Legacy-Bank-Pfade | Criterion 5, API-Check |
