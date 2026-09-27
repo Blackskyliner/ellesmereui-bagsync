@@ -104,7 +104,11 @@ Sets. Der Browser zeigt Items in einem eigenen Tooltip-Fenster, Blizzards
 
 **Suche:** Wörter (Namensbestandteile), `12345` oder `id:12345` (Item-ID),
 `q:epic` oder `q:4` (Qualität), `t:rüstung` (Typ/Untertyp). Mehrere Begriffe
-müssen alle zutreffen.
+müssen alle zutreffen. Wörter und eine Zahl durchsuchen auch die Namen der
+gespeicherten Währungen. Treffer stehen oben unter „Währungen“ mit der Summe
+über alle Charaktere und den Beständen pro Charakter, Hover zeigt den
+Währungs-Tooltip, Shift-Klick verlinkt die Währung im Chat. `id:`, `q:` und
+`t:` filtern nur Items.
 
 **Tooltip:** Pro Charakter eine Zeile mit Aufteilung nach Ort, dazu
 Kriegsmeutenbank, Gildenbank und Summe. Er erscheint nur an Item-Tooltips aus

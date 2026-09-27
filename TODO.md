@@ -101,5 +101,10 @@ Header-Button + Gildenbank. Keine Auktionen, kein LDB/Minimap.
 - [x] Währungen: Summen in den Übersichten, Tooltip mit Aufteilung pro Charakter
 - [x] Locales, busted- und Simulator-Tests
 
+## 15. Fensterkopf und Währungssuche (0.6.2)
+- [x] Titel, Suche und Schließen-Button zentriert in EUIs 25-px-Titelleiste
+- [x] Schließen-Button relativ zum Fenster gelevelt (Template setzt absolut 510), Fenster ist Toplevel
+- [x] Suche findet Währungen (Summe, Bestände pro Charakter, Tooltip, Chat-Link)
+
 ## Offen (braucht den echten Client)
 - [ ] Ingame-Testplan aus README.md durchgehen (Bank, Post, Auktionen, Gildenbank, Kampf/Instanz, taint.log)
