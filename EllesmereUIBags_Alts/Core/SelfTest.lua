@@ -24,7 +24,9 @@ local REQUIRED_APIS = {
     "GetNumGuildBankTabs", "GetGuildBankTabInfo", "GetGuildBankItemInfo", "GetGuildBankItemLink",
     "QueryGuildBankTab", "GetCurrentGuildBankTab", "GetGuildBankMoney", "GetGuildInfo",
     "C_AuctionHouse.GetOwnedAuctions", "C_AuctionHouse.HasFullOwnedAuctionResults",
-    "C_AuctionHouse.QueryOwnedAuctions",
+    "C_AuctionHouse.QueryOwnedAuctions", "C_AuctionHouse.PostItem", "C_AuctionHouse.PostCommodity",
+    "C_AuctionHouse.ConfirmPostItem", "C_AuctionHouse.ConfirmPostCommodity",
+    "C_Item.DoesItemExist", "C_Item.GetItemID", "C_Item.GetItemLink",
     "GetNormalizedRealmName", "HandleModifiedItemClick", "SetItemButtonTexture",
     "SetItemButtonCount", "SetItemButtonQuality",
 }

@@ -135,6 +135,16 @@ def main():
             full = ns_name + "." + fn
             if full not in functions:
                 problems.append("%s: unknown function %s" % (rel, full))
+        for ns_name, fn in re.findall(r'hooksecurefunc\((C_\w+),\s*"(\w+)"', s):
+            if ns_name + "." + fn not in functions:
+                problems.append("%s: hook on unknown function %s.%s" % (rel, ns_name, fn))
+        for fn in re.findall(r'hooksecurefunc\("(\w+)"', s):
+            if fn not in known_globals:
+                problems.append("%s: hook on unknown global %s" % (rel, fn))
+        for m in re.finditer(r"local hooks = \{(.*?)\}", s, re.S):
+            for fn in re.findall(r"(\w+)\s*=", m.group(1)):
+                if "C_AuctionHouse." + fn not in functions:
+                    problems.append("%s: hook on unknown function C_AuctionHouse.%s" % (rel, fn))
         for enum_type, value in re.findall(r"\bEnum\.(\w+)\.(\w+)", s):
             if value not in enums.get(enum_type, ()):
                 problems.append("%s: unknown enum Enum.%s.%s" % (rel, enum_type, value))
