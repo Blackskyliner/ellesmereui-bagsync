@@ -67,3 +67,20 @@ simtest_when(function() return EUI_Bags and EUI_Bags.Header ~= nil end, "header 
     assertTrue(not btn:IsShown())
     ToggleAllBags()
 end)
+
+simtest("hovering a grid item uses the private tooltip through Blizzard's ProcessInfo", function()
+    ns.Browser:Open()
+    ns.Browser:SelectTab("bags")
+    local f = _G.EllesmereUIBagsAltsBrowser
+    local b = f.grid.buttons[1]
+    assertNotNil(b)
+    b:GetScript("OnEnter")(b)
+    local tooltip = _G.EllesmereUIBagsAltsTooltip
+    assertNotNil(tooltip)
+    local info = tooltip.processingInfo
+    assertNotNil(info)
+    assertEquals("GetHyperlink", info.getterName)
+    assertTrue(GameTooltip:GetOwner() ~= b)
+    b:GetScript("OnLeave")(b)
+    ns.Browser:Close()
+end)

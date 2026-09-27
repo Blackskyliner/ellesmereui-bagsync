@@ -61,13 +61,15 @@ local function Secret(v) return setmetatable({ value = v }, SecretMT) end
 --  Item database used by the mock client (itemID -> info)
 --------------------------------------------------------------------------------
 M.ITEMS = {
-    [6948]   = { name = "Hearthstone", quality = 1, icon = 134414, type = "Miscellaneous", subtype = "Junk", equipLoc = "" },
+    [6948]   = { name = "Hearthstone", quality = 1, icon = 134414, type = "Miscellaneous", subtype = "Junk", equipLoc = "", bindType = 1 },
     [2589]   = { name = "Linen Cloth", quality = 1, icon = 132889, type = "Tradeskill", subtype = "Cloth", equipLoc = "" },
     [2592]   = { name = "Wool Cloth", quality = 1, icon = 132911, type = "Tradeskill", subtype = "Cloth", equipLoc = "" },
     [190396] = { name = "Serevite Ore", quality = 1, icon = 4555563, type = "Tradeskill", subtype = "Metal & Stone", equipLoc = "" },
     [212345] = { name = "Algari Mana Potion", quality = 1, icon = 5931169, type = "Consumable", subtype = "Potion", equipLoc = "" },
-    [19019]  = { name = "Thunderfury, Blessed Blade of the Windseeker", quality = 5, icon = 135349, type = "Weapon", subtype = "One-Handed Swords", equipLoc = "INVTYPE_WEAPON" },
-    [230000] = { name = "Void-Touched Helm", quality = 4, icon = 5925000, type = "Armor", subtype = "Plate", equipLoc = "INVTYPE_HEAD" },
+    [19019]  = { name = "Thunderfury, Blessed Blade of the Windseeker", quality = 5, icon = 135349, type = "Weapon", subtype = "One-Handed Swords", equipLoc = "INVTYPE_WEAPON", bindType = 1 },
+    [230000] = { name = "Void-Touched Helm", quality = 4, icon = 5925000, type = "Armor", subtype = "Plate", equipLoc = "INVTYPE_HEAD", bindType = 2 },
+    [231000] = { name = "Warbound Cloak", quality = 4, icon = 5925001, type = "Armor", subtype = "Cloth", equipLoc = "INVTYPE_CLOAK", bindType = 9 },
+    [232000] = { name = "Heirloom Staff", quality = 7, icon = 5925002, type = "Weapon", subtype = "Staves", equipLoc = "INVTYPE_2HWEAPON", bindType = 8 },
     [82800]  = { name = "Pet Cage", quality = 1, icon = 132599, type = "Miscellaneous", subtype = "Companion Pets", equipLoc = "" },
     [180653] = { name = "Mythic Keystone", quality = 4, icon = 4352494, type = "Reagent", subtype = "Keystone", equipLoc = "" },
 }
@@ -115,6 +117,9 @@ local function Enums()
             CharacterBanker = 67, AccountBanker = 68,
         },
         TooltipDataType = { Item = 0 },
+        TooltipDataLineType = { None = 0, ItemName = 22, ItemBinding = 20 },
+        ItemBind = { None = 0, OnAcquire = 1, OnEquip = 2, OnUse = 3, Quest = 4, ToWoWAccount = 7,
+                     ToBnetAccount = 8, ToBnetAccountUntilEquipped = 9 },
         AuctionStatus = { Active = 0, Sold = 1 },
         AuctionHouseTimeLeftBand = { Short = 0, Medium = 1, Long = 2, VeryLong = 3 },
         AuctionHouseSortOrder = { Price = 0, Name = 1, Level = 2, Bid = 3, Buyout = 4, TimeRemaining = 5 },
@@ -265,6 +270,32 @@ function FrameMethods:SetHyperlink(link)
     local id = tonumber(tostring(link):match("item:(%d+)"))
     self:ProcessTooltipData(0, { type = 0, id = id })
 end
+-- TooltipDataHandlerMixin:ProcessInfo with getter, per-call linePreCall and
+-- tooltipPostCall, then the global post-calls (as Blizzard's pipeline does).
+local BIND_TEXT = { [1] = "Binds when picked up", [2] = "Binds when equipped", [3] = "Binds when used",
+                    [7] = "Warbound", [8] = "Warbound", [9] = "Warbound until equipped" }
+function FrameMethods:ProcessInfo(info)
+    self:ClearLines()
+    self.processingInfo = info
+    local data = info.tooltipData
+    if not data then
+        local id = tonumber(tostring(info.getterArgs[1]):match("item:(%d+)"))
+        local item = M.ITEMS[id] or {}
+        data = { type = 0, id = id, lines = { { type = 22, leftText = item.name or "?" } } }
+        if BIND_TEXT[item.bindType] then
+            table.insert(data.lines, { type = 20, leftText = BIND_TEXT[item.bindType],
+                                       leftColor = { r = 1, g = 1, b = 1 } })
+        end
+    end
+    for _, line in ipairs(data.lines) do
+        local consumed = info.linePreCall and info.linePreCall(self, line)
+        if not consumed then self:AddLine(line.leftText) end
+    end
+    if info.tooltipPostCall then info.tooltipPostCall(self) end
+    for _, pc in ipairs(self.env.__postCalls) do
+        if pc[1] == data.type then pc[2](self, data) end
+    end
+end
 -- Unit/world tooltips (type 2 = Unit, 18 = Object); refreshed every 0.2 s in the client.
 function FrameMethods:SetUnit(unit)
     self:ProcessTooltipData(2, { type = 2, guid = "Creature-0-0-0-0-1234-0000" .. tostring(unit) })
@@ -408,6 +439,7 @@ function M.newEnv(state, savedVariables)
     env.BackdropTemplateMixin = { SetBackdrop = function(self, b) self.backdrop = b end,
         SetBackdropColor = function() end, SetBackdropBorderColor = function() end }
     env.OKAY, env.CANCEL = "Okay", "Cancel"
+    env.ITEM_SOULBOUND, env.ITEM_ACCOUNTBOUND = "Soulbound", "Warbound"
     env.ITEM_QUALITY_COLORS = {}
     for q = 0, 8 do env.ITEM_QUALITY_COLORS[q] = { r = q / 8, g = 0.5, b = 1 - q / 8 } end
     env.ITEM_QUALITY4_DESC = "Epic"
@@ -455,7 +487,8 @@ function M.newEnv(state, savedVariables)
         GetItemInfo = function(ref)
             local id, info = infoFor(ref)
             if not info or (S.uncachedItems and S.uncachedItems[id] and not S.loadedItems[id]) then return nil end
-            return info.name, M.itemLink(id), info.quality, 80, 1, info.type, info.subtype, 20, info.equipLoc, info.icon
+            return info.name, M.itemLink(id), info.quality, 80, 1, info.type, info.subtype, 20, info.equipLoc, info.icon,
+                100, 4, 1, info.bindType or 0
         end,
         GetItemInfoInstant = function(ref)
             local id, info = infoFor(ref)
@@ -474,6 +507,11 @@ function M.newEnv(state, savedVariables)
         GetItemLink = function(loc)
             local it = S.bags[loc.bagID] and S.bags[loc.bagID].slots[loc.slotIndex]
             return it and it.link
+        end,
+        -- slot.wue: "warbound until equipped" (still movable in the warband)
+        IsBoundToAccountUntilEquip = function(loc)
+            local it = loc.bagID and S.bags[loc.bagID] and S.bags[loc.bagID].slots[loc.slotIndex]
+            return it and it.wue or false
         end,
         GetItemQualityByID = function(ref)
             local id, info = infoFor(ref)
@@ -512,7 +550,7 @@ function M.newEnv(state, savedVariables)
             local info = M.ITEMS[it.id] or {}
             return { iconFileID = info.icon, stackCount = maybeSecret(it.count), isLocked = false, quality = info.quality,
                      isReadable = false, hasLoot = false, hyperlink = maybeSecret(it.link), isFiltered = false,
-                     hasNoValue = false, itemID = maybeSecret(it.id), isBound = false, itemName = info.name }
+                     hasNoValue = false, itemID = maybeSecret(it.id), isBound = it.bound or false, itemName = info.name }
         end,
     }
 
@@ -529,6 +567,55 @@ function M.newEnv(state, savedVariables)
         end,
         FetchDepositedMoney = function(bankType) if bankType == 2 then return S.warbandMoney end return 0 end,
     }
+
+    -- ItemLocation (Blizzard_ObjectAPI)
+    env.ItemLocation = {
+        CreateFromBagAndSlot = function(_, bagID, slotIndex) return { bagID = bagID, slotIndex = slotIndex } end,
+        CreateFromEquipmentSlot = function(_, slot) return { equipmentSlotIndex = slot } end,
+    }
+
+    -- Equipment sets. Locations use the client's packing (see EquipmentManager.lua):
+    -- PLAYER 0x100000, BAGS 0x200000, bag << 8, slot.
+    S.equipmentSets = S.equipmentSets or {}   -- { { id, name, items = { "e<slot>" | "b<bag>:<slot>" } } }
+    env.C_EquipmentSet = {
+        GetEquipmentSetIDs = function()
+            local ids = {}
+            for i, set in ipairs(S.equipmentSets) do ids[i] = set.id end
+            return ids
+        end,
+        GetEquipmentSetInfo = function(id)
+            for _, set in ipairs(S.equipmentSets) do if set.id == id then return set.name, 0, id end end
+        end,
+        GetItemLocations = function(id)
+            for _, set in ipairs(S.equipmentSets) do
+                if set.id == id then
+                    local locs = { [2] = 1 }                       -- an "ignored" slot marker
+                    for n, key in ipairs(set.items) do
+                        local e = key:match("^e(%d+)$")
+                        local b, sl = key:match("^b(%d+):(%d+)$")
+                        if e then locs[100 + n] = 0x100000 + tonumber(e)
+                        else locs[100 + n] = 0x100000 + 0x200000 + tonumber(b) * 256 + tonumber(sl) end
+                    end
+                    return locs
+                end
+            end
+        end,
+    }
+    env.EquipmentManager_GetLocationData = function(location)
+        local d = { isPlayer = location >= 0x100000 and (location % 0x200000) >= 0x100000 }
+        d.isBags = location >= 0x200000
+        d.isBank = false
+        local rest = location
+        if d.isBags then rest = rest - 0x200000 end
+        if d.isPlayer then rest = rest - 0x100000 end
+        if d.isBags then
+            d.bag = math.floor(rest / 256)
+            d.slot = rest - d.bag * 256
+        else
+            d.slot = rest
+        end
+        return d
+    end
 
     -- Equipment
     env.GetInventoryItemLink = function(_, slot) local it = S.equipped[slot]; return it and it.link end

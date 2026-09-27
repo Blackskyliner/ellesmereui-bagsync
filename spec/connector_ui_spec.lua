@@ -303,7 +303,8 @@ describe("Browser", function()
         local f = env.EllesmereUIBagsAltsBrowser
         local b = f.grid.buttons[1]
         b:RunScript("OnEnter")
-        assert.are.equal(b, env.GameTooltip.owner)
+        assert.are.equal(b, env.EllesmereUIBagsAltsTooltip.owner)   -- private tooltip, not GameTooltip
+        assert.is_nil(env.GameTooltip.owner)
         b:Click()
         assert.are.equal(0, #env.__clicks)            -- plain click does nothing
         env.__state.modifiers.shift = true

@@ -128,14 +128,18 @@ simtest("taint: only the addon's own globals carry its taint", function()
     -- Blizzard / EUI tables the addon interacts with keep secure slots
     local watched = { SlashCmdList = SlashCmdList, GameTooltip = GameTooltip, ItemRefTooltip = ItemRefTooltip,
         TooltipDataProcessor = TooltipDataProcessor, EUI_Bags = EUI_Bags, EllesmereUI = EllesmereUI }
+    local taintedSlots = {}
     for name, tbl in pairs(watched) do
         if type(tbl) == "table" then
             for key in pairs(tbl) do
                 local secure, source = issecurevariable(tbl, key)
-                assertTrue(secure or source ~= "EllesmereUIBags_Alts", name .. "." .. tostring(key) .. " tainted by the addon")
+                if not secure and source == "EllesmereUIBags_Alts" then
+                    taintedSlots[#taintedSlots + 1] = name .. "." .. tostring(key)
+                end
             end
         end
     end
+    if #taintedSlots > 0 then error("tainted slots: " .. table.concat(taintedSlots, ", ")) end
     -- Blizzard functions the addon hooks stay secure (hooksecurefunc, never replaced).
     -- The auction post-hooks are installed on the first auction house visit.
     assertTrue((issecurevariable("SendMail")))
