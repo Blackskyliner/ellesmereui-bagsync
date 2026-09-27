@@ -146,6 +146,20 @@ function W.FormatGold(copper)
     return out .. "|cffffd700g|r"
 end
 
+-- Copper as "1,234g 56s 7c" (zero parts left out; below 1g silver/copper shown).
+function W.FormatMoney(copper)
+    copper = math.floor(copper or 0)
+    local gold = math.floor(copper / 10000)
+    local silver = math.floor((copper % 10000) / 100)
+    local cop = copper % 100
+    local parts = {}
+    if gold > 0 then parts[#parts + 1] = W.FormatGold(copper) end
+    if silver > 0 then parts[#parts + 1] = silver .. "|cffc7c7cfs|r" end
+    if cop > 0 and gold == 0 then parts[#parts + 1] = cop .. "|cffeda55fc|r" end
+    if #parts == 0 then return "0|cffeda55fc|r" end
+    return table.concat(parts, " ")
+end
+
 function W.FormatAgo(timestamp)
     if not timestamp then return ns.L["never"] end
     local diff = time() - timestamp

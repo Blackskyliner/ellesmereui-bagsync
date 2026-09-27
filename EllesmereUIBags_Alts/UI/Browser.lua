@@ -501,6 +501,46 @@ local function RenderResults(f, width)
     return y, #results, #pending
 end
 
+-- Sold auctions waiting as gold in the mailbox, newest first, as result rows.
+local function RenderSold(f, c, width, y)
+    local list = {}
+    for _, m in ipairs(c.mailSold or {}) do list[#list + 1] = m end
+    table.sort(list, function(a, b) return (a.at or 0) > (b.at or 0) end)
+    if #list == 0 then return y, 0 end
+    local h = f.grid:AcquireHeader()
+    h:ClearAllPoints()
+    h:SetPoint("TOPLEFT", f.scroll.content, "TOPLEFT", 2, -y - 2)
+    h:SetText(L["Sold (gold waiting in the mailbox)"])
+    local ar, ag, ab = Ext:GetAccentColor()
+    h:SetTextColor(ar, ag, ab)
+    y = y + 20
+    for _, m in ipairs(list) do
+        local id, count, link = ns.DecodeItem(m.e)
+        local r = PoolAcquire(f.results)
+        r:ClearAllPoints()
+        r:SetPoint("TOPLEFT", 0, -y)
+        r:SetWidth(width)
+        r.itemID = id
+        local _, _, _, _, icon = C_Item.GetItemInfoInstant(id)
+        r.icon:SetTexture(icon or 134400)
+        local name = (link and link:match("|h%[(.-)%]|h")) or C_Item.GetItemInfo(id) or ("item:" .. id)
+        r.name:SetText((count and count > 1) and (count .. "x " .. name) or name)
+        local quality = C_Item.GetItemQualityByID(link or id)
+        local color = quality and ITEM_QUALITY_COLORS and ITEM_QUALITY_COLORS[quality]
+        if color then r.name:SetTextColor(color.r, color.g, color.b) else r.name:SetTextColor(1, 1, 1) end
+        r.total:SetText(W.FormatMoney(m.money))
+        r.detail:SetText(W.FormatAgo(m.at))
+        y = y + RESULT_H
+    end
+    return y, #list
+end
+
+local function SoldTotal(c)
+    local total = 0
+    for _, m in ipairs(c.mailSold or {}) do total = total + (m.money or 0) end
+    return total
+end
+
 local function FooterFor(owner)
     if owner == ns.WARBAND_OWNER then
         local wb = ns.db.warband
@@ -513,8 +553,14 @@ local function FooterFor(owner)
     local c = ns.db.chars[owner]
     if not c then return "" end
     if state.tab == "auctions" then
-        return string.format("%s: %s   %s: %s", L["Gold"], W.FormatGold(c.money),
+        local value, count = ns.AuctionValue(c)
+        return string.format("%s: %s   %s: %s (%d)   %s: %s", L["Gold"], W.FormatGold(c.money),
+            L["On the auction house"], W.FormatMoney(value), count,
             L["Auctions scanned"], W.FormatAgo(c.auctions and c.auctions.scannedAt))
+    elseif state.tab == "mail" then
+        return string.format("%s: %s   %s: %s   %s: %s", L["Gold"], W.FormatGold(c.money),
+            L["Gold in mail"], W.FormatMoney(SoldTotal(c)),
+            L["Mail scanned"], W.FormatAgo(c.mail and c.mail.scannedAt))
     end
     return string.format("%s: %s   %s: %s   %s: %s   %s: %s",
         L["Gold"], W.FormatGold(c.money),
@@ -578,6 +624,11 @@ function Browser:Refresh()
         if sections then
             height = f.grid:Layout(sections, width)
             count = f.grid.used
+        end
+        if isChar and state.tab == "mail" then
+            local sold
+            height, sold = RenderSold(f, ns.db.chars[owner], width, height)
+            count = count + sold
         end
         if count == 0 then
             local hint = L["Nothing stored here yet."]
