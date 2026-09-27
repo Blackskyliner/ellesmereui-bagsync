@@ -68,22 +68,27 @@ local function CaptureOutgoing(recipient)
     pendingSend = #items > 0 and { recipient = known, items = items } or nil
 end
 
+-- Puts items "in transit" into a character's mailbox (sent mail, cancelled or
+-- expired auctions). The character's next inbox scan replaces them.
+function ns.AddIncomingMail(charKey, encodedItems, from)
+    local c = ns.GetChar(charKey, false)
+    if not c or #encodedItems == 0 then return end
+    local expires = time() + MAIL_LIFETIME_DAYS * DAY
+    local added = {}
+    for i = 1, #encodedItems do
+        local entry = { e = encodedItems[i], x = expires, from = from }
+        c.mailIncoming[#c.mailIncoming + 1] = entry
+        added[#added + 1] = entry
+    end
+    ns.Index:Replace(charKey, "mail", nil, added)
+    ns.Fire("CHAR_UPDATED", charKey, "mail")
+end
+
 local function CommitOutgoing()
     local send = pendingSend
     pendingSend = nil
     if not send then return end
-    local c = ns.GetChar(send.recipient, false)
-    if not c then return end
-    local expires = time() + MAIL_LIFETIME_DAYS * DAY
-    local from = ns.GetPlayerKey()
-    local added = {}
-    for i = 1, #send.items do
-        local entry = { e = send.items[i], x = expires, from = from }
-        c.mailIncoming[#c.mailIncoming + 1] = entry
-        added[#added + 1] = entry
-    end
-    ns.Index:Replace(send.recipient, "mail", nil, added)
-    ns.Fire("CHAR_UPDATED", send.recipient, "mail")
+    ns.AddIncomingMail(send.recipient, send.items, ns.GetPlayerKey())
 end
 
 local function OnMailShow()
