@@ -101,7 +101,7 @@ L["toggle the browser"] = "mostrar/ocultar el explorador"
 L["toggle tooltip counts"] = "activar/desactivar las cantidades en la descripción emergente"
 L["version"] = "versión"
 
--- Auction house tracking (0.2.0)
+-- Auction house tracking
 L["Auctions"] = "Subastas"
 L["Active auctions"] = "Subastas activas"
 L["Auctions scanned"] = "Subastas registradas"
@@ -115,28 +115,28 @@ L["Sold (gold waiting in the mailbox)"] = "Vendido (oro esperando en el buzón)"
 L["Gold in mail"] = "Oro en el correo"
 L["On the auction house"] = "En la casa de subastas"
 
--- Currency groups (0.4.0)
+-- Currency groups
 L["Character-bound"] = "Ligada al personaje"
 L["Transferable"] = "Transferible"
 L["Warband-wide (shared)"] = "De toda la banda guerrera (compartida)"
 
--- Equipment sets (0.4.0)
+-- Equipment sets
 L["Equipment sets: %s"] = "Conjuntos de equipamiento: %s"
 
--- All characters / realm overview (0.6.0)
+-- All characters / realm overview
 L["All characters"] = "Todos los personajes"
 L["Everything"] = "Todo"
 L["%d characters"] = "%d personajes"
 
--- Currency search (0.6.2)
+-- Currency search
 L["Items"] = "Objetos"
 
--- Activation on first use (0.7.0)
+-- Activation on first use
 L["activated"] = "activado"
 L["yes"] = "sí"
 L["no (waiting for the first use: bags, bank, mailbox, auction house, guild bank, browser or tooltip)"] = "no (espera al primer uso: bolsas, banco, buzón, casa de subastas, banco de hermandad, explorador o descripción emergente)"
 
--- Self-test output (0.8.2)
+-- Self-test output
 L["FAILED"] = "ERROR"
 L["missing"] = "faltan"
 L["inconsistent (rebuilt)"] = "incoherente (reconstruido)"

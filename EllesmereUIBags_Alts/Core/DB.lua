@@ -12,7 +12,7 @@
 --    warband  = { money, moneyAt, bank = Container, bankAt }
 --    guilds   = { ["Guild-Realm"] = { name, realm, faction, money, scannedAt, tabs = { [tab] = Container } } }
 --    currencyMeta = { [currencyID] = { t = transferable, w = warbandWide } }
---    moneyRepaired = true   -- the 0.1.0 gold repair ran (Collect/Character.lua)
+--    moneyRepaired = true   -- gold repair for 0.1.0 databases done (Collect/Character.lua)
 --
 --  Container = { size = n, name = str?, icon = fileID?, items = "slot:enc;..." (packed, Keys.lua),
 --                sets = { [slot] = "Set A, Set B" }? }   -- equipment sets (bags, worn)
@@ -97,7 +97,8 @@ local function Recode(enc)
     return ns.EncodeItem(id, count, link, bound)
 end
 
--- Up to 0.7.x containers kept a table { [slot] = enc }: packed here once.
+-- Databases from 0.7.x and earlier hold containers as tables { [slot] = enc };
+-- they are packed here once, so the rest of the code only knows one format.
 -- Packed strings are re-packed only when they hold something malformed.
 local function SanitizeItems(items)
     local map, clean = {}, true

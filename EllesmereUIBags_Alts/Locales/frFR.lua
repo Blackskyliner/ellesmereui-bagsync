@@ -100,7 +100,7 @@ L["show status"] = "afficher l'état"
 L["toggle the browser"] = "afficher/masquer le navigateur"
 L["toggle tooltip counts"] = "activer/désactiver les quantités dans l'infobulle"
 
--- Auction house tracking (0.2.0)
+-- Auction house tracking
 L["Auctions"] = "Ventes"
 L["Active auctions"] = "Ventes actives"
 L["Auctions scanned"] = "Ventes analysées"
@@ -114,28 +114,28 @@ L["Sold (gold waiting in the mailbox)"] = "Vendu (or en attente dans la boîte a
 L["Gold in mail"] = "Or dans le courrier"
 L["On the auction house"] = "À l'hôtel des ventes"
 
--- Currency groups (0.4.0)
+-- Currency groups
 L["Character-bound"] = "Liée au personnage"
 L["Transferable"] = "Transférable"
 L["Warband-wide (shared)"] = "Commune au bataillon"
 
--- Equipment sets (0.4.0)
+-- Equipment sets
 L["Equipment sets: %s"] = "Ensembles d'équipement : %s"
 
--- All characters / realm overview (0.6.0)
+-- All characters / realm overview
 L["All characters"] = "Tous les personnages"
 L["Everything"] = "Tout"
 L["%d characters"] = "%d personnages"
 
--- Currency search (0.6.2)
+-- Currency search
 L["Items"] = "Objets"
 
--- Activation on first use (0.7.0)
+-- Activation on first use
 L["activated"] = "activé"
 L["yes"] = "oui"
 L["no (waiting for the first use: bags, bank, mailbox, auction house, guild bank, browser or tooltip)"] = "non (attend la première utilisation : sacs, banque, boîte aux lettres, hôtel des ventes, banque de guilde, navigateur ou infobulle)"
 
--- Self-test output (0.8.2)
+-- Self-test output
 L["FAILED"] = "ÉCHEC"
 L["missing"] = "manquant"
 L["inconsistent (rebuilt)"] = "incohérent (reconstruit)"

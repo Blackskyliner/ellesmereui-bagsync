@@ -97,7 +97,7 @@ L["toggle the browser"] = "Browser ein-/ausblenden"
 L["toggle tooltip counts"] = "Tooltip-Anzahlen ein-/ausschalten"
 L["version"] = "Version"
 
--- Auction house tracking (0.2.0)
+-- Auction house tracking
 L["Auctions"] = "Auktionen"
 L["Active auctions"] = "Aktive Auktionen"
 L["Auctions scanned"] = "Auktionen erfasst"
@@ -111,28 +111,28 @@ L["Sold (gold waiting in the mailbox)"] = "Verkauft (Gold wartet im Briefkasten)
 L["Gold in mail"] = "Gold in der Post"
 L["On the auction house"] = "Im Auktionshaus"
 
--- Currency groups (0.4.0)
+-- Currency groups
 L["Character-bound"] = "Charaktergebunden"
 L["Transferable"] = "Überweisbar"
 L["Warband-wide (shared)"] = "Kriegsmeutenweit (geteilt)"
 
--- Equipment sets (0.4.0)
+-- Equipment sets
 L["Equipment sets: %s"] = "Ausrüstungs-Sets: %s"
 
--- All characters / realm overview (0.6.0)
+-- All characters / realm overview
 L["All characters"] = "Alle Charaktere"
 L["Everything"] = "Alles"
 L["%d characters"] = "%d Charaktere"
 
--- Currency search (0.6.2)
+-- Currency search
 L["Items"] = "Gegenstände"
 
--- Activation on first use (0.7.0)
+-- Activation on first use
 L["activated"] = "aktiviert"
 L["yes"] = "ja"
 L["no (waiting for the first use: bags, bank, mailbox, auction house, guild bank, browser or tooltip)"] = "nein (wartet auf die erste Nutzung: Taschen, Bank, Briefkasten, Auktionshaus, Gildenbank, Browser oder Tooltip)"
 
--- Self-test output (0.8.2)
+-- Self-test output
 L["FAILED"] = "FEHLGESCHLAGEN"
 L["missing"] = "fehlt"
 L["inconsistent (rebuilt)"] = "inkonsistent (neu aufgebaut)"

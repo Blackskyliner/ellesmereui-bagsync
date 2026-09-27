@@ -102,7 +102,7 @@ L["toggle the browser"] = "показать/скрыть обозревател�
 L["toggle tooltip counts"] = "вкл./выкл. количество в подсказках"
 L["version"] = "версия"
 
--- Auction house tracking (0.2.0)
+-- Auction house tracking
 L["Auctions"] = "Лоты"
 L["Active auctions"] = "Активные лоты"
 L["Auctions scanned"] = "Лоты считаны"
@@ -116,28 +116,28 @@ L["Sold (gold waiting in the mailbox)"] = "Продано (золото ждёт
 L["Gold in mail"] = "Золото на почте"
 L["On the auction house"] = "На аукционе"
 
--- Currency groups (0.4.0)
+-- Currency groups
 L["Character-bound"] = "Привязана к персонажу"
 L["Transferable"] = "Передаваемая"
 L["Warband-wide (shared)"] = "Общая для отряда"
 
--- Equipment sets (0.4.0)
+-- Equipment sets
 L["Equipment sets: %s"] = "Комплекты экипировки: %s"
 
--- All characters / realm overview (0.6.0)
+-- All characters / realm overview
 L["All characters"] = "Все персонажи"
 L["Everything"] = "Всё"
 L["%d characters"] = "Персонажей: %d"
 
--- Currency search (0.6.2)
+-- Currency search
 L["Items"] = "Предметы"
 
--- Activation on first use (0.7.0)
+-- Activation on first use
 L["activated"] = "активировано"
 L["yes"] = "да"
 L["no (waiting for the first use: bags, bank, mailbox, auction house, guild bank, browser or tooltip)"] = "нет (ожидает первого использования: сумки, банк, почтовый ящик, аукционный дом, гильдейский банк, обозреватель или подсказка)"
 
--- Self-test output (0.8.2)
+-- Self-test output
 L["FAILED"] = "ОШИБКА"
 L["missing"] = "отсутствуют"
 L["inconsistent (rebuilt)"] = "несогласован (перестроен)"

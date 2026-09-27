@@ -102,7 +102,7 @@ L["toggle the browser"] = "打开/关闭浏览器"
 L["toggle tooltip counts"] = "开关鼠标提示中的数量"
 L["version"] = "版本"
 
--- Auction house tracking (0.2.0)
+-- Auction house tracking
 L["Auctions"] = "拍卖"
 L["Active auctions"] = "进行中的拍卖"
 L["Auctions scanned"] = "拍卖记录"
@@ -116,28 +116,28 @@ L["Sold (gold waiting in the mailbox)"] = "已售出（金币在邮箱中等待�
 L["Gold in mail"] = "邮件中的金币"
 L["On the auction house"] = "拍卖行中"
 
--- Currency groups (0.4.0)
+-- Currency groups
 L["Character-bound"] = "角色绑定"
 L["Transferable"] = "可转移"
 L["Warband-wide (shared)"] = "战团通用（共享）"
 
--- Equipment sets (0.4.0)
+-- Equipment sets
 L["Equipment sets: %s"] = "装备配置方案：%s"
 
--- All characters / realm overview (0.6.0)
+-- All characters / realm overview
 L["All characters"] = "所有角色"
 L["Everything"] = "全部"
 L["%d characters"] = "%d个角色"
 
--- Currency search (0.6.2)
+-- Currency search
 L["Items"] = "物品"
 
--- Activation on first use (0.7.0)
+-- Activation on first use
 L["activated"] = "已激活"
 L["yes"] = "是"
 L["no (waiting for the first use: bags, bank, mailbox, auction house, guild bank, browser or tooltip)"] = "否（等待首次使用：背包、银行、邮箱、拍卖行、公会银行、浏览器或鼠标提示）"
 
--- Self-test output (0.8.2)
+-- Self-test output
 L["OK"] = "正常"
 L["FAILED"] = "失败"
 L["missing"] = "缺失"

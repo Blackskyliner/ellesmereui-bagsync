@@ -101,7 +101,7 @@ L["toggle the browser"] = "mostrar/ocultar o navegador"
 L["toggle tooltip counts"] = "ativar/desativar as quantidades nas dicas"
 L["version"] = "versão"
 
--- Auction house tracking (0.2.0)
+-- Auction house tracking
 L["Auctions"] = "Leilões"
 L["Active auctions"] = "Leilões ativos"
 L["Auctions scanned"] = "Leilões registrados"
@@ -115,28 +115,28 @@ L["Sold (gold waiting in the mailbox)"] = "Vendido (ouro aguardando na caixa de 
 L["Gold in mail"] = "Ouro no correio"
 L["On the auction house"] = "Na casa de leilões"
 
--- Currency groups (0.4.0)
+-- Currency groups
 L["Character-bound"] = "Vinculada ao personagem"
 L["Transferable"] = "Transferível"
 L["Warband-wide (shared)"] = "De todo o Bando de Guerra (compartilhada)"
 
--- Equipment sets (0.4.0)
+-- Equipment sets
 L["Equipment sets: %s"] = "Conjuntos de Equipamentos: %s"
 
--- All characters / realm overview (0.6.0)
+-- All characters / realm overview
 L["All characters"] = "Todos os personagens"
 L["Everything"] = "Tudo"
 L["%d characters"] = "%d personagens"
 
--- Currency search (0.6.2)
+-- Currency search
 L["Items"] = "Itens"
 
--- Activation on first use (0.7.0)
+-- Activation on first use
 L["activated"] = "ativado"
 L["yes"] = "sim"
 L["no (waiting for the first use: bags, bank, mailbox, auction house, guild bank, browser or tooltip)"] = "não (aguardando o primeiro uso: bolsas, banco, caixa de correio, casa de leilões, banco da guilda, navegador ou dica)"
 
--- Self-test output (0.8.2)
+-- Self-test output
 L["FAILED"] = "FALHOU"
 L["missing"] = "ausentes"
 L["inconsistent (rebuilt)"] = "inconsistente (reconstruído)"

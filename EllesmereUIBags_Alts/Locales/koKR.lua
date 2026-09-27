@@ -102,7 +102,7 @@ L["toggle the browser"] = "탐색기 열기/닫기"
 L["toggle tooltip counts"] = "툴팁 개수 켜기/끄기"
 L["version"] = "버전"
 
--- Auction house tracking (0.2.0)
+-- Auction house tracking
 L["Auctions"] = "경매"
 L["Active auctions"] = "진행 중인 경매"
 L["Auctions scanned"] = "경매 기록"
@@ -116,28 +116,28 @@ L["Sold (gold waiting in the mailbox)"] = "판매됨 (우편함에서 골드 대
 L["Gold in mail"] = "우편함 골드"
 L["On the auction house"] = "경매장에 등록됨"
 
--- Currency groups (0.4.0)
+-- Currency groups
 L["Character-bound"] = "캐릭터 귀속"
 L["Transferable"] = "이전 가능"
 L["Warband-wide (shared)"] = "전투부대 공유"
 
--- Equipment sets (0.4.0)
+-- Equipment sets
 L["Equipment sets: %s"] = "장비 구성: %s"
 
--- All characters / realm overview (0.6.0)
+-- All characters / realm overview
 L["All characters"] = "모든 캐릭터"
 L["Everything"] = "전체"
 L["%d characters"] = "캐릭터 %d명"
 
--- Currency search (0.6.2)
+-- Currency search
 L["Items"] = "아이템"
 
--- Activation on first use (0.7.0)
+-- Activation on first use
 L["activated"] = "활성화됨"
 L["yes"] = "예"
 L["no (waiting for the first use: bags, bank, mailbox, auction house, guild bank, browser or tooltip)"] = "아니요 (처음 사용 대기 중: 가방, 은행, 우체통, 경매장, 길드 은행, 탐색기 또는 툴팁)"
 
--- Self-test output (0.8.2)
+-- Self-test output
 L["OK"] = "정상"
 L["FAILED"] = "실패"
 L["missing"] = "누락"
