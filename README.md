@@ -1,322 +1,288 @@
 # EllesmereUI Bags: Alts
 
-Companion-Addon für **EllesmereUI Bags** (WoW Midnight 12.x). Es speichert Taschen,
-Ausrüstung, Bank, Kriegsmeutenbank, Post, eigene Auktionen, Währungen und optional die Gildenbank
-aller deiner Charaktere. Die Bestände zeigt es auf Wunsch im Item-Tooltip und in
-einem eigenen Browser-Fenster an, ähnlich wie Baganator.
+A companion addon for **[EllesmereUI](https://github.com/EllesmereGaming/EllesmereUI) Bags** in
+World of Warcraft: Midnight (12.x). It remembers what all your characters carry: bags,
+equipped gear, character bank, warband bank, mailbox, own auctions, currencies and,
+if you want, your guild bank. It shows that stock in item tooltips and in a browser
+window across all characters, similar to Baganator, in EllesmereUI's look.
 
-- Begleit-Addon zu **EllesmereUI Bags** (Abhängigkeit, damit auch der
-  EllesmereUI-Kern). Es genügt EllesmereUI mit nur dem Bags-Modul, die übrigen
-  Module sind nicht nötig. **EllesmereUI wird nicht verändert.** Ist EUIs Modul
-  für Blizzard-Fenster (EllesmereUIBlizzardSkin) aktiv, trägt der Browser EUIs
-  Look, sonst eine schlichte eigene Optik.
-- Alles Sichtbare ist standardmäßig **aus** und wird erst nach Zustimmung aktiv
-  (siehe „Erster Start“).
-- Eine Zwischenschicht (`Libs/EUIBagsExt`) kapselt jeden Zugriff auf EllesmereUI.
-  Der passende Upstream-Vorschlag für EllesmereUI liegt in `upstream/`.
+> **About AI assistance.** This addon was built with an AI coding assistant (Claude,
+> by Anthropic), used strictly as an implementation tool. The idea, the scope, the
+> design decisions and the direction of every change came from the human maintainer,
+> who guided the work closely throughout development and tested it manually in the
+> game along the way. The AI was not used as a source of ideas. Every feature has been
+> validated in the game by a human.
 
-## Sprachen
+Version 0.8.0, by Blackskyliner.
 
-Das Addon hat dieselben Sprachen wie das EllesmereUI-Repo: Englisch (Basis),
-Deutsch, Spanisch (EU und Lateinamerika), Französisch, Italienisch, Koreanisch,
-Portugiesisch (Brasilien), Russisch, Chinesisch (vereinfacht und traditionell).
-Es gelten die Konventionen aus EUIs `CONTRIBUTING_TRANSLATIONS.md`:
-- Der englische Text ist der Schlüssel.
-- Die Dateien sind UTF-8 ohne BOM, mit echten Sonderzeichen.
-- Nur die Datei der Client-Sprache legt Einträge an.
-- Fehlende Einträge fallen auf Englisch zurück.
+## What it does
 
-Spielbegriffe (Kriegsmeutenbank, Reagenzientasche usw.) folgen Blizzards bzw.
-EllesmereUIs eigenen Übersetzungen. Die Übersetzungen sind KI-erstellt
-und nicht muttersprachlich geprüft. Korrekturen sind willkommen, der Test
-`spec/locales_spec.lua` prüft dabei Abdeckung, Platzhalter und Kodierung.
+- **Remembers every character.** Bags (incl. reagent bag), equipped gear, gold,
+  level and guild are kept up to date while you play. Bank, warband bank, mailbox,
+  auction house and guild bank are recorded whenever you visit them.
+- **Tooltip counts** (opt-in): every item tooltip lists which character has how
+  many and where (bags, bank, equipped, mail, auctions), plus the warband bank,
+  guild banks and a total.
+- **Browser** (`/alts`): a window with all characters grouped by realm, the warband
+  bank and your guild banks, with tabs for bags, bank, equipped, mail, auctions and
+  currencies. An **Everything** tab merges all locations of a character, and the
+  **All characters** entry and every realm header merge everything you own.
+- **Search** across all characters and all stored currencies.
+- **Currencies** grouped into character-bound, transferable and warband-wide, with
+  a tooltip that shows who holds how much.
+- **Auction tracking**: posted auctions appear immediately, cancelled and expired
+  ones move to "Mail -> In transit", sold ones wait under "Mail -> Sold" with the
+  amount until you open the mailbox. The auctions footer shows the value of all
+  active auctions.
+- **Bound state and equipment sets**: stored items remember whether they are
+  soulbound or warbound, and which equipment sets they belong to.
+- **A button in the EllesmereUI bag header** (opt-in) that opens the browser.
+- **Ten languages**, the same as EllesmereUI.
+
+It only displays. The browser never uses, moves or picks up items.
+
+## Design principles
+
+The addon follows the five acceptance criteria EllesmereUI sets for its own code
+(`.github/CONTRIBUTING.md` in the EllesmereUI repository). In short:
+
+- **Nothing happens until you use it.** At login the addon scans nothing, checks no
+  data and registers no collector event. It only waits for its first use in a
+  session (opening the EUI bags, a bank, mailbox, auction house or guild bank, the
+  browser, or the first item tooltip when tooltip counts are on). Then it records
+  the current character once and stays event-driven from there.
+- **Nothing visible without consent.** Tooltip counts, the header button, EUI
+  categories, the guild bank and the active auction query are off by default.
+- **Cheap when on.** Event-driven only, no polling, no timers. Tooltip counts come
+  from caches, unit and world tooltips cost nothing.
+- **No taint.** No secure templates, no fields written onto EllesmereUI or Blizzard
+  frames, no hooks on Blizzard's bag windows, the browser uses its own tooltip.
+- **Midnight only.**
+
+Every access to EllesmereUI goes through a small connector layer
+(`Libs/EUIBagsExt`). EllesmereUI itself is never modified. A proposal for native
+extension points in EllesmereUI Bags is in [`upstream/`](upstream/).
+
+## Requirements
+
+- World of Warcraft: Midnight, interface 12.0 to 12.1.
+- **EllesmereUI with the Bags module** (a dependency; EllesmereUI's core plus the
+  Bags module is enough, the other modules are not needed).
+- Optional: EllesmereUI's Blizzard skin module (EllesmereUIBlizzardSkin). With it
+  the browser wears EllesmereUI's window look, without it a plain look of its own.
 
 ## Installation
 
-1. Den Ordner `EllesmereUIBags_Alts` (oder den Inhalt von
-   `dist/EllesmereUIBags_Alts-<version>.zip`) nach
-   `World of Warcraft/_retail_/Interface/AddOns/` kopieren. Voraussetzung:
-   EllesmereUI mit dem Modul Bags.
-2. Im Charakterauswahl-Bildschirm unter „AddOns“ prüfen, dass
-   „EllesmereUI Bags: Alts“ aktiv ist. Ohne EllesmereUI Bags meldet WoW eine
-   fehlende Abhängigkeit und lädt das Addon nicht.
-3. Einloggen. Daten sammeln sich ab jetzt pro Charakter: **jeden Charakter
-   einmal einloggen**, für Bankdaten einmal einen Bankier besuchen und für
-   Postdaten einmal einen Briefkasten öffnen.
+1. Copy the folder `EllesmereUIBags_Alts` (or the contents of
+   `dist/EllesmereUIBags_Alts-<version>.zip`) into
+   `World of Warcraft/_retail_/Interface/AddOns/`.
+2. Check under "AddOns" on the character selection screen that
+   "EllesmereUI Bags: Alts" is enabled. Without EllesmereUI Bags, WoW reports a
+   missing dependency and does not load it.
+3. Log in each character once and open its bags; visit a banker once for bank
+   data and a mailbox once for mail.
 
-## Erster Start
+## First run
 
-- Beim ersten Login erscheint nur eine Chat-Zeile mit Hinweis auf `/alts`.
-- Beim **ersten Öffnen der Tasche** fragt ein Popup, ob die Tooltip-Anzahlen
-  und der Button im Taschen-Kopf aktiviert werden sollen. Die Frage kommt erst
-  dann, weil EUI beim Login eigene Popups zeigt.
-- Die Entscheidung lässt sich jederzeit ändern: Optionen → AddOns →
-  „EllesmereUI Bags: Alts“ oder `/alts options`.
+- The first login prints one chat line pointing to `/alts`.
+- The **first time you open your bags**, a popup asks whether to turn on tooltip
+  counts and the bag header button. It waits until then because EllesmereUI shows
+  its own popups at login.
+- Change your mind any time: Options -> AddOns -> "EllesmereUI Bags: Alts", or
+  `/alts options`.
 
-## Bedienung
+## Usage
 
-| Befehl | Wirkung |
+| Command | Effect |
 |---|---|
-| `/alts` | Browser öffnen/schließen |
-| `/alts search <text>` | Suche über alle Charaktere |
-| `/alts options` | Einstellungen öffnen |
-| `/alts tooltip` | Tooltip-Anzahlen an/aus |
-| `/alts status` | Version, gespeicherte Charaktere, aktive Funktionen, registrierte Events |
-| `/alts debug` | Diagnose-Ausgaben im Chat an/aus, etwa zu Auktions-Events mit IDs. Hilfreich für Fehlerberichte. |
-| `/alts selftest` | Gleicht die gespeicherten Daten dieses Charakters mit dem Spiel ab (siehe unten) |
-| `/alts delete Name-Realm` | Daten eines anderen Charakters löschen (mit Rückfrage) |
+| `/alts` | Open or close the browser |
+| `/alts search <text>` | Search across all characters |
+| `/alts options` | Open the options |
+| `/alts tooltip` | Tooltip counts on/off |
+| `/alts status` | Version, stored characters, whether and by what the addon was activated, active features, registered events |
+| `/alts debug` | Diagnostic chat output on/off (e.g. auction events with IDs, the guild bank walk). Useful for bug reports. |
+| `/alts selftest` | Compares this character's stored data with the game (see the test plan) |
+| `/alts delete Name-Realm` | Delete another character's data (asks first) |
 
-**Browser:** links die Charaktere nach Realm gruppiert, dazu Kriegsmeutenbank
-und Gildenbanken. Oben die Tabs Taschen, Bank, Angelegt, Post, Auktionen und Währungen,
-rechts die Items. Hover zeigt den Item-Tooltip, Shift-Klick verlinkt im Chat,
-Strg-Klick öffnet die Anprobe. Der Browser zeigt nur an und nimmt, verschiebt
-oder benutzt keine Items.
+**Browser.** On the left the characters grouped by realm, then the warband bank
+and the guild banks. At the top the tabs Everything, Bags, Bank, Equipped, Mail,
+Auctions and Currencies. Hover shows the item tooltip, shift-click links an item
+in chat, ctrl-click opens the dressing room.
 
-**Übersichten:** Ganz oben in der Seitenleiste steht „Alle Charaktere“, jede
-Realm-Überschrift ist ebenfalls anklickbar. Beide zeigen alle gespeicherten
-Items zusammengefasst: gleiche Items ergeben einen Platz mit der Gesamtzahl,
-Ausrüstung mit unterschiedlichem Link bleibt getrennt. Die Items sind nach
-Gegenstandsklasse gruppiert (oder nach EUI-Kategorien, wenn die Option an ist).
-Der Tab „Alles“ umfasst Taschen, Banken, Angelegtes, Post,
-Auktionen und Gildenbanken, die übrigen Tabs filtern nach Ort. Auch jeder
-einzelne Charakter hat den Tab „Alles“: dieselbe zusammengefasste Ansicht über
-alle Orte dieses Charakters, der Tooltip nennt die Orte (z. B. „Taschen: 20,
-Bank: 5“). Der Tooltip
-zeigt hier immer, wer wie viel hat, auch wenn die Tooltip-Option aus ist. Die
-Realm-Übersicht enthält nur die Charaktere und Gildenbanken dieses Realms. Die
-Kriegsmeutenbank ist accountweit und gehört nur zu „Alle Charaktere“. Im
-Footer stehen die Goldsumme und die Zahl der Charaktere.
+**Overviews.** "All characters" at the top of the sidebar and every realm header
+show all stored items merged: equal items share one slot with the total amount,
+gear with different links stays apart. Items are grouped by item class, or by
+EllesmereUI's bag categories when that option is on. The Everything tab covers
+bags, banks, equipped gear, mail, auctions and guild banks; the other tabs filter
+by location. Every character has an Everything tab as well. In these views the
+tooltip always shows who holds how many, even with tooltip counts off. A realm
+overview contains only that realm's characters and guild banks; the warband bank
+is account-wide and belongs to "All characters". The footer shows the total gold
+and the number of characters.
 
-**Währungen:** Der Tab gruppiert nach „Charaktergebunden“ und „Überweisbar“
-(in der Kriegsmeute übertragbar). Kriegsmeutenweite Währungen teilen alle
-Charaktere, sie sind also weder gebunden noch überweisbar. Sie stehen in einem
-eigenen Abschnitt „Kriegsmeutenweit (geteilt)“, der nur erscheint, wenn solche
-Währungen vorkommen. Die Art jeder Währung merkt sich das Addon accountweit,
-damit auch die Währungen anderer Charaktere richtig einsortiert werden.
-Hover über eine Währung zeigt Blizzards Währungs-Tooltip und darunter, welcher
-Charakter wie viel hat, mit Summe. In den Übersichten werden Währungen
-aufsummiert. Kriegsmeutenweite Währungen zählen dabei nur einmal.
+**Currencies.** Grouped into character-bound, transferable (within the warband)
+and warband-wide (shared, shown only if any exist). The kind of every currency is
+remembered account-wide, so offline characters sort correctly too. Hovering a
+currency shows Blizzard's currency tooltip plus every character's amount and the
+total. Overviews add currencies up; warband-wide ones count once.
 
-**Bindung und Sets:** Das Addon merkt sich pro Item, ob es seelengebunden
-oder kriegsmeutengebunden ist. Im Browser-Tooltip steht bei gebundenen Items
-deshalb „Seelengebunden“ bzw. „Kriegsmeutengebunden“ statt der allgemeinen
-Angabe „Beim Anlegen gebunden“. Items ohne diesen Hinweis sind noch frei
-beweglich, „kriegsmeutengebunden bis zum Anlegen“ bleibt sichtbar. Gehört ein
-Item zu einem Ausrüstungsset (Taschen oder angelegt), nennt der Tooltip die
-Sets. Der Browser zeigt Items in einem eigenen Tooltip-Fenster, Blizzards
-`GameTooltip` bleibt unberührt.
+**Bound state and sets.** A stored item that is bound shows "Soulbound" or
+"Warbound" in the browser tooltip instead of the generic "Binds when equipped";
+items without such a line can still move. If an item belongs to equipment sets
+(bags or worn), the tooltip names them.
 
-**Suche:** Wörter (Namensbestandteile), `12345` oder `id:12345` (Item-ID),
-`q:epic` oder `q:4` (Qualität), `t:rüstung` (Typ/Untertyp). Mehrere Begriffe
-müssen alle zutreffen. Wörter und eine Zahl durchsuchen auch die Namen der
-gespeicherten Währungen. Treffer stehen oben unter „Währungen“ mit der Summe
-über alle Charaktere und den Beständen pro Charakter, Hover zeigt den
-Währungs-Tooltip, Shift-Klick verlinkt die Währung im Chat. `id:`, `q:` und
-`t:` filtern nur Items.
+**Search.** Words (parts of the name), `12345` or `id:12345` (item ID), `q:epic`
+or `q:4` (quality), `t:armor` (type/subtype). All terms must match. Words and a
+number also search the names of stored currencies; those hits come first, with the
+total and the per-character amounts. `id:`, `q:` and `t:` filter items only.
 
-**Tooltip:** Pro Charakter eine Zeile mit Aufteilung nach Ort, dazu
-Kriegsmeutenbank, Gildenbank und Summe. Er erscheint nur an Item-Tooltips aus
-Taschen, Bank, Chat-Links, AH usw., nicht an Units oder Objekten in der Welt. Einstellbar sind: nur bei gedrückter
-Umschalt-, Strg- oder Alt-Taste, Realm-Umfang (verbundene Realms, nur dieser
-Realm oder alle), aktuellen Charakter ausblenden und maximale Zeilenzahl.
+**Tooltip counts.** One line per character with the split by location, plus the
+warband bank, guild banks and the total, at most ten characters. They appear on
+item tooltips (bags, bank, chat links, auction house and so on), never on units
+or world objects. Options: only while Shift, Ctrl or Alt is held; realm scope
+(connected realms, this realm, all realms); total; hide the current character;
+include the warband bank; include guild banks.
 
-## Wann welche Daten erfasst werden
+## When data is recorded
 
-**Erst ab der ersten Benutzung.** Beim Einloggen scannt das Addon nichts,
-prüft keine gespeicherten Daten und registriert kein Collector-Event. Es hängt
-nur seine Auslöser ein: EUIs Taschenfenster, ein einziges Event für Bank,
-Briefkasten, Auktionshaus und Gildenbank, den Browser (`/alts`, Header-Button),
-die öffentliche API und, wenn die Tooltip-Option an ist, den ersten
-Item-Tooltip. Beim ersten Auslöser einer Sitzung wird das Addon aktiviert,
-genau einmal. Dann erfasst es den aktuellen Charakter einmal vollständig, und
-ab da gilt die Tabelle. Das NPC-Fenster, das die Aktivierung ausgelöst hat,
-wird bei demselben Besuch schon erfasst. `/alts status` zeigt, ob und wodurch
-das Addon aktiviert wurde. Blizzards eigene Taschenfenster werden nie
-eingehängt, weil EllesmereUI Bags vorausgesetzt ist. Ladebildschirme
-(Instanzen, Portale) lösen keine erneuten Scans aus.
+Nothing is recorded before the first use in a session (see Design principles).
+The NPC window that triggers the activation is recorded in the same visit. After
+that:
 
-| Quelle | Wann (nach der Aktivierung) | Hinweis |
+| Source | When | Note |
 |---|---|---|
-| Taschen inkl. Reagenzientasche | laufend | nach jeder Änderung, gebündelt pro Update-Schub |
-| Angelegte Ausrüstung | laufend | |
-| Gold, Level, Gilde | laufend | |
-| Charakterbank + Kriegsmeutenbank | **nur am Bankier** | Zeitstempel „Bank erfasst“ im Browser |
-| Post | **nur am Briefkasten** | Post an eigene Charaktere erscheint sofort als „Unterwegs“ beim Empfänger |
-| Eigene Auktionen | **nur im Auktionshaus** | Standardmäßig passiv: Gelesen wird, was der Client meldet, etwa beim Öffnen des Reiters „Auktionen“. Opt-in: beim Öffnen selbst abfragen. **Neu eingestellte Auktionen erscheinen sofort**, auch mit Bestätigungsdialog und bei Mehrfach-Einstellungen. Abgebrochene Auktionen wandern sofort in „Post → Unterwegs“, abgelaufene spätestens beim nächsten Login. **Verkaufte Auktionen** stehen mit dem erzielten Betrag unter „Post → Verkauft“, bis du den Briefkasten öffnest. Sie werden live erkannt (Verkaufsmeldung, auch außerhalb des AH) und beim Abgleich mit der Auktionsliste, bei Commodities auch Teilverkäufe. Der Footer im Auktionen-Tab zeigt den möglichen Erlös aller aktiven Auktionen. |
-| Währungen | laufend | Die Erstliste enthält nur aufgeklappte Kategorien, danach wird jede Änderung erfasst |
-| Gildenbank (Opt-in) | **nur an der Gildenbank** | liest alle Fächer, die du sehen darfst |
+| Bags incl. reagent bag | continuously | after every change, batched per update burst |
+| Equipped gear | continuously | |
+| Gold, level, guild | continuously | |
+| Character bank + warband bank | **only at the banker** | "Bank scanned" timestamp in the browser |
+| Mail | **only at the mailbox** | mail to your own characters appears at once as "In transit" at the recipient |
+| Own auctions | **only at the auction house** | Passive by default: what the client reports, e.g. when the Auctions tab opens. Opt-in: query on opening. New auctions appear immediately, also with the confirmation dialog and multi-posts. Cancelled ones move to "Mail -> In transit" at once, expired ones at the latest on the next login. Sold ones show with the amount under "Mail -> Sold" until you open the mailbox; they are detected live (sale notification, also outside the AH) and when the list is compared, for commodities including partial sales. |
+| Currencies | continuously | the first list only contains expanded categories, every change after that is recorded |
+| Guild bank (opt-in) | **only at the guild bank** | reads every tab you may view |
 
-Die Daten liegen accountweit in `WTF/Account/<ACCOUNT>/SavedVariables/EllesmereUIBags_Alts.lua`
-(Variable `EllesmereUIBagsAltsDB`), bewusst getrennt von `EllesmereUIDB`.
-Jede Tasche, jedes Bankfach und jedes Gildenbankfach steht dort als **ein**
-String (`"slot:itemID,Anzahl;…"`). Von Item-Links wird nur der `item:`-Kern
-gespeichert, Name und Farbe kommen aus dem Item-Cache. Bei 20 Charakteren mit
-je 150 Items in den Taschen und 300 in der Bank sind das rund 200 KB statt
-über 300 KB, und das Laden kostet etwa ein Viertel der Zeit und des Speichers.
-Seit 0.8.0 werden ältere Daten beim ersten Benutzen einmal umgewandelt. Eine
-ältere Version des Addons kann das neue Format nicht lesen und verwirft dann
-die Container-Inhalte, bis die Charaktere neu erfasst sind.
+Loading screens (instances, portals) trigger no rescans.
 
-## Ingame-Testplan
+### Storage
 
-Vorbereitung: [BugGrabber](https://www.curseforge.com/wow/addons/bug-grabber) und
-[BugSack](https://www.curseforge.com/wow/addons/bugsack) installieren, dann einmal
-`/console taintLog 1` eingeben (das Log landet in `Logs/taint.log`).
+The data lives account-wide in `WTF/Account/<ACCOUNT>/SavedVariables/EllesmereUIBags_Alts.lua`
+(`EllesmereUIBagsAltsDB`), deliberately apart from EllesmereUI's own saved
+variables. Every bag, bank tab and guild bank tab is stored as **one** string
+(`"slot:itemID,count;..."`); item links keep only their `item:` core, name and
+colour come from the item cache. With 20 characters holding 150 items in their bags
+and 300 in their bank, plus 300 in the warband bank, that is about 200 KB, and
+loading it takes under a millisecond (measured in Lua 5.1). Data from versions
+before 0.8.0 is converted once on the first use; older versions of the addon
+cannot read the new format.
 
-1. **Laden:** Einloggen, keine BugSack-Meldung. `/alts status` zeigt 1
-   Charakter und die aktiven Funktionen `character, bags, equipped, bank, mail,
-   currency`.
-2. **Opt-in:** Tasche öffnen, das Popup erscheint. „Aktivieren“ klicken, danach
-   ist neben der Item-Anzahl im Kopf der EUI-Tasche ein kleiner Button zu sehen.
-3. **Selbsttest:** `/alts selftest` zeigt „OK“. Er prüft, dass alle genutzten
-   APIs im Client existieren, dass die gespeicherten Taschen- und
-   Ausrüstungs-Anzahlen `C_Item.GetItemCount` entsprechen und dass der
-   inkrementelle Index einem Neuaufbau entspricht.
-4. **Taschen live:** Ein Item verschieben, aufteilen oder verkaufen, dann erneut
-   `/alts selftest` ausführen. Das Ergebnis bleibt „OK“.
-5. **Bank:** Einen Bankier besuchen, im Browser unter „Bank“ erscheinen die
-   Fächer und bei „Kriegsmeutenbank“ die Warband-Fächer. Bei offener Bank ein
-   Item in die Bank legen, es erscheint dort sofort.
-6. **Zweiter Charakter:** Einen Twink einloggen, der Browser zeigt beide
-   Charaktere. Beim Hover über ein Item, das beide besitzen, zeigt der Tooltip
-   beide Zeilen und die Summe. „Alle Charaktere“ und die Realm-Überschrift
-   anklicken: Die Items beider Charaktere erscheinen zusammengefasst, der Tab
-   „Währungen“ zeigt Summen, Hover über eine Währung listet die Charaktere.
-7. **Post:** Mit Charakter A etwas an Charakter B schicken. Im Browser taucht es
-   bei B unter „Post → Unterwegs“ auf. Nach dem Einloggen von B und dem Öffnen
-   des Briefkastens steht es unter „Posteingang“.
-8. **Auktionen:** Ein Item einstellen. Es erscheint sofort im Browser unter
-   „Auktionen“, ohne dass du den Reiter „Auktionen“ öffnen musst, und der
-   Tooltip zeigt „Auktionen: n“. Der Footer zeigt „Im Auktionshaus: X (n)“.
-   Den Reiter einmal öffnen, die Liste bleibt gleich und ist nicht doppelt.
-   Eine Auktion abbrechen, das Item steht sofort unter „Post → Unterwegs“.
-   Wird etwas verkauft, steht es mit Betrag unter „Post → Verkauft“, und der
-   Footer zeigt „Gold in der Post“. Nach dem Öffnen des Briefkastens ist der
-   Eintrag weg. Bei Abweichungen `/alts debug` einschalten und die Chatzeilen
-   mitschicken.
-9. **Gildenbank (optional):** In den Optionen „Gildenbank“ aktivieren (sie ist
-   standardmäßig aus, `/alts status` listet `guildbank` unter den aktiven
-   Features) und die Gildenbank öffnen. Die Fächer erscheinen im Browser unter
-   „Gildenbanken“, auch beim ersten Besuch nach dem Einloggen. Mit
-   `/alts debug` meldet der Chat, wie viele Fächer bekannt sind und welches
-   Fach mit wie vielen Stapeln erfasst wurde.
-10. **Kampf/Instanz:** In einem Dungeon kämpfen, Taschen öffnen und `/alts`
-   öffnen. BugSack bleibt leer, und `taint.log` enthält keine Zeile mit
-   `EllesmereUIBags_Alts`.
-11. **Abschalten:** `/alts tooltip` blendet die Tooltip-Zeilen aus. Bei
-    abgeschaltetem Button in den Optionen verschwindet er aus dem Taschen-Kopf.
-12. **Ohne EUIs Blizzard-Skin (optional):** Das Modul EllesmereUIBlizzardSkin
-    deaktivieren. Das Addon läuft weiter, der Browser hat dann die schlichte
-    eigene Optik, die Item-Slots behalten EUI Bags' Look.
+## Limitations
 
-Falls etwas auffällt, bitte `/alts status` und `/alts selftest` ausführen und
-die Ausgabe sowie die BugSack-Meldung festhalten.
+- Bank, mail and guild bank are only as current as your last visit; the browser
+  footer shows the timestamps.
+- Only mail to characters that have logged in with the addon at least once is
+  tracked.
+- The first currency list does not contain collapsed categories; the addon does
+  not expand UI elements for you.
+- Commodity sales outside the AH only show at the next look at the auction list;
+  the sale notification does not say how many units were sold.
+- Amounts are gross; the AH fee is only taken by the mail. For auctions not posted
+  through this addon the price comes from the list, and for commodities it is taken
+  as the unit price.
+- EllesmereUI has no public API for option pages of other addons, so the options
+  live in Blizzard's settings (Options -> AddOns), which EllesmereUI's skin module
+  styles.
 
-## Grenzen
+## Manual in-game test plan
 
-- Bank, Post und Gildenbank sind nur so aktuell wie der letzte Besuch.
-  Zeitstempel stehen im Browser-Footer.
-- Nachverfolgt wird nur Post an Charaktere, die schon einmal mit dem Addon
-  eingeloggt waren.
-- Die erste Währungsliste enthält keine zugeklappten Kategorien. Das Addon
-  klappt keine UI-Elemente für dich auf.
-- Commodity-Verkäufe außerhalb des AH erscheinen erst beim nächsten Blick in
-  die Auktionsliste. Die Verkaufsmeldung sagt nicht, wie viele Einheiten
-  verkauft wurden.
-- Beträge sind Brutto, die AH-Gebühr zieht erst die Post ab. Für Auktionen, die
-  nicht über dieses Addon eingestellt wurden, stammt der Preis aus der Liste.
-  Bei Commodities wird er als Stückpreis gewertet, das ist im Client zu
-  bestätigen.
+Preparation: install [BugGrabber](https://www.curseforge.com/wow/addons/bug-grabber)
+and [BugSack](https://www.curseforge.com/wow/addons/bugsack), then enter
+`/console taintLog 1` once (the log goes to `Logs/taint.log`).
 
-## Entwicklung
+1. **Load:** log in, no BugSack message. `/alts status` shows "activated: no".
+2. **Activation and opt-in:** open the bags. `/alts status` now shows
+   "activated: yes (bags)" and the collectors among the active features. The
+   first-run popup appears; after "Enable" a small button sits next to the item
+   count in the EUI bag header.
+3. **Self-test:** `/alts selftest` reports "OK". It checks that every API the
+   addon uses exists in the client, that the stored bag and gear counts match
+   `C_Item.GetItemCount`, and that the incremental index equals a rebuild.
+4. **Bags live:** move, split or sell an item, run `/alts selftest` again; it stays
+   "OK".
+5. **Bank:** visit a banker. The browser shows the tabs under "Bank" and the
+   warband tabs under "Warband Bank". With the bank open, put an item in; it shows
+   up at once.
+6. **Second character:** log in an alt; the browser lists both. Hovering an item
+   both own shows both lines and the total. Click "All characters" and the realm
+   header: the items of both characters appear merged, the Currencies tab shows
+   totals, hovering a currency lists the characters.
+7. **Mail:** send something from character A to character B. It shows at B under
+   "Mail -> In transit"; after logging in B and opening the mailbox it is under
+   "Inbox".
+8. **Auctions:** post an item. It appears in the browser under "Auctions" at once,
+   without opening the Auctions tab, and the tooltip shows "Auctions: n"; the
+   footer shows "On the auction house: X (n)". Opening the tab keeps the list
+   unchanged. Cancel an auction: the item is under "Mail -> In transit" at once.
+   When something sells it is listed with the amount under "Mail -> Sold" and the
+   footer shows "Gold in mail"; opening the mailbox clears the entry. If anything
+   looks off, turn on `/alts debug` and include the chat lines.
+9. **Guild bank (optional):** enable "Guild bank" in the options (off by default;
+   `/alts status` then lists `guildbank`), open the guild bank. The tabs appear
+   under "Guild Banks", also on the first visit after logging in. With
+   `/alts debug` the chat reports how many tabs are known and each recorded tab.
+10. **Combat/instance:** fight in a dungeon, open the bags and `/alts`. BugSack
+    stays empty and `taint.log` contains no line with `EllesmereUIBags_Alts`.
+11. **Switching off:** `/alts tooltip` hides the tooltip lines; with the button
+    turned off in the options it leaves the bag header.
+12. **Without EUI's skin module (optional):** disable EllesmereUIBlizzardSkin. The
+    addon keeps working with its plain look; the item slots keep EUI Bags' look.
 
-```bash
-scripts/setup-tools.sh
-```
+If something is off, please run `/alts status` and `/alts selftest` and keep their
+output and the BugSack message.
 
-`setup-tools.sh` baut die projektlokale Toolchain in `.tools/`: Lua 5.1, busted,
-luacheck, Referenzquellen und den wow-ui-sim-Simulator. Den Simulator gibt es
-zweimal: headless für die Tests (`target/`) und mit GPU-Renderer für
-Screenshots (`target-gui/`). Dazu kommt eine Python-Umgebung (`.tools/venv`)
-mit Pillow für den Bildvergleich.
+## Languages
 
-```bash
-scripts/test.sh
-```
+English (base), German, Spanish (Spain and Latin America), French, Italian,
+Korean, Portuguese (Brazil), Russian, Chinese (simplified and traditional), the
+same set as EllesmereUI, following its `CONTRIBUTING_TRANSLATIONS.md`. Game terms
+follow Blizzard's and EllesmereUI's own translations. The translations were
+produced with the AI assistant and have not been reviewed by native speakers;
+corrections are welcome (see [CONTRIBUTING.md](CONTRIBUTING.md)).
 
-`test.sh` führt alle Prüfungen aus:
-
-1. **luacheck** (Lua 5.1, jede genutzte globale Variable deklariert).
-2. **API-Check** (`scripts/check-api.py`): Jede globale Funktion, jede
-   `C_*`-Funktion, jeder `Enum`-Wert, jedes Event und jedes Template muss in
-   Blizzards 12.1-Quellen bzw. den API-Annotationen existieren. Dazu kommen der
-   Vertrag mit dem EllesmereUI-Quellcode (20 Symbole) und die ASCII-Prüfung.
-3. **busted** (`spec/`): WoW-Client-Mock mit Taschen, Bank, Post, Gildenbank,
-   Secret Values und Relogs samt serialisierten SavedVariables. Nicht
-   modellierte Frame-Methoden werden nur akzeptiert, wenn sie echte
-   Widget-Methoden laut Blizzard-Doku sind.
-4. **wow-ui-sim** (`sim/`): Das Addon läuft im Headless-Simulator mit Blizzards
-   echtem FrameXML 12.1 und echtem EllesmereUI. Es gibt drei Durchläufe: EUI-Kern
-   mit Bags (so wie bei Standalone-Bags), zusätzlich mit EUIs Blizzard-Skin
-   (`skin`) und mit gepatchtem EUI Bags (Upstream-API). Jeder Lua-Fehler aus dem
-   Addon lässt den Lauf scheitern. `08_secure_combat.lua` ruft jeden Addon-Pfad
-   im Kampf als unsicheren Code auf. Der Simulator erzwingt geschützte Frames,
-   und jeder Treffer würde `ADDON_ACTION_BLOCKED` auslösen. Eine Positivkontrolle
-   in jedem Lauf beweist, dass die Sperre aktiv ist. Dazu prüft der Test, dass
-   kein eigener Frame geschützt ist und dass der Taint des Addons auf keinem
-   fremden globalen oder Blizzard/EUI-Tabellen-Slot liegt.
-   **Nicht abgedeckt:** Taint, der zur Laufzeit in Event-Handlern entsteht und
-   sich in Blizzards sicheren Code ausbreitet. Der Simulator verwirft ihn, das
-   deckt nur der Ingame-Schritt 9 mit `taint.log` ab.
-   `10_layout.lua` prüft Layout-Invarianten in jeder Browser-Ansicht (Charakter
-   mit allen Tabs, „Alle Charaktere“, Realm, Kriegsmeuten- und Gildenbank,
-   Suche) und bei zwei Skalierungen. Gemessen wird die Geometrie, die der
-   Simulator aus den echten Ankern berechnet. Nichts ragt aus dem Fenster
-   (Scrollinhalt nicht seitlich), Titel, Suche und Schließen-Button liegen in
-   EUIs 25-px-Titelleiste, Tabs, Grid-Slots und Textzeilen überlappen nicht,
-   und kein Frame liegt weit über dem Level seines Fensters. Die Testdaten
-   (`sim/.../Fixture.lua`) sind drei Charaktere auf zwei Realms mit Bank, Post,
-   Auktionen, Währungen, Kriegsmeuten- und Gildenbank.
-5. **Visual Regression** (`scripts/visual-test.sh`): Jedes Szenario in
-   `sim/visual/scenarios/` wird mit dem GPU-Build gerendert (EUI-Kern mit Bags),
-   auf den Ziel-Frame zugeschnitten und mit `sim/visual/baselines/<modus>/`
-   verglichen. Ein Pixel zählt als verändert, wenn ein Kanal um mehr als 24
-   abweicht. Ein Szenario scheitert ab 0,1 % veränderten Pixeln, bei geänderter
-   Größe oder bei einem Lua-Fehler. Ergebnis, Diff-Bilder (Änderungen rot) und
-   `report.html` landen in `.tools/visual-out/`. Nach einer gewollten
-   Änderung übernimmt `scripts/visual-test.sh --update [szenario...]` die neuen
-   Bilder. Die Referenzbilder vor dem Commit ansehen.
-   **Grenzen:** Ohne lokale WoW-Installation fehlen Blizzards Texturen
-   (Item-Icons, Atlanten), und native Tooltip-Zeilen erzeugt der Simulator
-   nicht. Die Bilder zeigen Layout, EUI Bags' Slot-Look und unsere Texte,
-   nicht die exakte Optik im Spiel. Den vollen EUI-Skin rendern sie nicht: Im
-   Simulator greifen Methoden-Hooks auf ein Objekt auf alle Objekte desselben
-   Typs über (`sim/.../tests/00_harness.lua` hält das fest), dadurch blendet EUIs
-   Settings-Skin dort jede Textur aus. Die Geometrie mit Skin prüfen die
-   Layout-Tests im Durchlauf `skin`. Mit
-   `WOW_INSTALL_PATH` auf eine WoW-Installation zeigen die Renders auch die
-   Blizzard-Grafiken, dann müssen die Referenzbilder neu erzeugt werden.
-
-Struktur: `EllesmereUIBags_Alts/` (Addon), `spec/` (busted), `sim/`
-(Simulator-Tests), `upstream/` (Vorschlag für EllesmereUI), `scripts/`
-(Toolchain, Checks, Tests), `PLAN.md` (Konzept), `TODO.md` (Arbeits-Checkliste).
-
-### Öffentliche API für andere Addons
+## Public API for other addons
 
 ```lua
 local total, byOwner = EllesmereUIBagsAlts.GetItemCount(itemID)
--- byOwner["Name-Realm"].bags / .bank / .equipped / .mail / .auctions, byOwner["#warband"].warband, byOwner["@Gilde-Realm"].guild
+-- byOwner["Name-Realm"].bags / .bank / .equipped / .mail / .auctions,
+-- byOwner["#warband"].warband, byOwner["@Guild-Realm"].guild
 EllesmereUIBagsAlts.GetCharacters()          -- { "Name-Realm", ... }
 EllesmereUIBagsAlts.GetCharacterInfo(key)    -- name, realm, class, level, money, lastSeen
 EllesmereUIBagsAlts.OpenBrowser(key) / .ToggleBrowser() / .Search(text)
 ```
 
-### Acceptance Criteria aus EllesmereUI (`.github/CONTRIBUTING.md`)
+Calling the API counts as using the addon and activates it.
 
-| # | Kriterium | Umsetzung | Test |
-|---|---|---|---|
-| 1 | Nichts kostet, solange es aus ist | Features registrieren Events erst beim Einschalten. Die Collector starten zudem erst mit der ersten Benutzung einer Sitzung. Bis dahin sind nur ein Event (NPC-Fenster) und ein Hook an EUIs Taschenfenster aktiv, es gibt keinen Scan beim Login. Der Browser wird erst beim ersten Öffnen gebaut. Der Tooltip-Hook entsteht erst beim ersten Einschalten. | `spec/options_criteria_spec.lua` (Criterion 1), `spec/activation_spec.lua`, Simulator |
-| 2 | Keine Verhaltensänderung ohne Opt-in | Tooltip, Header-Button, EUI-Kategorien, Gildenbank und die aktive Auktionsabfrage sind standardmäßig aus. Die Opt-in-Frage kommt erst beim ersten Taschen-Öffnen. | DB- und Options-Specs |
-| 3 | Geringe Kosten im Betrieb | Dirty-Set statt Voll-Scan, keine Timer, kein OnUpdate-Polling. Der Tooltip hängt nur an Item-Tooltips, es gibt keinen Clear-Hook. Unit-, NPC- und Welt-Tooltips kosten null Addon-Aufrufe. Die Anzahlen kommen aus dem Index-Cache, die Zeilen aus einem Cache pro Item. | Criterion 3: je ein Scan pro Burst. Tooltip: 0 Aufrufe bei 1000 Unit-Refreshes, kein Neuzählen bei 1000 Item-Refreshes. |
-| 4 | Kein Taint-Risiko | Keine secure Templates, kein `SetScript` auf fremden Frames, keine Feldzugriffe auf EUI- oder Blizzard-Frames, nur `hooksecurefunc`/`HookScript`, keine geschützten Aktionen | statische Criterion-4-Tests, Simulator |
-| 5 | Nur Midnight | Interface ab 120000, nur `C_*`-APIs, keine Legacy-Bank-Pfade | Criterion 5, API-Check |
+## Development
+
+The project ships its own project-local toolchain and a test suite that runs the
+addon against a mocked client, Blizzard's real 12.1 interface code in a headless
+simulator, layout invariants and screenshot comparisons. How to set it up, the
+rules for changes and how to test them are in [CONTRIBUTING.md](CONTRIBUTING.md).
+
+```text
+EllesmereUIBags_Alts/   the addon
+  Core/                 init, events, feature registry, activation, keys/encoding, DB, API, self-test
+  Libs/EUIBagsExt/      connector layer to EllesmereUI (embeddable, upstreamable)
+  Collect/              collectors: bags, equipped, bank, mail, auctions, currency, guild bank
+  Index/                runtime item index
+  Tooltip/              tooltip counts
+  UI/                   browser, item grid, search, widgets, header button
+  Options/              settings page, slash commands, first run
+  Locales/              translations
+spec/                   busted tests with the client mock
+sim/                    simulator tests, fixtures, visual scenarios and baselines
+scripts/                toolchain setup, checks, tests, packaging
+upstream/               proposed extension API for EllesmereUI Bags
+docs/archive/           the original design plan and the development checklist
+```
+
+The original design plan and the development checklist are kept in
+[`docs/archive/`](docs/archive/).
