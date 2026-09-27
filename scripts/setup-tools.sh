@@ -39,6 +39,12 @@ if command -v cargo >/dev/null 2>&1; then
     (cd "$T/vendor/wow-ui-sim" && CARGO_HOME="$T/cargo" cargo build --release --bin wow-sim \
       --no-default-features --features client-retail --locked)
   fi
+  # Second build with the GPU renderer for screenshots (visual tests); own
+  # target dir so the headless binary above stays untouched.
+  if [ ! -x "$T/vendor/wow-ui-sim/target-gui/release/wow-sim" ]; then
+    (cd "$T/vendor/wow-ui-sim" && CARGO_HOME="$T/cargo" CARGO_TARGET_DIR="$T/vendor/wow-ui-sim/target-gui" \
+      cargo build --release --bin wow-sim --no-default-features --features gui,client-retail --locked)
+  fi
   # wow-sim reads Blizzard UI from $HOME/Library/Caches (macOS) or ~/.cache; point HOME at .tools/simhome.
   C="$T/simhome/Library/Caches/wow-ui-sim/blizzard-ui/retail/AddOns"
   if [ ! -f "$C/.wow-ui-sim-blizzard-ui-complete" ]; then
@@ -50,5 +56,9 @@ if command -v cargo >/dev/null 2>&1; then
   ln -sfn "$T/simhome/Library/Caches/wow-ui-sim" "$T/simhome/.cache/wow-ui-sim"
 else
   echo "cargo not found: skipping wow-ui-sim (simulator tests unavailable)" >&2
+fi
+# Python venv for the image comparison of the visual tests.
+if [ ! -x "$T/venv/bin/python" ]; then
+  python3 -m venv "$T/venv" && "$T/venv/bin/pip" install -q "pillow==11.3.0"
 fi
 echo "toolchain ready in $T"

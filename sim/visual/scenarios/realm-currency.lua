@@ -1,0 +1,1 @@
+VisualScene("*realm:Blackhand", "currency")

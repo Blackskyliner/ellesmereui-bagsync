@@ -45,6 +45,20 @@ else
   step "wow-ui-sim skipped (not built)"
 fi
 
+if [ -x "$T/vendor/wow-ui-sim/target-gui/release/wow-sim" ] && [ -x "$T/venv/bin/python" ]; then
+  step "visual regression (wow-ui-sim screenshots vs sim/visual/baselines)"
+  vlog="$(mktemp)"
+  if bash scripts/visual-test.sh >"$vlog" 2>&1; then
+    tail -1 "$vlog"
+  else
+    grep -v "^OK " "$vlog"
+    fail=1
+  fi
+  rm -f "$vlog"
+else
+  step "visual regression skipped (GUI build or venv missing)"
+fi
+
 printf '\n'
 if [ $fail -eq 0 ]; then echo "ALL CHECKS PASSED"; else echo "CHECKS FAILED"; fi
 exit $fail
