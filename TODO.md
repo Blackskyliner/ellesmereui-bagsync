@@ -93,5 +93,12 @@ Header-Button + Gildenbank. Keine Auktionen, kein LDB/Minimap.
 - [x] Ausrüstungssets pro Taschen-/Angelegt-Slot (C_EquipmentSet + EquipmentManager_GetLocationData)
 - [x] Eigener Tooltip-Frame für den Browser (kein Taint auf GameTooltip)
 
+## 14. Übersichten und Währungs-Tooltip (0.6.0)
+- [x] Seitenleiste: „Alle Charaktere“ und anklickbare Realm-Überschriften
+- [x] Zusammengefasste Items (Link bzw. itemID), gruppiert nach Gegenstandsklasse/EUI-Kategorie, Tab „Alles“
+- [x] Besitzer-Zeilen im Browser-Tooltip der Übersichten (unabhängig von der Tooltip-Option, ohne Doppelung)
+- [x] Währungen: Summen in den Übersichten, Tooltip mit Aufteilung pro Charakter
+- [x] Locales, busted- und Simulator-Tests
+
 ## Offen (braucht den echten Client)
 - [ ] Ingame-Testplan aus README.md durchgehen (Bank, Post, Auktionen, Gildenbank, Kampf/Instanz, taint.log)

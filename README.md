@@ -68,12 +68,27 @@ rechts die Items. Hover zeigt den Item-Tooltip, Shift-Klick verlinkt im Chat,
 Strg-Klick öffnet die Anprobe. Der Browser zeigt nur an und nimmt, verschiebt
 oder benutzt keine Items.
 
+**Übersichten:** Ganz oben in der Seitenleiste steht „Alle Charaktere“, jede
+Realm-Überschrift ist ebenfalls anklickbar. Beide zeigen alle gespeicherten
+Items zusammengefasst: gleiche Items ergeben einen Platz mit der Gesamtzahl,
+Ausrüstung mit unterschiedlichem Link bleibt getrennt. Die Items sind nach
+Gegenstandsklasse gruppiert (oder nach EUI-Kategorien, wenn die Option an ist).
+Der zusätzliche Tab „Alles“ umfasst Taschen, Banken, Angelegtes, Post,
+Auktionen und Gildenbanken, die übrigen Tabs filtern nach Ort. Der Tooltip
+zeigt hier immer, wer wie viel hat, auch wenn die Tooltip-Option aus ist. Die
+Realm-Übersicht enthält nur die Charaktere und Gildenbanken dieses Realms. Die
+Kriegsmeutenbank ist accountweit und gehört nur zu „Alle Charaktere“. Im
+Footer stehen die Goldsumme und die Zahl der Charaktere.
+
 **Währungen:** Der Tab gruppiert nach „Charaktergebunden“ und „Überweisbar“
 (in der Kriegsmeute übertragbar). Kriegsmeutenweite Währungen teilen alle
 Charaktere, sie sind also weder gebunden noch überweisbar. Sie stehen in einem
 eigenen Abschnitt „Kriegsmeutenweit (geteilt)“, der nur erscheint, wenn solche
 Währungen vorkommen. Die Art jeder Währung merkt sich das Addon accountweit,
 damit auch die Währungen anderer Charaktere richtig einsortiert werden.
+Hover über eine Währung zeigt Blizzards Währungs-Tooltip und darunter, welcher
+Charakter wie viel hat, mit Summe. In den Übersichten werden Währungen
+aufsummiert. Kriegsmeutenweite Währungen zählen dabei nur einmal.
 
 **Bindung und Sets:** Das Addon merkt sich pro Item, ob es seelengebunden
 oder kriegsmeutengebunden ist. Im Browser-Tooltip steht bei gebundenen Items
@@ -132,7 +147,9 @@ Vorbereitung: [BugGrabber](https://www.curseforge.com/wow/addons/bug-grabber) un
    Item in die Bank legen, es erscheint dort sofort.
 6. **Zweiter Charakter:** Einen Twink einloggen, der Browser zeigt beide
    Charaktere. Beim Hover über ein Item, das beide besitzen, zeigt der Tooltip
-   beide Zeilen und die Summe.
+   beide Zeilen und die Summe. „Alle Charaktere“ und die Realm-Überschrift
+   anklicken: Die Items beider Charaktere erscheinen zusammengefasst, der Tab
+   „Währungen“ zeigt Summen, Hover über eine Währung listet die Charaktere.
 7. **Post:** Mit Charakter A etwas an Charakter B schicken. Im Browser taucht es
    bei B unter „Post → Unterwegs“ auf. Nach dem Einloggen von B und dem Öffnen
    des Briefkastens steht es unter „Posteingang“.
