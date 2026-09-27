@@ -777,8 +777,14 @@ function M.newEnv(state, savedVariables)
         if not S.guild then return nil end
         return S.guild.name, "Member", 3, S.guild.realm
     end
-    env.GetNumGuildBankTabs = function() return S.guild and #S.guild.tabs or 0 end
+    -- S.guildTabsPending: first visit of a session, the tab list has not
+    -- arrived yet (the client reports 0 tabs until GUILDBANK_UPDATE_TABS).
+    env.GetNumGuildBankTabs = function()
+        if S.guildTabsPending then return 0 end
+        return S.guild and #S.guild.tabs or 0
+    end
     env.GetGuildBankTabInfo = function(tab)
+        if S.guildTabsPending then return nil end
         local t = S.guild and S.guild.tabs[tab]
         if not t then return nil end
         return t.name, t.icon or 0, t.viewable ~= false, true, 0, 0, false

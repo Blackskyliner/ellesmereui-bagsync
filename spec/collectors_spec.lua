@@ -405,6 +405,75 @@ describe("Guild bank collector (opt-in)", function()
         assert.are.same({}, env.__errors)
     end)
 
+    it("scans every tab when the tab list arrives after the bank opened", function()
+        local state = guildState()
+        state.guildTabsPending = true                   -- first visit this session
+        local env, ns = wow.boot(state)
+        ns.db.settings.collect.guildbank = true
+        ns.SettingsChanged()
+        env.FireEvent("PLAYER_INTERACTION_MANAGER_FRAME_SHOW", 10)
+        env.ProcessQueue()
+        env.__state.guildTabsPending = false
+        env.FireEvent("GUILDBANK_UPDATE_TABS")
+        env.ProcessQueue()
+        local g = ns.db.guilds["Knights-Blackhand"]
+        assert.are.equal("2589,100", g.tabs[1].items[1])
+        assert.are.equal("212345,40", g.tabs[3].items[3])
+        assert.is_nil(g.tabs[2])
+        -- a repeated tab update does not query the tabs again
+        local queries = 0
+        local orig = env.QueryGuildBankTab
+        env.QueryGuildBankTab = function(...) queries = queries + 1 return orig(...) end
+        env.FireEvent("GUILDBANK_UPDATE_TABS")
+        env.ProcessQueue()
+        assert.are.equal(0, queries)
+        env.FireEvent("PLAYER_INTERACTION_MANAGER_FRAME_HIDE", 10)
+        assert.is_false(ns.IsEventRegistered(ns.featureByKey.guildbank, "GUILDBANK_UPDATE_TABS"))
+        assert.are.same({}, env.__errors)
+    end)
+
+    it("keeps the stored tabs while the tab list of a new session is still pending", function()
+        local env, ns = wow.boot(guildState())
+        ns.db.settings.collect.guildbank = true
+        ns.SettingsChanged()
+        env.FireEvent("PLAYER_INTERACTION_MANAGER_FRAME_SHOW", 10)
+        env.ProcessQueue()
+        env.FireEvent("PLAYER_INTERACTION_MANAGER_FRAME_HIDE", 10)
+        local state = guildState()
+        state.guildTabsPending = true
+        local env2, ns2 = wow.relog(env, {}, { guild = state.guild, guildTabsPending = true })
+        env2.FireEvent("PLAYER_INTERACTION_MANAGER_FRAME_SHOW", 10)
+        env2.ProcessQueue()
+        local g = ns2.db.guilds["Knights-Blackhand"]
+        assert.are.equal("2589,100", g.tabs[1].items[1])      -- not wiped by "0 tabs"
+        assert.are.equal("212345,40", g.tabs[3].items[3])
+        -- a tab that really disappeared goes once the list is known
+        env2.__state.guild.tabs[3] = nil
+        env2.__state.guildTabsPending = false
+        env2.FireEvent("GUILDBANK_UPDATE_TABS")
+        env2.ProcessQueue()
+        assert.is_nil(g.tabs[3])
+        assert.is_table(g.tabs[1])
+        ns2.Index:EnsureBuilt()
+        assert.are.equal(0, ns2.Index:GetTotal(212345))
+    end)
+
+    it("an open browser lists the guild as soon as the bank opens, before any tab data", function()
+        local state = guildState()
+        state.guildTabsPending = true
+        local env, ns = wow.boot(state)
+        ns.db.settings.collect.guildbank = true
+        ns.SettingsChanged()
+        ns.Browser:Open()
+        env.FireEvent("PLAYER_INTERACTION_MANAGER_FRAME_SHOW", 10)
+        env.ProcessQueue()
+        env.RunOnUpdates()                              -- coalesced refresh of the open browser
+        local f = env.EllesmereUIBagsAltsBrowser
+        local owners = {}
+        for i = 1, f.sideRows.used do owners[f.sideRows.items[i].ownerKey] = true end
+        assert.is_true(owners["@Knights-Blackhand"])
+    end)
+
     it("recovers when a foreign slots event arrives before the requested tab's data", function()
         local env, ns = wow.boot(guildState())
         ns.db.settings.collect.guildbank = true
