@@ -856,7 +856,7 @@ function M.newEnv(state, savedVariables)
     env.CreateSettingsButtonInitializer = function(name, text, click) return { button = name, text = text, click = click } end
 
     -- Test helpers on the env
-    -- Which NPC window is open (C_PlayerInteractionManager), kept like the
+    -- Which interaction window is open (C_PlayerInteractionManager), kept like the
     -- client from the show/hide events the tests fire.
     local INTERACTION_EVENTS = {
         MAIL_SHOW = { 17, true }, MAIL_CLOSED = { 17, false },

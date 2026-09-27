@@ -67,7 +67,7 @@ describe("Activation", function()
         assert.is_table(wow.items(ns.GetPlayerChar().equipped)[16] and ns.GetPlayerChar().equipped)
         assert.are.equal(1, calls.currency)
         assert.is_true(ns.IsEventRegistered(ns.featureByKey.bags, "BAG_UPDATE"))
-        -- the trigger is gone; later opens, NPC visits and browser opens activate nothing again
+        -- the trigger is gone; later bag opens, bank visits and browser opens activate nothing again
         env.CloseBags()
         env.OpenBags()
         env.FireEvent("PLAYER_INTERACTION_MANAGER_FRAME_SHOW", 8)
@@ -126,7 +126,7 @@ describe("Activation", function()
         assert.truthy(table.concat(text, "\n"):find("Bags: 20", 1, true))
     end)
 
-    describe("an NPC window activates and is captured in the same visit", function()
+    describe("a bank, mailbox or guild bank visit activates and is recorded in the same visit", function()
         it("bank", function()
             local s = world()
             s.bankTabs[0] = { { ID = 6, name = "Gear" } }

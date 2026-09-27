@@ -150,8 +150,8 @@ include the warband bank; include guild banks.
 ## When data is recorded
 
 Nothing is recorded before the first use in a session (see Design principles).
-The NPC window that triggers the activation is recorded in the same visit. After
-that:
+If that first use is opening a bank, mailbox, auction house or guild bank, that
+visit is already recorded. After that:
 
 | Source | When | Note |
 |---|---|---|

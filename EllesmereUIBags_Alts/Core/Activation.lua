@@ -24,7 +24,9 @@ local armed = false
 local trigger = {}   -- event owner of the activation trigger
 
 local PIT = Enum.PlayerInteractionType
-local NPC_TRIGGERS = {
+-- Interaction windows (PlayerInteractionManager) that activate: bank, mailbox,
+-- auction house, guild bank.
+local INTERACTION_TRIGGERS = {
     [PIT.Banker] = "bank",
     [PIT.CharacterBanker or -1] = "bank",
     [PIT.AccountBanker or -1] = "bank",
@@ -59,12 +61,13 @@ function ns.ArmActivation()
     -- EllesmereUI's bag window is an addon frame: hooking it taints nothing of Blizzard's.
     _G.EUI_Bags:HookScript("OnShow", OnBagsOpened)
     ns.RegisterEvent(trigger, "PLAYER_INTERACTION_MANAGER_FRAME_SHOW", function(_, _, interaction)
-        local reason = NPC_TRIGGERS[interaction]
+        local reason = INTERACTION_TRIGGERS[interaction]
         if reason then ns.Activate(reason) end
     end)
 end
 
--- For collectors of NPC windows: is that window open right now?
+-- For the collectors of interaction windows (bank, mailbox, auction house,
+-- guild bank): is that window open right now?
 function ns.IsInteracting(interaction)
     return C_PlayerInteractionManager ~= nil
         and C_PlayerInteractionManager.IsInteractingWithNpcOfType(interaction) == true

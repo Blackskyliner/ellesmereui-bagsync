@@ -126,8 +126,8 @@ tracking was added later, see section 11.)
 - [x] Debug output (`/alts debug`) for the walk
 
 ## 18. Activation on first use (0.7.0)
-- [x] Login: only triggers (EUI bag window, one NPC event, browser, API, tooltip when enabled), no scan, no data check
-- [x] Activation exactly once per session, then event-driven collectors; the NPC window that triggered it is read in the same visit
+- [x] Login: only triggers (EUI bag window, one interaction event for bank, mailbox, auction house and guild bank, browser, API, tooltip when enabled), no scan, no data check
+- [x] Activation exactly once per session, then event-driven collectors; if a bank, mailbox, auction house or guild bank visit triggered it, that visit is read too
 - [x] No hooks on Blizzard's bags (taint), EUI Bags is a requirement
 - [x] No rescans on loading screens, bag swaps via BAG_CONTAINER_UPDATE
 - [x] `/alts status` shows the activation
