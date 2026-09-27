@@ -72,6 +72,21 @@ M.ITEMS = {
     [180653] = { name = "Mythic Keystone", quality = 4, icon = 4352494, type = "Reagent", subtype = "Keystone", equipLoc = "" },
 }
 
+-- OwnedAuctionInfo as returned by C_AuctionHouse.GetOwnedAuctions (12.1 docs).
+function M.ownedAuction(auctionID, itemID, quantity, opts)
+    opts = opts or {}
+    return {
+        auctionID = auctionID,
+        itemKey = { itemID = itemID, itemLevel = 0, itemSuffix = 0, battlePetSpeciesID = opts.species or 0 },
+        itemLink = opts.link,
+        status = opts.sold and 1 or 0,
+        quantity = quantity or 1,
+        timeLeftSeconds = opts.seconds,
+        timeLeft = opts.band,
+        buyoutAmount = opts.buyout or 10000,
+    }
+end
+
 function M.itemLink(id, itemString)
     local info = M.ITEMS[id] or { name = "Item " .. id, quality = 1 }
     local colors = { [0] = "ff9d9d9d", "ffffffff", "ff1eff00", "ff0070dd", "ffa335ee", "ffff8000", "ffe6cc80", "ff00ccff" }
@@ -98,6 +113,9 @@ local function Enums()
             CharacterBanker = 67, AccountBanker = 68,
         },
         TooltipDataType = { Item = 0 },
+        AuctionStatus = { Active = 0, Sold = 1 },
+        AuctionHouseTimeLeftBand = { Short = 0, Medium = 1, Long = 2, VeryLong = 3 },
+        AuctionHouseSortOrder = { Price = 0, Name = 1, Level = 2, Bid = 3, Buyout = 4, TimeRemaining = 5 },
     }
 end
 
@@ -291,6 +309,9 @@ function M.defaultState(overrides)
         inbox = {},
         sendItems = {},
         guild = nil,     -- { name, realm, money, tabs = { { name, icon, viewable, slots = { [slot] = { id, count } } } } }
+        ownedAuctions = {},   -- list of OwnedAuctionInfo-shaped tables (C_AuctionHouse.GetOwnedAuctions)
+        ownedAuctionsFull = false,
+        auctionQueries = 0,
         currencies = {}, -- list of { id, name, quantity, icon, header }
         loadedItems = {},
         inCombat = false,
@@ -492,6 +513,24 @@ function M.newEnv(state, savedVariables)
                 if c.id == id then return { name = c.name, quantity = c.quantity, iconFileID = c.icon, currencyID = id } end
             end
             return nil
+        end,
+    }
+
+    -- Auction house (owned auctions)
+    env.C_AuctionHouse = {
+        GetOwnedAuctions = function()
+            local out = {}
+            for i, a in ipairs(S.ownedAuctions) do out[i] = a end
+            return out
+        end,
+        HasFullOwnedAuctionResults = function() return S.ownedAuctionsFull end,
+        QueryOwnedAuctions = function(sorts)
+            assert(type(sorts) == "table", "QueryOwnedAuctions needs a sorts table")
+            S.auctionQueries = S.auctionQueries + 1
+            table.insert(env.__queue, function()
+                S.ownedAuctionsFull = true
+                env.FireEvent("OWNED_AUCTIONS_UPDATED")
+            end)
         end,
     }
 

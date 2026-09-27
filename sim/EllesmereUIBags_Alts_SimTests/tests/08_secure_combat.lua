@@ -60,7 +60,7 @@ local function exerciseEverything()
     ns.Browser:SetQuery("")
     ns.Browser:Select(ns.WARBAND_OWNER)
     ns.Browser:Select(ns.GetPlayerKey())
-    for _, tab in ipairs({ "bank", "equipped", "mail", "currency", "bags" }) do ns.Browser:SelectTab(tab) end
+    for _, tab in ipairs({ "bank", "equipped", "mail", "auctions", "currency", "bags" }) do ns.Browser:SelectTab(tab) end
     ns.Browser:RaiseAboveSettings()
     SlashCmdList["EUIALTS"]("")
     -- header button on/off (EUI header exists; bags themselves are EUI's business)

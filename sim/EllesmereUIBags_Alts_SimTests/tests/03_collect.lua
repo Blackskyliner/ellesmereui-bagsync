@@ -44,3 +44,18 @@ simtest("feature registry matches defaults (tooltip/header off, collectors on)",
     assertTrue(not ns.IsFeatureActive("headerButton"))
     assertTrue(not ns.IsFeatureActive("guildbank"))
 end)
+
+simtest("auction tracking reads the simulator's C_AuctionHouse without errors", function()
+    assertType("function", C_AuctionHouse.GetOwnedAuctions)
+    assertTrue(ns.IsFeatureActive("auctions"))
+    A_Admin.FireEvent("AUCTION_HOUSE_SHOW")
+    assertTrue(ns.IsEventRegistered(ns.featureByKey.auctions, "OWNED_AUCTIONS_UPDATED"))
+    A_Admin.FireEvent("OWNED_AUCTIONS_UPDATED")
+    local a = ns.GetPlayerChar().auctions
+    assertType("table", a.items)
+    -- The client always returns a table; the simulator's stub returns nil, which
+    -- the collector must survive without storing a scan.
+    if type(C_AuctionHouse.GetOwnedAuctions()) == "table" then assertType("number", a.scannedAt) end
+    A_Admin.FireEvent("AUCTION_HOUSE_CLOSED")
+    assertTrue(not ns.IsEventRegistered(ns.featureByKey.auctions, "OWNED_AUCTIONS_UPDATED"))
+end)

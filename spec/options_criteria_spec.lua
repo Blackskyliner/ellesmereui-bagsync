@@ -31,7 +31,7 @@ describe("Options", function()
         local expected = { "tooltip_enabled", "tooltip_modifier", "tooltip_realmScope", "tooltip_showTotal",
             "tooltip_hideCurrent", "tooltip_showWarband", "tooltip_showGuild", "ui_headerButton",
             "ui_useEUICategories", "collect_bags", "collect_equipped", "collect_bank", "collect_mail",
-            "collect_currency", "collect_guildbank" }
+            "collect_currency", "collect_guildbank", "collect_auctions", "collect_auctionsQuery" }
         for _, v in ipairs(expected) do assert.is_table(cat.settings["EUIALTS_" .. v], v) end
         local setting = cat.settings.EUIALTS_tooltip_enabled
         assert.is_false(setting:GetValue())

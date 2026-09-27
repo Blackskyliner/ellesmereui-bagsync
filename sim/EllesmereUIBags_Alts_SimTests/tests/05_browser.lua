@@ -46,7 +46,10 @@ end
 simtest_when(function() return EUI_Bags and EUI_Bags.Header ~= nil end, "header button attaches to the real EUI bag header on first bag open", function()
     ns.db.settings.ui.headerButton = true
     ns.SettingsChanged()
-    ToggleAllBags()                      -- EUI's replacement opens EUI_Bags -> OnShow hook attaches
+    -- EUI's replacement opens EUI_Bags -> OnShow hook attaches. Close first if an
+    -- earlier test (e.g. the auction house event) left the bags open.
+    if EUI_Bags:IsShown() then ToggleAllBags() end
+    ToggleAllBags()
     assertTrue(EUI_Bags:IsShown())
     if EllesmereUIBagsExt:GetNativeAPIVersion() > 0 then return end   -- covered by 07_upstream.lua
     local btn = EllesmereUIBagsExt:GetHeaderButton("EllesmereUIBags_Alts")
