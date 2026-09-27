@@ -132,5 +132,9 @@ Header-Button + Gildenbank. Keine Auktionen, kein LDB/Minimap.
 - [x] Bleibt: schlichte Optik ohne EUIs Blizzard-Skin-Modul, Drift-Schutz im Connector (fehlende EUI-Funktion -> leise)
 - [x] Simulator-Modus `skin` (EUI-Kern + Bags + BlizzardSkin); Visual nur `bags` (Simulator-Fehler bei Objekt-Hooks, festgehalten)
 
+## 20. Header wie EUI Bags (0.7.2)
+- [x] 35-px-Header mit EUI-Bags-Metriken (Titel 13/8 px, grauer Untertitel 11, Suche 22 px, EUI-Close-Glyph 12 px, Trennlinie)
+- [x] EUI-Skin ohne eigene 25-px-Titelleiste (noTopBar), Suchfeld ohne Skin im Stil der Bag-Suche (PanelPP-Rahmen)
+
 ## Offen (braucht den echten Client)
 - [ ] Ingame-Testplan aus README.md durchgehen (Bank, Post, Auktionen, Gildenbank, Kampf/Instanz, taint.log)
