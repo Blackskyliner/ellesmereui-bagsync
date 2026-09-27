@@ -59,11 +59,12 @@ local function SumLocations(byLoc)
     return total
 end
 
--- Builds the flat left/right line list for one item.
-local function BuildLines(itemID)
+-- Builds the flat left/right line list for one item. opts: settings-shaped
+-- table overriding the tooltip settings (the browser's all-characters view).
+local function BuildLines(itemID, opts)
     local byOwner = ns.Index:Get(itemID)
     if not byOwner then return false end
-    local s = Settings()
+    local s = opts or Settings()
     local db = ns.db
     local playerKey = ns.GetPlayerKey()
     local ownRealm = ns.GetPlayerRealm()
@@ -136,6 +137,12 @@ local function BuildLines(itemID)
 end
 ns.BuildTooltipLines = BuildLines   -- exposed for tests and the self-test
 
+-- Every owner, every realm: the browser's all-characters view (own UI, so it
+-- does not depend on the opt-in tooltip setting).
+local ALL_OWNERS = { realmScope = "all", showWarband = true, showGuild = true, showTotal = true,
+                     hideCurrent = false, maxChars = 40 }
+function ns.BuildAllOwnerLines(itemID) return BuildLines(itemID, ALL_OWNERS) end
+
 local function GetLines(itemID)
     local lines = lineCache[itemID]
     if lines == nil then
@@ -180,7 +187,8 @@ local function OnTooltipItem(tooltip, data)
     if not ALLOWED_TOOLTIPS[tooltip] then return end
     if tooltip.IsForbidden and tooltip:IsForbidden() then return end
     local info = tooltip.processingInfo
-    if info ~= nil and lastAdded[tooltip] == info then return end
+    -- euiAltsOwners: the browser adds its own all-owner lines to this build
+    if info ~= nil and (lastAdded[tooltip] == info or info.euiAltsOwners) then return end
     if IsWorldObject(data) then return end
     local itemID = ItemIDFromData(data)
     if not itemID or ns.IsSecret(itemID) then return end
