@@ -30,6 +30,9 @@ function M.install(env, opts)
         GetFontOutlineFlag = function() return "OUTLINE" end,
         GetAccentColor = function() return 0.1, 0.2, 0.3 end,
         L = function(s) return s end,
+        PanelPP = { mult = 1, CreateBorder = function(frame, r, g, b, a)
+            rec.borders[frame] = { r, g, b, a }
+        end },
         ShowWidgetTooltip = function(owner, text) table.insert(rec.tooltips, { owner, text }) end,
         HideWidgetTooltip = function() rec.tooltipHidden = true end,
     }

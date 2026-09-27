@@ -115,6 +115,17 @@ function lib:SkinItemButton(btn)
     return false
 end
 
+-- EUI's pixel-perfect 1 px border (EllesmereUI.PanelPP), as the bag header's
+-- search box uses. -> true when drawn.
+function lib:CreateBorder(frame, r, g, b, a)
+    local e = EUI()
+    local pp = e and e.PanelPP
+    if type(pp) == "table" and type(pp.CreateBorder) == "function" then
+        return pcall(pp.CreateBorder, frame, r, g, b, a or 1, 1, "OVERLAY", 7) == true
+    end
+    return false
+end
+
 -- Border color for a button styled by lib:SkinItemButton (quality color etc.).
 function lib:SetItemBorderColor(btn, r, g, b, a)
     local bags = _G.EUI_Bags

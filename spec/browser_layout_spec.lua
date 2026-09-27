@@ -24,10 +24,10 @@ end
 
 for _, withEUI in ipairs({ true, false }) do
     describe("Browser chrome (" .. (withEUI and "EUI skin" or "fallback") .. ")", function()
-        it("keeps title, search and close button inside the 25 px title bar", function()
+        it("keeps title, search and close button inside the 35 px bag-style header", function()
             local env, ns, f = open(withEUI)
             assert.are.equal(ns.W.HEADER_H, f.header:GetHeight())
-            assert.are.equal(25, ns.W.HEADER_H)
+            assert.are.equal(35, ns.W.HEADER_H)                  -- EUI Bags HEADER_H
             for _, w in ipairs({ f.title, f.search, f.close }) do centredInHeader(f, w) end
             assert.is_true(f.search:GetHeight() <= ns.W.HEADER_H - 2)
             assert.is_true(f.close:GetHeight() <= ns.W.HEADER_H - 2)

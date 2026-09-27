@@ -403,3 +403,23 @@ describe("Plain look (EUI Bags without EUI's Blizzard skin module)", function()
         assert.are.same({}, env.__errors)
     end)
 end)
+
+describe("Search box", function()
+    it("without EUI's skin module gets the bag header's look (fill + EUI border)", function()
+        local env, ns = wow.boot(wow.defaultState(), nil, { eui = { noSkin = true } })
+        ns.Browser:Open()
+        local box = env.EllesmereUIBagsAltsBrowser.search
+        assert.is_table(box.fill)
+        assert.are.same({ 0.25, 0.25, 0.25, 1 }, env.__eui.borders[box])
+    end)
+
+    it("with the skin module is left to EUI's skin", function()
+        local env, ns = wow.boot(wow.defaultState())
+        ns.Browser:Open()
+        local box = env.EllesmereUIBagsAltsBrowser.search
+        assert.is_nil(box.fill)
+        local skinned = false
+        for _, s in ipairs(env.__eui.skins) do if s[1] == "EditBox" and s[2] == box then skinned = true end end
+        assert.is_true(skinned)
+    end)
+end)

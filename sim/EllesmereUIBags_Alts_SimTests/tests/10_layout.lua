@@ -12,9 +12,9 @@ local VIEWS = {
     { owner = "@Knights of Ellesmere-Blackhand" },
 }
 local SEARCHES = { "n", "valor", "zzzz" }
--- EUI's window shell paints a 25 px title bar (WSkin.Shell topBar); the title
--- row must fit it whether or not the code models it as its own frame.
-local TITLE_BAR_H = 25
+-- The title row matches EllesmereUI Bags' bag header (HEADER_H = 35, inset
+-- 1 px, EllesmereUIBags.lua CreateHeader); everything in it must fit it.
+local TITLE_BAR_H = 1 + 35
 
 local function frame() return _G.EllesmereUIBagsAltsBrowser end
 
@@ -35,14 +35,17 @@ local function check(where)
     local ok, err = pcall(function()
         -- 1. nothing is painted outside the window (scroll content: not sideways)
         Lay.AssertNone(Lay.Escapees(f, f.scroll), "outside the window")
-        -- 2. title row: all three inside the title bar, none overlapping
+        -- 2. title row: all inside the bag-style header, none overlapping
         local win = Lay.Rect(f)
         local header = { l = win.l, r = win.r, t = win.t, b = win.t - TITLE_BAR_H }
         local title, search, close = Lay.TextRect(f.title), Lay.Rect(f.search), Lay.Rect(f.close)
-        for _, item in ipairs({ { "title", title }, { "search", search }, { "close", close } }) do
+        local subtitle = f.subtitle and Lay.TextRect(f.subtitle)
+        for _, item in ipairs({ { "title", title }, { "subtitle", subtitle }, { "search", search }, { "close", close } }) do
+            if item[2] then
             if not Lay.Inside(item[2], header) then error(Lay.Describe(item[1], item[2]) .. " outside " .. Lay.Describe("header", header)) end
+            end
         end
-        Lay.AssertNone(Lay.Overlaps({ { "title", title }, { "search", search }, { "close", close } }), "title row overlap")
+        Lay.AssertNone(Lay.Overlaps({ { "title", title }, { "subtitle", subtitle }, { "search", search }, { "close", close } }), "title row overlap")
         -- 3. tabs: side by side inside the content column, below the title bar
         local tabs, content = {}, Lay.Rect(f.content)
         for _, tab in ipairs(f.tabs) do

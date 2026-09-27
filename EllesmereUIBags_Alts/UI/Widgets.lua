@@ -16,8 +16,10 @@ local skin
 Ext:RegisterSkin(ADDON_NAME, function(S) skin = S end)
 function W.GetSkin() return skin end
 
--- Title row height: EUI's shell draws a 25 px black bar behind the title.
-W.HEADER_H = 25
+-- Title row, as EllesmereUI Bags draws its bag header (EllesmereUIBags.lua
+-- CreateHeader): 35 px, inset 1 px, black 50 % bar, 1 px separator below.
+W.HEADER_H = 35
+local CLOSE_ICON = "Interface\\AddOns\\EllesmereUI\\media\\icons\\eui-close.png"
 
 local BG = { 0.06, 0.06, 0.06, 0.94 }
 local BORDER = { 0.25, 0.25, 0.25, 1 }
@@ -62,17 +64,30 @@ function W.Window(name, width, height)
         if self.OnMoved then self:OnMoved() end
     end)
     if skin then
-        skin.Shell(f)
+        skin.Shell(f, { noTopBar = true })   -- our own, bag-sized header instead
     else
         W.ApplyFlatBackdrop(f)
-        local bar = f:CreateTexture(nil, "BACKGROUND", nil, -5)
-        bar:SetColorTexture(0, 0, 0, 0.5)
-        bar:SetPoint("TOPLEFT", 1, -1)
-        bar:SetPoint("TOPRIGHT", -1, -1)
-        bar:SetHeight(W.HEADER_H - 1)
     end
     tinsert(UISpecialFrames, name)
     return f
+end
+
+-- The window's title row, laid out like the EUI bag header -> header frame.
+function W.Header(window)
+    local row = CreateFrame("Frame", nil, window)
+    row:SetPoint("TOPLEFT", 1, -1)
+    row:SetPoint("TOPRIGHT", -1, -1)
+    row:SetHeight(W.HEADER_H)
+    row.bg = row:CreateTexture(nil, "BACKGROUND")
+    row.bg:SetAllPoints()
+    row.bg:SetColorTexture(0, 0, 0, 0.5)
+    local PP = _G.EllesmereUI and _G.EllesmereUI.PP
+    row.sep = row:CreateTexture(nil, "ARTWORK")
+    row.sep:SetHeight((PP and PP.mult) or 1)
+    row.sep:SetPoint("BOTTOMLEFT")
+    row.sep:SetPoint("BOTTOMRIGHT")
+    row.sep:SetColorTexture(0.15, 0.15, 0.15, 1)
+    return row
 end
 
 function W.Panel(parent, inset)
@@ -96,21 +111,40 @@ function W.Button(parent, text, width, height)
     return b
 end
 
--- UIPanelCloseButton pins frameLevel="510" (SharedUIPanelTemplates.xml): an
--- absolute level that would draw it above every other window of the same
--- strata. Re-level it relative to its window (above EUI's border overlay, +6).
+-- EUI's close glyph, like the bag header's (12 px, 0.7 alpha, 0.9 on hover).
+-- A plain button, not UIPanelCloseButton: that template pins frameLevel="510",
+-- which would draw it above every other window of the same strata. Levelled
+-- above the window's border overlay (EUI shell: +6).
 function W.CloseButton(parent)
-    local b = CreateFrame("Button", nil, parent, "UIPanelCloseButton")
+    local b = CreateFrame("Button", nil, parent)
+    b:SetSize(12, 12)
     b:SetFrameLevel(parent:GetFrameLevel() + 10)
-    if skin then skin.CloseButton(b) end
+    b.icon = b:CreateTexture(nil, "OVERLAY")
+    b.icon:SetAllPoints()
+    b.icon:SetTexture(CLOSE_ICON)
+    b.icon:SetAlpha(0.7)
+    b:SetScript("OnEnter", function(self) self.icon:SetAlpha(0.9) end)
+    b:SetScript("OnLeave", function(self) self.icon:SetAlpha(0.7) end)
     return b
 end
 
+-- Search box; without EUI's skin module styled like the bag header's search
+-- (dark fill, 1 px grey EUI border) instead of Blizzard's search art.
 function W.EditBox(parent, width, height)
     local e = CreateFrame("EditBox", nil, parent, "SearchBoxTemplate")
     e:SetSize(width or 180, height or 22)
     e:SetAutoFocus(false)
-    if skin then skin.EditBox(e) end
+    if skin then
+        skin.EditBox(e)
+    else
+        for _, k in ipairs({ "Left", "Right", "Middle" }) do
+            if e[k] and e[k].SetAlpha then e[k]:SetAlpha(0) end
+        end
+        e.fill = e:CreateTexture(nil, "BACKGROUND")
+        e.fill:SetAllPoints()
+        e.fill:SetColorTexture(0.02, 0.02, 0.02, 1)
+        Ext:CreateBorder(e, 0.25, 0.25, 0.25, 1)
+    end
     return e
 end
 

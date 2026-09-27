@@ -466,23 +466,24 @@ function Browser:Build()
     RestorePosition(f)
     frame = f
 
-    -- Title row: everything vertically centred in the shell's title bar.
-    f.header = CreateFrame("Frame", nil, f)
-    f.header:SetPoint("TOPLEFT")
-    f.header:SetPoint("TOPRIGHT")
-    f.header:SetHeight(W.HEADER_H)
+    -- Title row with the EUI bag header's metrics: title 13 at 8 px, the
+    -- grey subtitle 11 beside it (like the item count), search 22 px high
+    -- ending 35 px from the right, the close glyph 9 px from the edge.
+    f.header = W.Header(f)
 
-    f.title = W.Text(f, 14)
-    f.title:SetPoint("LEFT", f.header, "LEFT", PAD + 2, 0)
-    f.title:SetText(L["Alts"] .. "  |cff888888" .. L["all characters"] .. "|r")
+    f.title = W.Text(f.header, 13)
+    f.title:SetPoint("LEFT", f.header, "LEFT", 8, 0)
+    f.title:SetText(L["Alts"])
+    f.subtitle = W.Text(f.header, 11, nil, 0.6, 0.6, 0.6)
+    f.subtitle:SetPoint("LEFT", f.title, "RIGHT", 8, 0)
+    f.subtitle:SetText(L["all characters"])
 
     f.close = W.CloseButton(f)
-    f.close:SetSize(22, 22)
-    f.close:SetPoint("RIGHT", f.header, "RIGHT", -2, 0)
+    f.close:SetPoint("RIGHT", f.header, "RIGHT", -9, 0)
     f.close:SetScript("OnClick", function() Browser:Close() end)
 
-    f.search = W.EditBox(f, 240, W.HEADER_H - 5)
-    f.search:SetPoint("RIGHT", f.close, "LEFT", -8, 0)
+    f.search = W.EditBox(f.header, 240, 22)
+    f.search:SetPoint("RIGHT", f.header, "RIGHT", -35, 0)
     -- Hook (not replace) so SearchBoxTemplate keeps its clear button and
     -- instructions; the clear button changes text without user input too.
     f.search:HookScript("OnTextChanged", function(box)
