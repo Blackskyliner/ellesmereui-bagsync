@@ -109,3 +109,7 @@ L["Stores your active auctions whenever the auction house shows them (Auctions t
 L["Request own auctions when the auction house opens"] = "Demander mes enchères à l'ouverture de l'hôtel des ventes"
 L["Sends one owned-auctions request when you open the auction house, so the Auctions tab does not need to be opened."] = "Envoie une requête pour vos enchères à l'ouverture de l'hôtel des ventes, sans devoir ouvrir l'onglet Enchères."
 L["No auctions stored. Open the Auctions tab of the auction house with this character."] = "Aucune enchère enregistrée. Ouvrez l'onglet Enchères de l'hôtel des ventes avec ce personnage."
+L["toggle diagnostic chat output"] = "activer/désactiver les messages de diagnostic dans le chat"
+L["Sold (gold waiting in the mailbox)"] = "Vendu (or en attente dans la boîte aux lettres)"
+L["Gold in mail"] = "Or au courrier"
+L["On the auction house"] = "À l'hôtel des ventes"

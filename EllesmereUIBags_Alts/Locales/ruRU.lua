@@ -111,3 +111,7 @@ L["Stores your active auctions whenever the auction house shows them (Auctions t
 L["Request own auctions when the auction house opens"] = "Запрашивать свои лоты при открытии аукциона"
 L["Sends one owned-auctions request when you open the auction house, so the Auctions tab does not need to be opened."] = "Отправляет один запрос ваших лотов при открытии аукциона, чтобы не открывать вкладку «Аукционы»."
 L["No auctions stored. Open the Auctions tab of the auction house with this character."] = "Лоты не сохранены. Откройте вкладку «Аукционы» на аукционе этим персонажем."
+L["toggle diagnostic chat output"] = "вкл./выкл. диагностические сообщения в чате"
+L["Sold (gold waiting in the mailbox)"] = "Продано (золото ждёт в почтовом ящике)"
+L["Gold in mail"] = "Золото на почте"
+L["On the auction house"] = "На аукционе"

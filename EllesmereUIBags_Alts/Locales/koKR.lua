@@ -111,3 +111,7 @@ L["Stores your active auctions whenever the auction house shows them (Auctions t
 L["Request own auctions when the auction house opens"] = "경매장을 열 때 내 경매 요청"
 L["Sends one owned-auctions request when you open the auction house, so the Auctions tab does not need to be opened."] = "경매장을 열 때 내 경매를 한 번 요청하므로 경매 탭을 열 필요가 없습니다."
 L["No auctions stored. Open the Auctions tab of the auction house with this character."] = "저장된 경매가 없습니다. 이 캐릭터로 경매장의 경매 탭을 여세요."
+L["toggle diagnostic chat output"] = "채팅 진단 메시지 켜기/끄기"
+L["Sold (gold waiting in the mailbox)"] = "판매됨 (우편함에서 골드 대기 중)"
+L["Gold in mail"] = "우편함 골드"
+L["On the auction house"] = "경매장에 등록됨"

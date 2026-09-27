@@ -111,3 +111,7 @@ L["Stores your active auctions whenever the auction house shows them (Auctions t
 L["Request own auctions when the auction house opens"] = "開啟拍賣場時請求我的拍賣"
 L["Sends one owned-auctions request when you open the auction house, so the Auctions tab does not need to be opened."] = "開啟拍賣場時發送一次我的拍賣請求，無需開啟拍賣分頁。"
 L["No auctions stored. Open the Auctions tab of the auction house with this character."] = "沒有已儲存的拍賣。請用此角色開啟拍賣場的拍賣分頁。"
+L["toggle diagnostic chat output"] = "開關聊天框診斷訊息"
+L["Sold (gold waiting in the mailbox)"] = "已售出（金幣在信箱中等待領取）"
+L["Gold in mail"] = "信件中的金幣"
+L["On the auction house"] = "拍賣場中"

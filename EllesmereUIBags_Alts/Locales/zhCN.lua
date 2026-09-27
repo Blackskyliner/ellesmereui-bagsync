@@ -111,3 +111,7 @@ L["Stores your active auctions whenever the auction house shows them (Auctions t
 L["Request own auctions when the auction house opens"] = "打开拍卖行时请求我的拍卖"
 L["Sends one owned-auctions request when you open the auction house, so the Auctions tab does not need to be opened."] = "打开拍卖行时发送一次我的拍卖请求，无需打开拍卖标签页。"
 L["No auctions stored. Open the Auctions tab of the auction house with this character."] = "没有已保存的拍卖。请用该角色打开拍卖行的拍卖标签页。"
+L["toggle diagnostic chat output"] = "开关聊天框诊断信息"
+L["Sold (gold waiting in the mailbox)"] = "已售出（金币在邮箱中等待领取）"
+L["Gold in mail"] = "邮件中的金币"
+L["On the auction house"] = "拍卖行中"

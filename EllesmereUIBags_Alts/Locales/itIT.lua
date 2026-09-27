@@ -108,3 +108,7 @@ L["Stores your active auctions whenever the auction house shows them (Auctions t
 L["Request own auctions when the auction house opens"] = "Richiedi le tue aste all'apertura della casa d'aste"
 L["Sends one owned-auctions request when you open the auction house, so the Auctions tab does not need to be opened."] = "Invia una richiesta delle tue aste all'apertura della casa d'aste, così non serve aprire la scheda Aste."
 L["No auctions stored. Open the Auctions tab of the auction house with this character."] = "Nessuna asta salvata. Apri la scheda Aste della casa d'aste con questo personaggio."
+L["toggle diagnostic chat output"] = "attiva/disattiva i messaggi diagnostici in chat"
+L["Sold (gold waiting in the mailbox)"] = "Venduto (oro in attesa nella cassetta postale)"
+L["Gold in mail"] = "Oro nella posta"
+L["On the auction house"] = "Nella casa d'aste"
