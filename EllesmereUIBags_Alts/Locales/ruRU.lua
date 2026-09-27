@@ -115,3 +115,8 @@ L["toggle diagnostic chat output"] = "вкл./выкл. диагностичес
 L["Sold (gold waiting in the mailbox)"] = "Продано (золото ждёт в почтовом ящике)"
 L["Gold in mail"] = "Золото на почте"
 L["On the auction house"] = "На аукционе"
+
+-- Currency groups (0.4.0)
+L["Character-bound"] = "Привязана к персонажу"
+L["Transferable"] = "Передаваемая"
+L["Warband-wide (shared)"] = "Общая для отряда"

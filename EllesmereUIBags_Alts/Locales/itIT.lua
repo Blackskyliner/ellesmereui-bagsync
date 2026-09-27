@@ -112,3 +112,8 @@ L["toggle diagnostic chat output"] = "attiva/disattiva i messaggi diagnostici in
 L["Sold (gold waiting in the mailbox)"] = "Venduto (oro in attesa nella cassetta postale)"
 L["Gold in mail"] = "Oro nella posta"
 L["On the auction house"] = "Nella casa d'aste"
+
+-- Currency groups (0.4.0)
+L["Character-bound"] = "Legata al personaggio"
+L["Transferable"] = "Trasferibile"
+L["Warband-wide (shared)"] = "Condivisa dalla brigata"

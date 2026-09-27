@@ -110,3 +110,8 @@ L["toggle diagnostic chat output"] = "Diagnose-Ausgaben im Chat ein-/ausschalten
 L["Sold (gold waiting in the mailbox)"] = "Verkauft (Gold im Postfach)"
 L["Gold in mail"] = "Gold in der Post"
 L["On the auction house"] = "Im Auktionshaus"
+
+-- Currency groups (0.4.0)
+L["Character-bound"] = "Charaktergebunden"
+L["Transferable"] = "Überweisbar"
+L["Warband-wide (shared)"] = "Kriegsmeutenweit (geteilt)"

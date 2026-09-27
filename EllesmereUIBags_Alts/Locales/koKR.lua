@@ -115,3 +115,8 @@ L["toggle diagnostic chat output"] = "채팅 진단 메시지 켜기/끄기"
 L["Sold (gold waiting in the mailbox)"] = "판매됨 (우편함에서 골드 대기 중)"
 L["Gold in mail"] = "우편함 골드"
 L["On the auction house"] = "경매장에 등록됨"
+
+-- Currency groups (0.4.0)
+L["Character-bound"] = "캐릭터 귀속"
+L["Transferable"] = "전송 가능"
+L["Warband-wide (shared)"] = "전투부대 공유"

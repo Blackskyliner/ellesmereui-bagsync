@@ -13,7 +13,8 @@ local MAY_STAY_ENGLISH = {
 
 -- Keys reached through lookup tables instead of literal L["..."] in the code.
 local INDIRECT_KEYS = { "Backpack", "Bag 1", "Bag 2", "Bag 3", "Bag 4", "Reagent Bag", "Currency",
-    "Bags", "Bank", "Equipped", "Mail", "Auctions", "Warband Bank", "Guild Bank" }
+    "Bags", "Bank", "Equipped", "Mail", "Auctions", "Warband Bank", "Guild Bank",
+    "Character-bound", "Transferable", "Warband-wide (shared)" }
 
 local function readAll(path)
     local fh = assert(io.open(path, "rb"))

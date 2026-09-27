@@ -115,3 +115,8 @@ L["toggle diagnostic chat output"] = "開關聊天框診斷訊息"
 L["Sold (gold waiting in the mailbox)"] = "已售出（金幣在信箱中等待領取）"
 L["Gold in mail"] = "信件中的金幣"
 L["On the auction house"] = "拍賣場中"
+
+-- Currency groups (0.4.0)
+L["Character-bound"] = "角色綁定"
+L["Transferable"] = "可轉移"
+L["Warband-wide (shared)"] = "戰隊通用（共享）"
