@@ -118,7 +118,20 @@ Realm oder alle), aktuellen Charakter ausblenden und maximale Zeilenzahl.
 
 ## Wann welche Daten erfasst werden
 
-| Quelle | Wann | Hinweis |
+**Erst ab der ersten Benutzung.** Beim Einloggen scannt das Addon nichts,
+prüft keine gespeicherten Daten und registriert kein Collector-Event. Es hängt
+nur seine Auslöser ein: EUIs Taschenfenster, ein einziges Event für Bank,
+Briefkasten, Auktionshaus und Gildenbank, den Browser (`/alts`, Header-Button),
+die öffentliche API und, wenn die Tooltip-Option an ist, den ersten
+Item-Tooltip. Beim ersten Auslöser einer Sitzung wird das Addon aktiviert,
+genau einmal. Dann erfasst es den aktuellen Charakter einmal vollständig, und
+ab da gilt die Tabelle. Das NPC-Fenster, das die Aktivierung ausgelöst hat,
+wird bei demselben Besuch schon erfasst. `/alts status` zeigt, ob und wodurch
+das Addon aktiviert wurde. Blizzards eigene Taschenfenster werden nie
+eingehängt, weil EllesmereUI Bags vorausgesetzt ist. Ladebildschirme
+(Instanzen, Portale) lösen keine erneuten Scans aus.
+
+| Quelle | Wann (nach der Aktivierung) | Hinweis |
 |---|---|---|
 | Taschen inkl. Reagenzientasche | laufend | nach jeder Änderung, gebündelt pro Update-Schub |
 | Angelegte Ausrüstung | laufend | |
@@ -284,7 +297,7 @@ EllesmereUIBagsAlts.OpenBrowser(key) / .ToggleBrowser() / .Search(text)
 
 | # | Kriterium | Umsetzung | Test |
 |---|---|---|---|
-| 1 | Nichts kostet, solange es aus ist | Features registrieren Events erst beim Einschalten. Der Browser wird erst beim ersten Öffnen gebaut. Der Tooltip-Hook entsteht erst beim ersten Einschalten. | `spec/options_criteria_spec.lua` (Criterion 1), Simulator |
+| 1 | Nichts kostet, solange es aus ist | Features registrieren Events erst beim Einschalten. Die Collector starten zudem erst mit der ersten Benutzung einer Sitzung. Bis dahin sind nur ein Event (NPC-Fenster) und ein Hook an EUIs Taschenfenster aktiv, es gibt keinen Scan beim Login. Der Browser wird erst beim ersten Öffnen gebaut. Der Tooltip-Hook entsteht erst beim ersten Einschalten. | `spec/options_criteria_spec.lua` (Criterion 1), `spec/activation_spec.lua`, Simulator |
 | 2 | Keine Verhaltensänderung ohne Opt-in | Tooltip, Header-Button, EUI-Kategorien, Gildenbank und die aktive Auktionsabfrage sind standardmäßig aus. Die Opt-in-Frage kommt erst beim ersten Taschen-Öffnen. | DB- und Options-Specs |
 | 3 | Geringe Kosten im Betrieb | Dirty-Set statt Voll-Scan, keine Timer, kein OnUpdate-Polling. Der Tooltip hängt nur an Item-Tooltips, es gibt keinen Clear-Hook. Unit-, NPC- und Welt-Tooltips kosten null Addon-Aufrufe. Die Anzahlen kommen aus dem Index-Cache, die Zeilen aus einem Cache pro Item. | Criterion 3: je ein Scan pro Burst. Tooltip: 0 Aufrufe bei 1000 Unit-Refreshes, kein Neuzählen bei 1000 Item-Refreshes. |
 | 4 | Kein Taint-Risiko | Keine secure Templates, kein `SetScript` auf fremden Frames, keine Feldzugriffe auf EUI- oder Blizzard-Frames, nur `hooksecurefunc`/`HookScript`, keine geschützten Aktionen | statische Criterion-4-Tests, Simulator |

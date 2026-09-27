@@ -119,5 +119,12 @@ Header-Button + Gildenbank. Keine Auktionen, kein LDB/Minimap.
 - [x] Offener Browser zeigt die Gilde sofort nach dem Öffnen der Gildenbank
 - [x] Debug-Ausgaben (`/alts debug`) für den Ablauf
 
+## 18. Aktivierung bei erster Benutzung (0.7.0)
+- [x] Login: nur Auslöser (EUI-Taschenfenster, ein NPC-Event, Browser, API, Tooltip bei aktiver Option), kein Scan, keine Datenprüfung
+- [x] Aktivierung genau einmal pro Sitzung, danach Collector event-getrieben; auslösendes NPC-Fenster wird im selben Besuch erfasst
+- [x] Keine Hooks an Blizzards Taschen (Taint), EUI Bags ist Voraussetzung
+- [x] Keine Rescans bei Ladebildschirmen, Taschenwechsel über BAG_CONTAINER_UPDATE
+- [x] `/alts status` zeigt die Aktivierung
+
 ## Offen (braucht den echten Client)
 - [ ] Ingame-Testplan aus README.md durchgehen (Bank, Post, Auktionen, Gildenbank, Kampf/Instanz, taint.log)
