@@ -74,6 +74,11 @@ M.ITEMS = {
     [180653] = { name = "Mythic Keystone", quality = 4, icon = 4352494, type = "Reagent", subtype = "Keystone", equipLoc = "" },
 }
 
+-- Item class IDs / names (Enum.ItemClass, C_Item.GetItemClassInfo).
+M.CLASS_IDS = { Consumable = 0, Weapon = 2, Armor = 4, Reagent = 5, Tradeskill = 7, Miscellaneous = 15 }
+M.CLASS_NAMES = { [0] = "Consumable", [2] = "Weapon", [4] = "Armor", [5] = "Reagent", [7] = "Tradeskill",
+                  [15] = "Miscellaneous" }
+
 -- OwnedAuctionInfo as returned by C_AuctionHouse.GetOwnedAuctions (12.1 docs).
 function M.ownedAuction(auctionID, itemID, quantity, opts)
     opts = opts or {}
@@ -116,7 +121,8 @@ local function Enums()
             Banker = 8, GuildBanker = 10, MailInfo = 17, Auctioneer = 21,
             CharacterBanker = 67, AccountBanker = 68,
         },
-        TooltipDataType = { Item = 0 },
+        TooltipDataType = { Item = 0, Currency = 5 },
+        ItemClass = { Consumable = 0, Weapon = 2, Armor = 4, Reagent = 5, Tradegoods = 7, Miscellaneous = 15 },
         TooltipDataLineType = { None = 0, ItemName = 22, ItemBinding = 20 },
         ItemBind = { None = 0, OnAcquire = 1, OnEquip = 2, OnUse = 3, Quest = 4, ToWoWAccount = 7,
                      ToBnetAccount = 8, ToBnetAccountUntilEquipped = 9 },
@@ -295,6 +301,12 @@ function FrameMethods:ProcessInfo(info)
     for _, pc in ipairs(self.env.__postCalls) do
         if pc[1] == data.type then pc[2](self, data) end
     end
+end
+-- GameTooltip:SetCurrencyByID (TooltipDataHandlerMixin): currency name line.
+function FrameMethods:SetCurrencyByID(id)
+    self:ProcessTooltipData(5, { type = 5, id = id })
+    local info = self.env.C_CurrencyInfo.GetCurrencyInfo(id)
+    self:AddLine(info and info.name or ("currency:" .. tostring(id)))
 end
 -- Unit/world tooltips (type 2 = Unit, 18 = Object); refreshed every 0.2 s in the client.
 function FrameMethods:SetUnit(unit)
@@ -494,8 +506,9 @@ function M.newEnv(state, savedVariables)
             local id, info = infoFor(ref)
             if not id then return nil end
             info = info or {}
-            return id, info.type, info.subtype, info.equipLoc, info.icon, 0, 0
+            return id, info.type, info.subtype, info.equipLoc, info.icon, M.CLASS_IDS[info.type] or 15, 0
         end,
+        GetItemClassInfo = function(classID) return M.CLASS_NAMES[classID] or "" end,
         DoesItemExist = function(loc)
             local bag = type(loc) == "table" and S.bags[loc.bagID]
             return bag ~= nil and bag and bag.slots[loc.slotIndex] ~= nil or false
