@@ -252,10 +252,22 @@ end
 function FrameMethods:AddLine(text) table.insert(self.lines, { text }) end
 function FrameMethods:AddDoubleLine(l, r) table.insert(self.lines, { l, r }) end
 function FrameMethods:NumLines() return #self.lines end
-function FrameMethods:SetHyperlink(link)
+-- Like TooltipDataHandlerMixin:ProcessInfo: clear, new processingInfo, run
+-- the post-calls registered for the data's type.
+function FrameMethods:ProcessTooltipData(dataType, data)
     self:ClearLines()
+    self.processingInfo = { tooltipData = data }
+    for _, pc in ipairs(self.env.__postCalls) do
+        if pc[1] == dataType then pc[2](self, data) end
+    end
+end
+function FrameMethods:SetHyperlink(link)
     local id = tonumber(tostring(link):match("item:(%d+)"))
-    self.env.__showTooltipData(self, id)
+    self:ProcessTooltipData(0, { type = 0, id = id })
+end
+-- Unit/world tooltips (type 2 = Unit, 18 = Object); refreshed every 0.2 s in the client.
+function FrameMethods:SetUnit(unit)
+    self:ProcessTooltipData(2, { type = 2, guid = "Creature-0-0-0-0-1234-0000" .. tostring(unit) })
 end
 -- Backdrop
 function FrameMethods:SetBackdrop(b) self.backdrop = b end
@@ -679,9 +691,7 @@ function M.newEnv(state, savedVariables)
         AddTooltipPostCall = function(dataType, fn) table.insert(env.__postCalls, { dataType, fn }) end,
     }
     env.__showTooltipData = function(tooltip, itemID)
-        for _, pc in ipairs(env.__postCalls) do
-            if pc[1] == 0 then pc[2](tooltip, { id = itemID, type = 0 }) end
-        end
+        tooltip:ProcessTooltipData(0, { type = 0, id = itemID })
     end
 
     -- Settings API

@@ -116,13 +116,14 @@ describe("Tooltip (opt-in)", function()
         tt:SetOwner(env.UIParent)
         tt:SetHyperlink("item:2589")
         local n = #tt.lines
-        ns.OnTooltipItem(tt, { id = 2589 })          -- second post-call for the same content
+        ns.OnTooltipItem(tt, { id = 2589 })          -- second post-call within the same build
+        assert.are.equal(n, #tt.lines)
+        tt:SetHyperlink("item:2589")                 -- refresh: new build, lines again
         assert.are.equal(n, #tt.lines)
         local foreign = env.CreateFrame("GameTooltip", "SomeAddonTooltip")
         ns.OnTooltipItem(foreign, { id = 2589 })
         assert.are.equal(0, #foreign.lines)
-        tt:ClearLines()
-        ns.OnTooltipItem(tt, { id = wow.Secret(2589) })
+        tt:ProcessTooltipData(0, { type = 0, id = wow.Secret(2589) })
         assert.are.equal(0, #tt.lines)
         assert.are.same({}, env.__errors)
     end)
@@ -149,11 +150,68 @@ describe("Tooltip (opt-in)", function()
         -- count Index lookups as a proxy for rebuilds
         local get = ns.Index.Get
         ns.Index.Get = function(self, id) build = build + 1; return get(self, id) end
-        for _ = 1, 200 do
-            tt:ClearLines()
-            ns.OnTooltipItem(tt, { id = 2589 })
-        end
+        for _ = 1, 200 do tt:SetHyperlink("item:2589") end
         ns.Index.Get = get
         assert.are.equal(0, build)
+    end)
+
+    -- Counts every Lua call into the addon's own files while fn runs.
+    local function addonCalls(fn)
+        local n = 0
+        debug.sethook(function()
+            local src = debug.getinfo(2, "S").source
+            if src:find("EllesmereUIBags_Alts/", 1, true) then n = n + 1 end
+        end, "c")
+        fn()
+        debug.sethook()
+        return n
+    end
+
+    it("costs zero addon calls for unit and world tooltips, even while enabled (regression)", function()
+        local env, ns = multiCharWorld()
+        ns.db.settings.tooltip.enabled = true
+        ns.SettingsChanged()
+        assert.is_nil(env.GameTooltip.hooks.OnTooltipCleared)       -- no clear hook
+        for _, pc in ipairs(env.__postCalls) do assert.are.equal(0, pc[1]) end   -- Item type only
+        local tt = env.GameTooltip
+        tt:SetOwner(env.UIParent)
+        local calls = addonCalls(function()
+            for _ = 1, 1000 do tt:SetUnit("mouseover") end           -- 200 s of looking at an NPC
+        end)
+        assert.are.equal(0, calls)
+    end)
+
+    it("an item tooltip refresh only reads the cache (no counting, no allocation per refresh)", function()
+        local env, ns = multiCharWorld()
+        ns.db.settings.tooltip.enabled = true
+        ns.SettingsChanged()
+        local tt = env.GameTooltip
+        tt:SetOwner(env.UIParent)
+        tt:SetHyperlink("item:2589")                                  -- first show builds the lines
+        local get, class = ns.Index.Get, env.C_ClassColor.GetClassColor
+        local counted = 0
+        ns.Index.Get = function(...) counted = counted + 1 return get(...) end
+        env.C_ClassColor.GetClassColor = function(...) counted = counted + 1 return class(...) end
+        local calls = addonCalls(function()
+            for _ = 1, 1000 do tt:SetHyperlink("item:2589") end
+        end)
+        ns.Index.Get, env.C_ClassColor.GetClassColor = get, class
+        assert.are.equal(0, counted)                                  -- nothing recounted
+        assert.is_true(calls <= 1000 * 6, "calls per refresh: " .. calls / 1000)
+    end)
+
+    it("does not add counts to item tooltips of world objects", function()
+        local env, ns = multiCharWorld()
+        ns.db.settings.tooltip.enabled = true
+        ns.SettingsChanged()
+        local tt = env.GameTooltip
+        tt:SetOwner(env.UIParent)
+        tt:ProcessTooltipData(0, { type = 0, id = 2589, worldLootObjectGUID = "WorldLootObject-1" })
+        assert.are.equal(0, #tt.lines)
+        tt:ProcessTooltipData(0, { type = 0, id = 2589, guid = "GameObject-0-1-2-3-4" })
+        assert.are.equal(0, #tt.lines)
+        tt:ProcessTooltipData(0, { type = 0, id = 2589, guid = "Item-1-0-4000000123456789" })
+        assert.is_true(#tt.lines > 0)                                 -- a real item (bag slot) still works
+        assert.are.same({}, env.__errors)
     end)
 end)
