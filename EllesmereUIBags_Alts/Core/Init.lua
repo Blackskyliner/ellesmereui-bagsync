@@ -113,7 +113,12 @@ end)
 --      IsEnabled = function(settings) return bool end,
 --      OnEnable  = function(self) end,   -- register events, build lazily
 --      OnDisable = function(self) end,   -- optional; events are dropped anyway
+--      eager     = true,                 -- optional: runs from login on
 --  }
+--  Features are lazy by default: they only start once the addon is activated
+--  (first use, see Core/Activation.lua), so an unused addon registers no
+--  collector events and scans nothing. Eager features are the ones that are
+--  themselves a way of using the addon (tooltip counts, the bag button).
 -------------------------------------------------------------------------------
 ns.features = {}
 ns.featureByKey = {}
@@ -145,6 +150,7 @@ function ns.RefreshFeatures()
     for i = 1, #ns.features do
         local def = ns.features[i]
         local want = settings ~= nil and def.IsEnabled ~= nil and def.IsEnabled(settings) == true
+            and (def.eager or ns.activated == true)
         SetFeatureActive(def, want)
     end
 end

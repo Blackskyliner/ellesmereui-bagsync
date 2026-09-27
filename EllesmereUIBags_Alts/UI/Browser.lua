@@ -1023,6 +1023,7 @@ function Browser:ConfirmDelete()
 end
 
 function Browser:Open(owner)
+    ns.Activate("browser")
     self:Build()
     if owner then state.owner = owner end
     if frame:IsShown() then

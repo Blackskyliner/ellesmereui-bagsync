@@ -79,7 +79,7 @@ describe("Options", function()
 
     it("with EUI, asks once at the first bag open; accepting enables tooltip and header button", function()
         local rec
-        local env, ns = wow.boot(wow.defaultState(), nil, { beforeLoad = function(e) rec = fakeEUI.install(e) end })
+        local env, ns = wow.boot(wow.defaultState(), nil, { inactive = true, beforeLoad = function(e) rec = fakeEUI.install(e) end })
         assert.are.equal(0, #rec.popups)                       -- no clash with EUI's login popups
         assert.truthy(table.concat(env.__chat, "\n"):find("/alts", 1, true))
         env.EUI_Bags:Show()

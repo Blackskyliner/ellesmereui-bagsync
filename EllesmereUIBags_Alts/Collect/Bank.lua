@@ -163,6 +163,10 @@ feature = ns.RegisterFeature({
         -- Also covered by the interaction manager; kept as a belt-and-braces signal.
         ns.RegisterEvent(self, "BANKFRAME_OPENED", OnBankOpened)
         ns.RegisterEvent(self, "BANKFRAME_CLOSED", OnBankClosed)
+        -- Started while the bank is open (the visit that activated the addon).
+        for interaction in pairs(BANKER_TYPES) do
+            if ns.IsInteracting(interaction) then OnBankOpened() break end
+        end
     end,
     OnDisable = function()
         isOpen = false

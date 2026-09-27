@@ -111,6 +111,7 @@ end
 
 -- Runs all checks. verbose=true prints to chat. Returns ok, report.
 function ns.RunSelfTest(verbose)
+    ns.Activate("selftest")
     local report = {}
     -- Make sure the latest bag state is stored before comparing.
     local bags = ns.featureByKey.bags

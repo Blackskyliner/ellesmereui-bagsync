@@ -133,3 +133,8 @@ L["%d characters"] = "%d个角色"
 
 -- Currency search (0.6.2)
 L["Items"] = "物品"
+
+-- Activation on first use (0.7.0)
+L["activated"] = "已激活"
+L["yes"] = "是"
+L["no (waiting for the bags, bank, browser or a tooltip)"] = "否（等待打开背包、银行、浏览器或鼠标提示）"

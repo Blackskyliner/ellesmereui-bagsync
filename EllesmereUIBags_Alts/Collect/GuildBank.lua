@@ -170,6 +170,9 @@ feature = ns.RegisterFeature({
         ns.RegisterEvent(self, "PLAYER_INTERACTION_MANAGER_FRAME_HIDE", function(_, _, interaction)
             if interaction == GUILD_BANKER then OnClosed() end
         end)
+        -- Started at the guild bank (the visit that activated the addon, or
+        -- the option switched on there).
+        if ns.IsInteracting(GUILD_BANKER) then OnOpened() end
     end,
     OnDisable = function()
         isOpen = false

@@ -53,8 +53,15 @@ feature = ns.RegisterFeature({
             for bagID = FIRST_BAG, LAST_BAG do dirty:Mark(bagID) end
             self:Flush()
         end)
-        -- Bag slots can change size (bag swapped) without item events.
-        ns.RegisterEvent(self, "PLAYER_ENTERING_WORLD", function()
+        -- A swapped bag changes the slot count without item events.
+        ns.RegisterEvent(self, "BAG_CONTAINER_UPDATE", function()
+            for bagID = FIRST_BAG, LAST_BAG do dirty:Mark(bagID) end
+            self:Flush()
+        end)
+        -- Activated between login and the first world entry: bag data is only
+        -- complete from there. Later loading screens change nothing.
+        ns.RegisterEvent(self, "PLAYER_ENTERING_WORLD", function(_, _, isInitialLogin, isReloadingUi)
+            if not (isInitialLogin or isReloadingUi) then return end
             for bagID = FIRST_BAG, LAST_BAG do dirty:Mark(bagID) end
             self:Flush()
         end)

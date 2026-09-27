@@ -131,3 +131,8 @@ L["%d characters"] = "%d personnages"
 
 -- Currency search (0.6.2)
 L["Items"] = "Objets"
+
+-- Activation on first use (0.7.0)
+L["activated"] = "activé"
+L["yes"] = "oui"
+L["no (waiting for the bags, bank, browser or a tooltip)"] = "non (attend les sacs, la banque, le navigateur ou une infobulle)"

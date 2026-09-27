@@ -21,6 +21,7 @@ API.VERSION = ns.VERSION
 
 function API.GetItemCount(itemID)
     if type(itemID) ~= "number" or not ns.db then return 0, {} end
+    ns.Activate("api")
     local byOwner = ns.Index:Get(itemID)
     local copy = {}
     if byOwner then
@@ -34,10 +35,12 @@ function API.GetItemCount(itemID)
 end
 
 function API.GetCharacters()
+    ns.Activate("api")
     return ns.GetSortedCharKeys()
 end
 
 function API.GetCharacterInfo(key)
+    ns.Activate("api")
     local c = ns.db and ns.db.chars[key]
     if not c then return nil end
     return { name = c.name, realm = c.realm, class = c.class, level = c.level, money = c.money, lastSeen = c.lastSeen }

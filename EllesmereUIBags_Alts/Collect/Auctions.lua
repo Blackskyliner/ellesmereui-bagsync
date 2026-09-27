@@ -563,6 +563,8 @@ feature = ns.RegisterFeature({
         ns.RegisterEvent(self, "AUCTION_HOUSE_SHOW", OnOpened)
         ns.RegisterEvent(self, "AUCTION_HOUSE_SHOW_FORMATTED_NOTIFICATION", OnNotification)
         ns.RegisterEvent(self, "AUCTION_HOUSE_CLOSED", OnClosed)
+        -- Started at the auction house (the visit that activated the addon).
+        if ns.IsInteracting(AUCTIONEER) then OnOpened() end
     end,
     OnDisable = function()
         isOpen = false

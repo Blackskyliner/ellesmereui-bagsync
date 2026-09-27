@@ -195,6 +195,7 @@ local function OnTooltipItem(tooltip, data)
     local modTest = MODIFIER_TEST[Settings().modifier]
     if modTest and not modTest() then return end
 
+    if not ns.activated then ns.Activate("tooltip") end   -- once: current character's data first
     local lines = GetLines(itemID)
     if not lines then return end
     lastAdded[tooltip] = info
@@ -209,6 +210,7 @@ local function InvalidateAll() wipe(lineCache) end
 
 ns.RegisterFeature({
     key = "tooltip",
+    eager = true,     -- hovering an item is using the addon: it activates it
     IsEnabled = function(s) return s.tooltip.enabled end,
     OnEnable = function()
         if not hooked then

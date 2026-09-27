@@ -133,3 +133,8 @@ L["%d characters"] = "캐릭터 %d명"
 
 -- Currency search (0.6.2)
 L["Items"] = "아이템"
+
+-- Activation on first use (0.7.0)
+L["activated"] = "활성화됨"
+L["yes"] = "예"
+L["no (waiting for the bags, bank, browser or a tooltip)"] = "아니요 (가방, 은행, 브라우저 또는 툴팁을 기다리는 중)"

@@ -156,6 +156,8 @@ feature = ns.RegisterFeature({
         ns.RegisterEvent(self, "PLAYER_INTERACTION_MANAGER_FRAME_HIDE", function(_, _, interaction)
             if interaction == Enum.PlayerInteractionType.MailInfo then OnMailClosed() end
         end)
+        -- Started while the mailbox is open (the visit that activated the addon).
+        if ns.IsInteracting(Enum.PlayerInteractionType.MailInfo) then OnMailShow() end
     end,
     OnDisable = function()
         isOpen = false

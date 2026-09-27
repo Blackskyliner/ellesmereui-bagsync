@@ -160,20 +160,32 @@ function ns.InitDB()
 
     MergeDefaults(db, ns.DEFAULTS)
 
+    -- Only the shape here; every stored record is checked by SanitizeData on
+    -- activation, so an unused addon does not walk its data at login.
     if type(db.chars) ~= "table" then db.chars = {} end
+    if type(db.warband) ~= "table" then db.warband = {} end
+    if type(db.currencyMeta) ~= "table" then db.currencyMeta = {} end
+    if type(db.guilds) ~= "table" then db.guilds = {} end
+
+    _G.EllesmereUIBagsAltsDB = db
+    ns.db = db
+    return db
+end
+
+-- Repairs or drops malformed stored records (hand edits, old versions).
+function ns.SanitizeData()
+    local db = ns.db
+    if not db then return end
     for key, c in pairs(db.chars) do
         if not SanitizeChar(key, c) then db.chars[key] = nil end
     end
 
-    if type(db.warband) ~= "table" then db.warband = {} end
     db.warband.bank = SanitizeContainerMap(db.warband.bank)
 
-    if type(db.currencyMeta) ~= "table" then db.currencyMeta = {} end
     for id, meta in pairs(db.currencyMeta) do
         if type(id) ~= "number" or type(meta) ~= "table" then db.currencyMeta[id] = nil end
     end
 
-    if type(db.guilds) ~= "table" then db.guilds = {} end
     for key, g in pairs(db.guilds) do
         if type(key) ~= "string" or type(g) ~= "table" then
             db.guilds[key] = nil
@@ -181,10 +193,7 @@ function ns.InitDB()
             g.tabs = SanitizeContainerMap(g.tabs)
         end
     end
-
-    _G.EllesmereUIBagsAltsDB = db
-    ns.db = db
-    return db
+    if ns.Index then ns.Index:Invalidate() end
 end
 
 -------------------------------------------------------------------------------

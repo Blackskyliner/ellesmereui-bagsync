@@ -44,7 +44,10 @@ ns.RegisterFeature({
         Scan()
         ns.RegisterEvent(self, "PLAYER_EQUIPMENT_CHANGED", Scan)
         ns.RegisterEvent(self, "EQUIPMENT_SETS_CHANGED", Scan)
-        -- Item links can be incomplete right at login; the first world entry fixes them.
-        ns.RegisterEvent(self, "PLAYER_ENTERING_WORLD", Scan)
+        -- Item links can be incomplete right at login; the first world entry
+        -- fixes them (only relevant when activated before it).
+        ns.RegisterEvent(self, "PLAYER_ENTERING_WORLD", function(_, _, isInitialLogin, isReloadingUi)
+            if isInitialLogin or isReloadingUi then Scan() end
+        end)
     end,
 })

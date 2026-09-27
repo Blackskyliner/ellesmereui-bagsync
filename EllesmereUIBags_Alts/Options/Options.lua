@@ -151,6 +151,8 @@ local function PrintStatus()
     for _, def in ipairs(ns.features) do
         if def.active then active[#active + 1] = def.key end
     end
+    ns.Print("%s: %s", L["activated"], ns.activated and (L["yes"] .. " (" .. tostring(ns.activatedBy) .. ")")
+        or L["no (waiting for the bags, bank, browser or a tooltip)"])
     ns.Print("%s: %s", L["active features"], table.concat(active, ", "))
     ns.Print("%s: %s", L["events"], table.concat(ns.GetRegisteredEvents(), ", "))
 end

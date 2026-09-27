@@ -12,6 +12,7 @@ local KEY = "EllesmereUIBags_Alts"
 
 ns.RegisterFeature({
     key = "headerButton",
+    eager = true,     -- clicking it opens the browser, which activates
     IsEnabled = function(s) return s.ui.headerButton end,
     OnEnable = function()
         local placed = Ext:RegisterHeaderButton(KEY, {
