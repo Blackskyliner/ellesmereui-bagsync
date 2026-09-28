@@ -4,7 +4,7 @@
 ## Category: |cff0cd29fEllesmere|rUI
 ## Author: Blackskyliner
 ## X-License: MIT
-## Version: 0.8.5
+## Version: 0.8.6
 ## Dependencies: EllesmereUIBags
 ## SavedVariables: EllesmereUIBagsAltsDB
 ## IconTexture: Interface\AddOns\EllesmereUIBags_Alts\media\icon.tga

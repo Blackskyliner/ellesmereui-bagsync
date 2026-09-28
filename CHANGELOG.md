@@ -12,6 +12,11 @@ better, faster or reads better), **Bugfix** (something did not work as intended)
 0.8.5 is the first public release. The versions before it were development
 builds, each tested in the game by the maintainer.
 
+## 0.8.6
+
+- **Enhanced:** CurseForge lists 12.1 as the only game version, the one the
+  addon runs on; EllesmereUI switches itself off on older clients.
+
 ## 0.8.5
 
 First public release, on CurseForge and as a GitHub release; the development
