@@ -253,6 +253,11 @@ fails without the fix, then make it pass.
   texture, which is why the visual tests render without it; the `skin` run still
   checks the geometry. When that harness test starts failing, the simulator is
   fixed and the skin mode can join the visual tests.
+- Its Lua now and then loses a string's type in code that passes on every other
+  run ("attempt to compare two string values", "bad argument ... (string
+  expected)"). It depends on memory layout: with a traceback handler around the
+  failing test it no longer shows. `test.sh` therefore runs a failed simulator
+  mode once more and says so; a real failure fails both runs.
 
 ## In-game validation
 

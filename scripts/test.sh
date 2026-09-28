@@ -27,13 +27,13 @@ python3 scripts/check-api.py || fail=1
 step "busted"
 "$T/rocks/bin/busted" -o utfTerminal || fail=1
 
-if [ -x "$T/vendor/wow-ui-sim/target/release/wow-sim" ]; then
-  for mode in tests skin upstream; do
-    step "wow-ui-sim ($mode)"
-    log="$(mktemp)"
-    bash scripts/sim-test.sh "$mode" >"$log" 2>&1
-    rc=$?
-    python3 - "$log" <<'PY'
+# One simulator run: prints the test lines; returns 1 on a failed test or a Lua
+# error raised by the addon.
+sim_run() {
+  local mode="$1" log rc=0
+  log="$(mktemp)"
+  bash scripts/sim-test.sh "$mode" >"$log" 2>&1 || rc=1
+  python3 - "$log" <<'PY'
 import sys
 s = open(sys.argv[1], encoding="utf-8", errors="ignore").read()
 body = s[s.find("Running"):]
@@ -43,12 +43,24 @@ for line in body.splitlines():
     elif line.startswith("    ") and not any(x in line for x in ("in function", "xpcall", "tail call", "main chunk", "MerchantFrame")):
         print(line)
 PY
-    if grep -a "Lua error" "$log" | grep -a -q "EllesmereUIBags_Alts/\|EUIBagsExt"; then
-      echo "Lua errors raised by the addon:"; grep -a "Lua error" "$log" | grep -a "EllesmereUIBags_Alts/\|EUIBagsExt" | sort -u
-      fail=1
+  if grep -a "Lua error" "$log" | grep -a -q "EllesmereUIBags_Alts/\|EUIBagsExt"; then
+    echo "Lua errors raised by the addon:"; grep -a "Lua error" "$log" | grep -a "EllesmereUIBags_Alts/\|EUIBagsExt" | sort -u
+    rc=1
+  fi
+  rm -f "$log"
+  return $rc
+}
+
+if [ -x "$T/vendor/wow-ui-sim/target/release/wow-sim" ]; then
+  for mode in tests skin upstream; do
+    step "wow-ui-sim ($mode)"
+    # A failed mode runs once more: the simulator's Lua now and then loses a
+    # string's type ("attempt to compare two string values", "string expected")
+    # in code that passes on every other run. A real failure fails twice.
+    if ! sim_run "$mode"; then
+      echo "-- $mode failed, running it once more (simulator flake?)"
+      sim_run "$mode" || fail=1
     fi
-    [ $rc -eq 0 ] || fail=1
-    rm -f "$log"
   done
 else
   step "wow-ui-sim skipped (not built)"
