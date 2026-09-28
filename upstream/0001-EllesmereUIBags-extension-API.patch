@@ -10,14 +10,15 @@ index 527f7e0..51b3d85 100644
 +EllesmereUIBags_ExtAPI.lua
 diff --git a/EllesmereUIBags/EllesmereUIBags_ExtAPI.lua b/EllesmereUIBags/EllesmereUIBags_ExtAPI.lua
 new file mode 100644
-index 0000000..1154da3
+index 0000000..6506a4c
 --- /dev/null
 +++ b/EllesmereUIBags/EllesmereUIBags_ExtAPI.lua
-@@ -0,0 +1,117 @@
+@@ -0,0 +1,118 @@
 +if EUI_CLIENT_BLOCKED then return end -- pre-12.1 client failsafe (EllesmereUI_ClientGate.lua)
 +-------------------------------------------------------------------------------
 +--  EllesmereUIBags_ExtAPI.lua
 +--  Public extension points of the Bags module for companion addons.
++--  Copyright (c) 2026 Blackskyliner. SPDX-License-Identifier: MIT
 +--
 +--  Loaded after EllesmereUIBags.lua (TOC). Defines functions only: nothing is
 +--  created, hooked or registered until a companion calls in, so users without

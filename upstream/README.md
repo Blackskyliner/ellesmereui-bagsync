@@ -43,6 +43,9 @@ Code style: Lua 5.1, ASCII only, EUI house tooltip (`ShowWidgetTooltip`).
 
 ## Files
 
+Both files are under the MIT license like the whole addon (Copyright (c) 2026
+Blackskyliner), so they can go into EllesmereUI under its own license.
+
 - `EllesmereUIBags_ExtAPI.lua`: the drop-in file.
 - `0001-EllesmereUIBags-extension-API.patch`: `git apply`-able against EllesmereUI
   `main` at `6ba622c` (2026-09-26). It adds the file and the TOC line.

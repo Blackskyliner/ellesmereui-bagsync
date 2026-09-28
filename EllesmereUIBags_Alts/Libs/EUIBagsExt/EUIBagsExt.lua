@@ -2,6 +2,8 @@
 --  EUIBagsExt.lua  -- extension layer between third-party addons and
 --  EllesmereUI Bags.
 --
+--  Copyright (c) 2026 Blackskyliner. SPDX-License-Identifier: MIT
+--
 --  One stable, versioned surface for everything a companion addon wants from
 --  EUI Bags, so companions never reach into EUI internals themselves:
 --      * looks: skin registration, font, accent color, item-slot skin, border,

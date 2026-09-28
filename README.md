@@ -327,7 +327,14 @@ upstream/               proposed extension API for EllesmereUI Bags
 docs/archive/           the original design plan and the development checklist
 docs/media/             the icon for the project page (CurseForge avatar, 400 px)
 CONTRIBUTING.md         rules for changes, toolchain, tests
+LICENSE                 MIT
 ```
 
 The original design plan and the development checklist are kept in
 [`docs/archive/`](docs/archive/).
+
+## License
+
+MIT, see [`LICENSE`](LICENSE). That includes the connector layer and the proposal in
+[`upstream/`](upstream/): other addons may embed the connector, and EllesmereUI can
+take in the proposal under its own license.

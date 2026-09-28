@@ -2,6 +2,7 @@ if EUI_CLIENT_BLOCKED then return end -- pre-12.1 client failsafe (EllesmereUI_C
 -------------------------------------------------------------------------------
 --  EllesmereUIBags_ExtAPI.lua
 --  Public extension points of the Bags module for companion addons.
+--  Copyright (c) 2026 Blackskyliner. SPDX-License-Identifier: MIT
 --
 --  Loaded after EllesmereUIBags.lua (TOC). Defines functions only: nothing is
 --  created, hooked or registered until a companion calls in, so users without

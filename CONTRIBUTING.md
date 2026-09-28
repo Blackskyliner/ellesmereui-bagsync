@@ -8,6 +8,8 @@ suggestions: a change that breaks one of them is sent back, however useful it is
 For anything larger than a fix, please open an issue first and describe what you
 want to build. It is much cheaper to agree on the approach before the code exists.
 
+Contributions are accepted under the project's MIT license ([`LICENSE`](LICENSE)).
+
 ## Project goals
 
 This addon is a companion to EllesmereUI Bags and shares its philosophy: be as
