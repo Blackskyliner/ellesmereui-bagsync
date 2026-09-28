@@ -3,8 +3,9 @@
 #   2. the tag must equal the TOC version and CHANGELOG.md needs a section
 #      for it (scripts/release-check.sh),
 #   3. BigWigsMods/packager builds the zip from .pkgmeta and uploads it to
-#      CurseForge (secret CF_API_KEY, variable CURSEFORGE_PROJECT_ID) and to a
-#      GitHub release. Without CF_API_KEY the CurseForge upload is skipped.
+#      CurseForge (secret CF_API_KEY and variable CURSEFORGE_PROJECT_ID of the
+#      environment "curseforge") and to a GitHub release. Without CF_API_KEY
+#      the CurseForge upload is skipped.
 # Run it by hand (workflow_dispatch) for a dry run: it packages without
 # uploading and keeps the zip as a workflow artifact.
 name: Release
@@ -26,6 +27,10 @@ jobs:
   release:
     name: Package and upload
     needs: ci
+    # The environment holds the CurseForge key, so only this job on a tag the
+    # environment admits can reach it. The manual dry run uploads nothing and
+    # runs without it, so a tag-only environment rule does not block it.
+    environment: ${{ github.ref_type == 'tag' && 'curseforge' || '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

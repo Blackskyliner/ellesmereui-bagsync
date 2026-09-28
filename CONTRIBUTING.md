@@ -313,7 +313,8 @@ from `.pkgmeta`, which produces the same zip. To publish a version:
 3. Merge to `main`, then tag that commit with the plain version and push the
    tag: `git tag 0.8.5 && git push origin 0.8.5`.
 4. `.github/workflows/release.yml` runs the CI jobs, packages, uploads to
-   CurseForge (secret `CF_API_KEY`, repository variable `CURSEFORGE_PROJECT_ID`)
+   CurseForge (secret `CF_API_KEY` and variable `CURSEFORGE_PROJECT_ID` of the
+   GitHub environment `curseforge`)
    and creates the GitHub release. Started by hand (Actions -> Release -> Run
    workflow) it is a dry run that keeps the zip as a workflow artifact.
 
