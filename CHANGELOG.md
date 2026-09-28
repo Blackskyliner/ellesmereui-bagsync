@@ -9,13 +9,20 @@ Every entry starts with one of these prefixes, in this order within a version:
 better, faster or reads better), **Bugfix** (something did not work as intended),
 **Removed** (a feature or mode is gone).
 
-0.8.4 is the first public release. The versions before it were development
+0.8.5 is the first public release. The versions before it were development
 builds, each tested in the game by the maintainer.
+
+## 0.8.5
+
+First public release, on CurseForge and as a GitHub release; the development
+versions before it are listed in CHANGELOG.md in the repository.
+
+- **New:** Own icon in the game's addon list: a bag with a sync sign, in
+  EllesmereUI's accent green.
 
 ## 0.8.4
 
-First public release, on CurseForge and as a GitHub release. It works like 0.8.3;
-the development versions before it are listed in CHANGELOG.md in the repository.
+Works like 0.8.3; only the code comments changed.
 
 ## 0.8.3
 

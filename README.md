@@ -19,7 +19,7 @@ window across all characters, similar to Baganator, in EllesmereUI's look.
 > reviewed by native speakers. **Corrections are very welcome**, see
 > [Languages](#languages).
 
-Version 0.8.4, by Blackskyliner.
+Version 0.8.5, by Blackskyliner.
 
 ## What it does
 

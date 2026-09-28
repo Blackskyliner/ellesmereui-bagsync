@@ -309,7 +309,7 @@ from `.pkgmeta`, which produces the same zip. To publish a version:
    checks tag, TOC and changelog (`scripts/release-check.sh`) and compares the
    package with `scripts/package.sh`.
 3. Merge to `main`, then tag that commit with the plain version and push the
-   tag: `git tag 0.8.4 && git push origin 0.8.4`.
+   tag: `git tag 0.8.5 && git push origin 0.8.5`.
 4. `.github/workflows/release.yml` runs the CI jobs, packages, uploads to
    CurseForge (secret `CF_API_KEY`, repository variable `CURSEFORGE_PROJECT_ID`)
    and creates the GitHub release. Started by hand (Actions -> Release -> Run
