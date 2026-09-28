@@ -3,6 +3,7 @@
 ## Notes: Test-only addon for wow-ui-sim run-tests. Never ship.
 ## Dependencies: EllesmereUIBags_Alts
 
+SimGaps.lua
 SimTests.lua
 
 Fixture.lua
