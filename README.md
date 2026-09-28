@@ -8,6 +8,9 @@ equipped gear, character bank, warband bank, mailbox, own auctions, currencies a
 if you want, your guild bank. It shows that stock in item tooltips and in a browser
 window across all characters, similar to Baganator, in EllesmereUI's look.
 
+**Download:** [CurseForge](https://www.curseforge.com/wow/addons/ellesmereui-bags-alts) or the
+[GitHub releases](https://github.com/Blackskyliner/ellesmereui-bagsync/releases).
+
 > **About AI assistance.** This addon was built with an AI coding assistant (Claude,
 > by Anthropic), used strictly as an implementation tool. The idea, the scope, the
 > design decisions and the direction of every change came from the human maintainer,
@@ -90,6 +93,9 @@ extension points in EllesmereUI Bags is in [`upstream/`](upstream/).
   the browser wears EllesmereUI's window look, without it a plain look of its own.
 
 ## Installation
+
+The easiest way is the CurseForge app ([project page](https://www.curseforge.com/wow/addons/ellesmereui-bags-alts)); it also
+installs EllesmereUI as the dependency. By hand:
 
 1. Copy the folder `EllesmereUIBags_Alts` (or the contents of
    `dist/EllesmereUIBags_Alts-<version>.zip`) into
