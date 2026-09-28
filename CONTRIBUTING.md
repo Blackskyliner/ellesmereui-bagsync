@@ -268,12 +268,19 @@ with BugSack and `taint.log`. For bug reports, include the output of
 
 ## Continuous integration
 
-`.github/workflows/ci.yml` runs on every push to `main` and every pull request:
+`.github/workflows/ci.yml` runs on every push to `main` and every pull request
+that changes more than documentation: one Linux job with `setup-tools.sh
+--no-gui` and `test.sh --require-sim` (luacheck, API check, busted and the three
+simulator modes; a simulator that fails to build fails the job instead of being
+skipped). It runs on Linux because private repositories are billed ten times the
+minutes on macOS.
 
-- **checks** (Linux): `setup-tools.sh --no-sim`, then `test.sh` (luacheck, API
-  check, busted);
-- **simulator** (macOS): `setup-tools.sh --no-gui`, then `test.sh --require-sim`,
-  so a simulator that fails to build fails the job instead of being skipped.
+What is cached: the Lua toolchain and the simulator binary alone (about 80 MB,
+keyed on `WOW_UI_SIM_REV`). A cache hit skips the Rust build; moving the pin
+builds once (about ten minutes on a runner) and caches the result. The CI sets
+`RUSTFLAGS`, because wow-ui-sim's own Linux flags compile for the runner's CPU
+(`target-cpu=native`) and a cached binary could then fail on the next runner.
+The sources and references are fetched on every run (a minute or so).
 
 The visual regression tests need a display and stay local. Blizzard's sources,
 the annotations and the GlobalStrings are fetched fresh on every run, so the API

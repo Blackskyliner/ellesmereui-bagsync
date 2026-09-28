@@ -1,13 +1,21 @@
 # Checks on every push to main and every pull request; the release workflow
-# runs the same jobs before it packages anything.
+# runs the same job before it packages anything. Changes to documentation only
+# skip it.
 name: CI
 
 on:
   push:
     branches: [main]
+    paths-ignore: ["**.md", "docs/**"]
   pull_request:
+    paths-ignore: ["**.md", "docs/**"]
   workflow_dispatch:
   workflow_call:
+    inputs:
+      ellesmereui-rev:
+        description: EllesmereUI revision ("latest" for its newest commit; empty for the pin)
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -18,15 +26,31 @@ concurrency:
 
 jobs:
   checks:
-    name: Lint, API check, busted
+    name: Lint, API check, busted, simulator
+    # Linux: private repositories are billed ten times the minutes on macOS.
+    # wow-ui-sim's own action does not fit: its image (newest tag v0.1.32)
+    # runs as a 12.0.7 client with 12.0.7 FrameXML, where EllesmereUI switches
+    # itself off (EUI_CLIENT_BLOCKED), and it mounts a single addon, while these
+    # tests need EllesmereUI, its Bags module, the addon and the test addon.
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
+    env:
+      ELLESMEREUI_REV: ${{ inputs.ellesmereui-rev }}
+      # wow-ui-sim's .cargo/config.toml builds for the runner's own CPU
+      # (target-cpu=native), which would tie the cached binary to one CPU
+      # model; RUSTFLAGS replaces those flags and keeps the mold linker.
+      RUSTFLAGS: -C link-arg=-fuse-ld=mold
     steps:
       - uses: actions/checkout@v7
 
-      # Lua 5.1 is built with its linux target, which links readline.
+      # readline: Lua's linux target. clang, mold: wow-ui-sim's linker setup.
+      # DejaVu: the simulator measures text with it when no game fonts exist.
       - name: Install build dependencies
-        run: sudo apt-get update -q && sudo apt-get install -y -q libreadline-dev
+        run: sudo apt-get update -q && sudo apt-get install -y -q libreadline-dev clang mold fonts-dejavu-core
+
+      - name: Pinned revisions
+        id: pins
+        run: echo "sim=$(sed -n 's/^WOW_UI_SIM_REV=//p' scripts/setup-tools.sh)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Lua toolchain
         uses: actions/cache@v6
@@ -37,44 +61,25 @@ jobs:
             .tools/rocks
           key: lua-${{ runner.os }}-${{ hashFiles('scripts/setup-tools.sh') }}
 
-      # The reference sources (Blizzard UI, API annotations, EllesmereUI,
-      # GlobalStrings) are fetched fresh: the API check and the EllesmereUI
-      # contract are meant to notice upstream changes.
-      - name: Set up toolchain and reference sources
-        run: scripts/setup-tools.sh --no-sim
-
-      - name: Run checks
-        run: scripts/test.sh
-
-  simulator:
-    name: Simulator (Blizzard FrameXML + EllesmereUI)
-    # Same platform as development: the simulator build and its UI cache
-    # layout are only exercised on macOS. wow-ui-sim's own action does not fit:
-    # its image (newest tag v0.1.32) runs as a 12.0.7 client with 12.0.7
-    # FrameXML, where EllesmereUI switches itself off (EUI_CLIENT_BLOCKED), and
-    # it mounts a single addon, while these tests need EllesmereUI, its Bags
-    # module, the addon and the test addon side by side.
-    runs-on: macos-latest
-    timeout-minutes: 60
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache toolchain and simulator build
+      # Only the finished binary (about 80 MB): with it setup-tools.sh skips the
+      # Rust build; the sources are fetched again at the pinned revision. A new
+      # pin builds once (about ten minutes) and is cached from then on.
+      - name: Cache simulator binary
+        id: sim-cache
         uses: actions/cache@v6
         with:
-          path: |
-            .tools/lua
-            .tools/luarocks
-            .tools/rocks
-            .tools/cargo
-            .tools/vendor/wow-ui-sim
-          key: sim-${{ runner.os }}-${{ hashFiles('scripts/setup-tools.sh') }}
+          path: .tools/vendor/wow-ui-sim/target/release/wow-sim
+          key: wow-sim-${{ runner.os }}-${{ steps.pins.outputs.sim }}-headless
 
+      - name: Rust toolchain (only to build the simulator)
+        if: steps.sim-cache.outputs.cache-hit != 'true'
+        uses: dtolnay/rust-toolchain@stable
+
+      # Blizzard's sources, the annotations and the GlobalStrings are fetched
+      # fresh, so the API check reports Blizzard changes on the next run.
       # No GPU build: the visual regression tests need a display and stay local.
       - name: Set up toolchain, reference sources and simulator
         run: scripts/setup-tools.sh --no-gui
 
-      - name: Run checks with the simulator
+      - name: Run checks
         run: scripts/test.sh --require-sim

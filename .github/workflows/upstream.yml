@@ -14,34 +14,7 @@ permissions:
   contents: read
 
 jobs:
-  latest-ellesmereui:
-    name: Checks against the newest EllesmereUI
-    runs-on: macos-latest
-    timeout-minutes: 60
-    env:
-      ELLESMEREUI_REV: latest
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: dtolnay/rust-toolchain@stable
-
-      # Same cache as the CI simulator job; EllesmereUI itself is not cached.
-      - name: Cache toolchain and simulator build
-        uses: actions/cache@v6
-        with:
-          path: |
-            .tools/lua
-            .tools/luarocks
-            .tools/rocks
-            .tools/cargo
-            .tools/vendor/wow-ui-sim
-          key: sim-${{ runner.os }}-${{ hashFiles('scripts/setup-tools.sh') }}
-
-      - name: Set up toolchain, newest EllesmereUI and simulator
-        run: scripts/setup-tools.sh --no-gui
-
-      - name: EllesmereUI revision
-        run: git -C .tools/vendor/EllesmereUI log -1 --format='%H %cd %s'
-
-      - name: Run checks with the simulator
-        run: scripts/test.sh --require-sim
+  ci:
+    uses: ./.github/workflows/ci.yml
+    with:
+      ellesmereui-rev: latest
