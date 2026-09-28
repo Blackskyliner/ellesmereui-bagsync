@@ -25,9 +25,12 @@ for arg in "$@"; do
 done
 mkdir -p "$T/src" "$T/vendor"
 
-# The simulator is pinned: its Lua API grows with every commit, and the test
-# suite is known to pass against this revision.
+# The simulator and EllesmereUI are pinned to revisions the whole suite passes
+# against, so a push is judged by its own changes. The simulator's Lua surface
+# grows with every commit; EllesmereUI changes almost daily. ELLESMEREUI_REV=latest
+# takes EllesmereUI's newest commit instead (.github/workflows/upstream.yml).
 WOW_UI_SIM_REV=d08c5517aa029cecc94b01a64d37c5a8066803b5
+ELLESMEREUI_REV="${ELLESMEREUI_REV:-7ea59eb7e90f95c44276b840b3f5670c3eacdb47}"
 
 case "$(uname -s)" in Darwin) LUA_TARGET=macosx ;; *) LUA_TARGET=linux ;; esac
 if [ ! -x "$T/lua/bin/lua" ]; then
@@ -48,13 +51,21 @@ for rock in busted luacheck; do
 done
 
 clone() { [ -d "$T/vendor/$2" ] || git clone -q --depth 1 ${3:+--branch "$3"} "$1" "$T/vendor/$2"; }
+# pinned <url> <dir> <commit|latest>: one commit, fetched without history; a
+# checkout at another commit (the pin moved) is moved along.
+pinned() {
+  local dir="$T/vendor/$2"
+  if [ "$3" = latest ]; then clone "$1" "$2"; return; fi
+  [ -d "$dir" ] && [ "$(git -C "$dir" rev-parse HEAD 2>/dev/null)" = "$3" ] && return 0
+  [ -d "$dir/.git" ] || git init -q "$dir"
+  git -C "$dir" fetch -q --depth 1 "$1" "$3"
+  git -C "$dir" -c advice.detachedHead=false checkout -q FETCH_HEAD
+}
 clone https://github.com/Gethe/wow-ui-source.git wow-ui-source live
 clone https://github.com/Ketho/vscode-wow-api.git vscode-wow-api
-clone https://github.com/EllesmereGaming/EllesmereUI.git EllesmereUI
-if [ "$SIM" = 1 ] && [ ! -d "$T/vendor/wow-ui-sim" ]; then
-  git init -q "$T/vendor/wow-ui-sim"
-  git -C "$T/vendor/wow-ui-sim" fetch -q --depth 1 https://github.com/Osso/wow-ui-sim.git "$WOW_UI_SIM_REV"
-  git -C "$T/vendor/wow-ui-sim" checkout -q FETCH_HEAD
+pinned https://github.com/EllesmereGaming/EllesmereUI.git EllesmereUI "$ELLESMEREUI_REV"
+if [ "$SIM" = 1 ]; then
+  pinned https://github.com/Osso/wow-ui-sim.git wow-ui-sim "$WOW_UI_SIM_REV"
 fi
 
 # Blizzard's own strings per client locale: the reference for game terms in our translations
