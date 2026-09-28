@@ -294,7 +294,10 @@ fails, an EllesmereUI update needs attention before the pin moves.
 scripts/package.sh
 ```
 
-builds `dist/EllesmereUIBags_Alts-<version>.zip` with the addon folder only.
+builds `dist/EllesmereUIBags_Alts-<version>.zip` with the addon folder only. The addon icon (`media/icon.tga`, the TOC's `IconTexture`) and the project
+avatar (`docs/media/icon-400.png`) are drawn by `scripts/make-icon.py`
+(`.tools/venv/bin/python scripts/make-icon.py`); change the drawing there, not
+the images.
 Releases are built by [BigWigsMods/packager](https://github.com/BigWigsMods/packager)
 from `.pkgmeta`, which produces the same zip. To publish a version:
 

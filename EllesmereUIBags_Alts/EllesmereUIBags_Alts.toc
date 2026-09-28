@@ -6,7 +6,7 @@
 ## Version: 0.8.4
 ## Dependencies: EllesmereUIBags
 ## SavedVariables: EllesmereUIBagsAltsDB
-## IconTexture: Interface\Icons\INV_Misc_Bag_10
+## IconTexture: Interface\AddOns\EllesmereUIBags_Alts\media\icon.tga
 
 # Locale (enUS base first; each translation returns unless it is the client locale)
 Locales\enUS.lua

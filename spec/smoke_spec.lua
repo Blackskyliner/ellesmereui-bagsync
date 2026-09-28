@@ -15,6 +15,30 @@ describe("boot smoke", function()
     end)
 end)
 
+describe("TOC icon", function()
+    -- The client shows a missing or unreadable icon as a blank square; it
+    -- reads uncompressed 32-bit TGAs with power-of-two sides.
+    it("points at a 32-bit uncompressed TGA with power-of-two sides inside the addon", function()
+        local fh = assert(io.open(wow.ROOT .. "/EllesmereUIBags_Alts/EllesmereUIBags_Alts.toc"))
+        local toc = fh:read("*a")
+        fh:close()
+        local path = toc:match("\n## IconTexture: Interface\\AddOns\\EllesmereUIBags_Alts\\([^\r\n]+)")
+        assert.is_string(path, "IconTexture outside the addon folder")
+        local tga = assert(io.open(wow.ROOT .. "/EllesmereUIBags_Alts/" .. path:gsub("\\", "/"), "rb"))
+        local header = tga:read(18)
+        tga:close()
+        local w = header:byte(13) + header:byte(14) * 256
+        local h = header:byte(15) + header:byte(16) * 256
+        assert.are.equal(2, header:byte(3))          -- uncompressed true colour
+        assert.are.equal(32, header:byte(17))        -- with alpha
+        for _, side in ipairs({ w, h }) do
+            local n = side
+            while n > 1 and n % 2 == 0 do n = n / 2 end
+            assert.is_true(n == 1 and side >= 16 and side <= 1024, "side " .. side)
+        end
+    end)
+end)
+
 describe("mock client sanity", function()
     it("delivers each event exactly once per registered frame", function()
         local env = wow.newEnv(wow.defaultState())

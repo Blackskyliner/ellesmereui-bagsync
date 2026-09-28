@@ -1,5 +1,7 @@
 # EllesmereUI Bags: Alts
 
+<img src="docs/media/icon-400.png" alt="" width="96" align="right">
+
 A companion addon for **[EllesmereUI](https://github.com/EllesmereGaming/EllesmereUI) Bags** in
 World of Warcraft: Midnight (12.x). It remembers what all your characters carry: bags,
 equipped gear, character bank, warband bank, mailbox, own auctions, currencies and,
@@ -316,12 +318,14 @@ EllesmereUIBags_Alts/   the addon
   UI/                   browser, item grid, search, widgets, header button
   Options/              settings page, slash commands, first run
   Locales/              translations
+  media/                addon icon (drawn by scripts/make-icon.py)
 spec/                   busted tests with the client mock
 sim/                    simulator tests, fixtures, visual scenarios and baselines
 scripts/                toolchain setup, checks, tests, packaging, release checks
 .github/workflows/      CI, the weekly check against the newest EllesmereUI, the release
 upstream/               proposed extension API for EllesmereUI Bags
 docs/archive/           the original design plan and the development checklist
+docs/media/             the icon for the project page (CurseForge avatar, 400 px)
 CONTRIBUTING.md         rules for changes, toolchain, tests
 ```
 
