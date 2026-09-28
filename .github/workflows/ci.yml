@@ -49,7 +49,11 @@ jobs:
   simulator:
     name: Simulator (Blizzard FrameXML + EllesmereUI)
     # Same platform as development: the simulator build and its UI cache
-    # layout are only exercised on macOS.
+    # layout are only exercised on macOS. wow-ui-sim's own action does not fit:
+    # its image (newest tag v0.1.32) runs as a 12.0.7 client with 12.0.7
+    # FrameXML, where EllesmereUI switches itself off (EUI_CLIENT_BLOCKED), and
+    # it mounts a single addon, while these tests need EllesmereUI, its Bags
+    # module, the addon and the test addon side by side.
     runs-on: macos-latest
     timeout-minutes: 60
     steps:
