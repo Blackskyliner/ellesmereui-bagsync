@@ -72,9 +72,9 @@ First public release.
 
 ## 0.7.1
 
-- **Removed:** Standalone mode without EllesmereUI Bags. EllesmereUI Bags is a
-  required dependency, and the addon stays inert on clients where EllesmereUI
-  switches itself off.
+- **Enhanced:** Depends on EllesmereUI Bags alone: the standalone Bags download
+  is enough, the rest of the EllesmereUI suite is not needed. On clients where
+  EllesmereUI switches itself off, the addon stays inert with it.
 
 ## 0.7.0
 
