@@ -300,6 +300,8 @@ from `.pkgmeta`, which produces the same zip. To publish a version:
 
 1. Set `## Version` in the TOC and add a `## <version>` section to
    `CHANGELOG.md` (its text becomes the changelog on CurseForge and GitHub).
+   Each entry starts with **New:**, **Enhanced:**, **Bugfix:** or **Removed:**,
+   in that order, written for players rather than as a commit list.
 2. `scripts/release-dry-run.sh`: runs the packager locally without uploading,
    checks tag, TOC and changelog (`scripts/release-check.sh`) and compares the
    package with `scripts/package.sh`.
