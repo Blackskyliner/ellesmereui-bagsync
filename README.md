@@ -82,9 +82,8 @@ extension points in EllesmereUI Bags is in [`upstream/`](upstream/).
 
 ## Requirements
 
-- World of Warcraft: Midnight 12.1 or later. The TOC lists the same interface
-  versions as EllesmereUI (12.0 to 12.1), but current EllesmereUI switches itself
-  off on clients before 12.1, and this addon stays inert with it.
+- World of Warcraft: Midnight 12.1 or later. The TOC lists only 12.1: EllesmereUI
+  still lists 12.0 as well, but switches itself off on clients before 12.1.
 - **EllesmereUI with the Bags module** (a dependency; EllesmereUI's core plus the
   Bags module is enough, the other modules are not needed).
 - Optional: EllesmereUI's Blizzard skin module (EllesmereUIBlizzardSkin). With it
