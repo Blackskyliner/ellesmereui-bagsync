@@ -72,4 +72,6 @@ jobs:
         with:
           name: EllesmereUIBags_Alts
           path: .release/*.zip
+          # .release is a dot directory, which upload-artifact skips by default.
+          include-hidden-files: true
           if-no-files-found: error
