@@ -41,6 +41,9 @@ fi
 cd "$SIM"
 export HOME="$ROOT/.tools/simhome"
 export WOW_SIM_NO_SOUND=1
+# The binary also looks next to the sources it was built from; naming the
+# directory keeps a cached or copied binary on this checkout's addons.
+export WOW_SIM_ADDONS_PATH="$SIM/Interface/AddOns"
 case "$MODE" in
   errors) "$BIN" --no-saved-vars lua-errors ;;
   *)      "$BIN" --no-saved-vars run-tests EllesmereUIBags_Alts_SimTests ;;

@@ -41,6 +41,9 @@ trap unlink_all EXIT
 rm -rf "${OUT:?}" && mkdir -p "$OUT"
 export HOME="$ROOT/.tools/simhome"
 export WOW_SIM_NO_SOUND=1
+# The binary also looks next to the sources it was built from; naming the
+# directory keeps a cached or copied binary on this checkout's addons.
+export WOW_SIM_ADDONS_PATH="$SIM/Interface/AddOns"
 
 for mode in bags; do
   unlink_all
