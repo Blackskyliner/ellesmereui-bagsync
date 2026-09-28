@@ -2,7 +2,16 @@
 # Full verification: lint, API surface, unit/integration tests (busted),
 # simulator tests with and without EllesmereUI, and a scan of every simulator
 # run for Lua errors raised by this addon.
+#   --require-sim   fail instead of skipping when the simulator is not built
+#                   (CI: a broken simulator build must not pass as "skipped")
 set -uo pipefail
+REQUIRE_SIM=0
+for arg in "$@"; do
+  case "$arg" in
+    --require-sim) REQUIRE_SIM=1 ;;
+    *) echo "unknown option: $arg" >&2; exit 2 ;;
+  esac
+done
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 T="$ROOT/.tools"
 cd "$ROOT"
@@ -43,6 +52,7 @@ PY
   done
 else
   step "wow-ui-sim skipped (not built)"
+  [ "$REQUIRE_SIM" = 0 ] || { echo "--require-sim: simulator missing"; fail=1; }
 fi
 
 if [ -x "$T/vendor/wow-ui-sim/target-gui/release/wow-sim" ] && [ -x "$T/venv/bin/python" ]; then

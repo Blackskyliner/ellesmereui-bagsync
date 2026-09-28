@@ -1,0 +1,70 @@
+# Publishes a release when a version tag is pushed (e.g. "0.8.4"):
+#   1. the CI jobs must pass,
+#   2. the tag must equal the TOC version and CHANGELOG.md needs a section
+#      for it (scripts/release-check.sh),
+#   3. BigWigsMods/packager builds the zip from .pkgmeta and uploads it to
+#      CurseForge (secret CF_API_KEY, variable CURSEFORGE_PROJECT_ID) and to a
+#      GitHub release. Without CF_API_KEY the CurseForge upload is skipped.
+# Run it by hand (workflow_dispatch) for a dry run: it packages without
+# uploading and keeps the zip as a workflow artifact.
+name: Release
+
+on:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+-*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    name: Package and upload
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      # Full history and tags: the packager derives the version from the tag.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Check the version and write the release notes
+        run: |
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            tag="$GITHUB_REF_NAME"
+          else
+            tag="$(sed -n 's/^## Version: *//p' EllesmereUIBags_Alts/EllesmereUIBags_Alts.toc | tr -d '\r')"
+          fi
+          scripts/release-check.sh "$tag"
+
+      - name: Packager arguments
+        id: args
+        env:
+          CURSEFORGE_PROJECT_ID: ${{ vars.CURSEFORGE_PROJECT_ID }}
+        run: |
+          args="-u"
+          if [ -n "$CURSEFORGE_PROJECT_ID" ]; then args="$args -p $CURSEFORGE_PROJECT_ID"; fi
+          if [ "$GITHUB_REF_TYPE" != tag ]; then args="$args -d"; fi
+          echo "args=$args" >> "$GITHUB_OUTPUT"
+
+      - name: Package and upload
+        uses: BigWigsMods/packager@v2.6.1
+        with:
+          args: ${{ steps.args.outputs.args }}
+          pandoc: false
+        env:
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}
+          GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Keep the package
+        uses: actions/upload-artifact@v7
+        with:
+          name: EllesmereUIBags_Alts
+          path: .release/*.zip
+          if-no-files-found: error

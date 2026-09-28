@@ -159,14 +159,24 @@ scripts/setup-tools.sh
 
 Prerequisites on the host: `git`, `curl`, a C compiler and `make`, `python3`,
 `rsync`, `zip`/`unzip` (packaging) and a Rust toolchain (`cargo`) for the
-simulator. The script is written
-for macOS (Lua is built with its `macosx` target); on Linux the Lua build target
-needs adjusting. It builds or fetches:
+simulator. It runs on macOS and Linux (there Lua's `linux` target needs the
+readline headers, e.g. `libreadline-dev`). `--no-sim` skips the simulator and
+the venv, `--no-gui` only the GPU build and the venv; CI uses both. It builds or
+fetches:
 
 - Lua 5.1, LuaRocks, busted and luacheck;
 - reference sources: Blizzard's UI source (Gethe/wow-ui-source, live), Ketho's API
   annotations, EllesmereUI's source and Blizzard's GlobalStrings of every client
   locale (Ketho/BlizzardInterfaceResources);
+
+EllesmereUI and wow-ui-sim are pinned to revisions the whole suite passes against
+(`ELLESMEREUI_REV`, `WOW_UI_SIM_REV` in the script), so a push is judged by its
+own changes; `ELLESMEREUI_REV=latest scripts/setup-tools.sh` (in a fresh `.tools`)
+tests the newest EllesmereUI. Move a pin deliberately: change the revision, rerun
+the script (it moves the checkout) and run the whole suite, visual tests included.
+The other sources follow their upstream branch. When EllesmereUI starts calling a
+client API the simulator lacks, a stand-in goes into
+`sim/EllesmereUIBags_Alts_SimTests/SimGaps.lua`, never into the addon.
 - [wow-ui-sim](https://github.com/Osso/wow-ui-sim) twice: headless for the test
   runs (`target/`) and with the GPU renderer for screenshots (`target-gui/`);
 - a Python venv with Pillow for the image comparison.
@@ -251,13 +261,45 @@ in the client before it counts as done: follow the manual test plan in the READM
 with BugSack and `taint.log`. For bug reports, include the output of
 `/alts status`, `/alts selftest` and, where it helps, `/alts debug`.
 
-## Packaging
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on every push to `main` and every pull request:
+
+- **checks** (Linux): `setup-tools.sh --no-sim`, then `test.sh` (luacheck, API
+  check, busted);
+- **simulator** (macOS): `setup-tools.sh --no-gui`, then `test.sh --require-sim`,
+  so a simulator that fails to build fails the job instead of being skipped.
+
+The visual regression tests need a display and stay local. Blizzard's sources,
+the annotations and the GlobalStrings are fetched fresh on every run, so the API
+check reports Blizzard changes there first. `.github/workflows/upstream.yml`
+runs the simulator job every Monday against EllesmereUI's newest commit; when it
+fails, an EllesmereUI update needs attention before the pin moves.
+
+## Packaging and releases
 
 ```bash
 scripts/package.sh
 ```
 
 builds `dist/EllesmereUIBags_Alts-<version>.zip` with the addon folder only.
+Releases are built by [BigWigsMods/packager](https://github.com/BigWigsMods/packager)
+from `.pkgmeta`, which produces the same zip. To publish a version:
+
+1. Set `## Version` in the TOC and add a `## <version>` section to
+   `CHANGELOG.md` (its text becomes the changelog on CurseForge and GitHub).
+2. `scripts/release-dry-run.sh`: runs the packager locally without uploading,
+   checks tag, TOC and changelog (`scripts/release-check.sh`) and compares the
+   package with `scripts/package.sh`.
+3. Merge to `main`, then tag that commit with the plain version and push the
+   tag: `git tag 0.8.4 && git push origin 0.8.4`.
+4. `.github/workflows/release.yml` runs the CI jobs, packages, uploads to
+   CurseForge (secret `CF_API_KEY`, repository variable `CURSEFORGE_PROJECT_ID`)
+   and creates the GitHub release. Started by hand (Actions -> Release -> Run
+   workflow) it is a dry run that keeps the zip as a workflow artifact.
+
+A tag containing `beta` or `alpha` (`0.9.0-beta1`) is published on CurseForge as
+a beta or alpha file; its TOC version carries the same suffix.
 
 ## Checklist for a change
 
@@ -268,4 +310,5 @@ builds `dist/EllesmereUIBags_Alts-<version>.zip` with the addon folder only.
 - [ ] Tests added or updated; a regression test fails without the fix
 - [ ] `scripts/test.sh` passes; changed visual baselines reviewed and committed
 - [ ] README updated where behavior or options changed
+- [ ] For a release: TOC version bumped and a `CHANGELOG.md` section written
 - [ ] Checked in the game

@@ -301,7 +301,9 @@ Calling the API counts as using the addon and activates it.
 The project ships its own project-local toolchain and a test suite that runs the
 addon against a mocked client, Blizzard's real 12.1 interface code in a headless
 simulator, layout invariants and screenshot comparisons. How to set it up, the
-rules for changes and how to test them are in [CONTRIBUTING.md](CONTRIBUTING.md).
+rules for changes, how to test them and how releases reach CurseForge are in
+[CONTRIBUTING.md](CONTRIBUTING.md). GitHub Actions run the checks on every push and
+pull request; the changes per version are in [CHANGELOG.md](CHANGELOG.md).
 
 ```text
 EllesmereUIBags_Alts/   the addon
@@ -316,7 +318,8 @@ EllesmereUIBags_Alts/   the addon
   Locales/              translations
 spec/                   busted tests with the client mock
 sim/                    simulator tests, fixtures, visual scenarios and baselines
-scripts/                toolchain setup, checks, tests, packaging
+scripts/                toolchain setup, checks, tests, packaging, release checks
+.github/workflows/      CI, the weekly check against the newest EllesmereUI, the release
 upstream/               proposed extension API for EllesmereUI Bags
 docs/archive/           the original design plan and the development checklist
 CONTRIBUTING.md         rules for changes, toolchain, tests

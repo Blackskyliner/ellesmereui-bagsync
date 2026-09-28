@@ -1,0 +1,76 @@
+# Checks on every push to main and every pull request; the release workflow
+# runs the same jobs before it packages anything.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Lint, API check, busted
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      # Lua 5.1 is built with its linux target, which links readline.
+      - name: Install build dependencies
+        run: sudo apt-get update -q && sudo apt-get install -y -q libreadline-dev
+
+      - name: Cache Lua toolchain
+        uses: actions/cache@v6
+        with:
+          path: |
+            .tools/lua
+            .tools/luarocks
+            .tools/rocks
+          key: lua-${{ runner.os }}-${{ hashFiles('scripts/setup-tools.sh') }}
+
+      # The reference sources (Blizzard UI, API annotations, EllesmereUI,
+      # GlobalStrings) are fetched fresh: the API check and the EllesmereUI
+      # contract are meant to notice upstream changes.
+      - name: Set up toolchain and reference sources
+        run: scripts/setup-tools.sh --no-sim
+
+      - name: Run checks
+        run: scripts/test.sh
+
+  simulator:
+    name: Simulator (Blizzard FrameXML + EllesmereUI)
+    # Same platform as development: the simulator build and its UI cache
+    # layout are only exercised on macOS.
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache toolchain and simulator build
+        uses: actions/cache@v6
+        with:
+          path: |
+            .tools/lua
+            .tools/luarocks
+            .tools/rocks
+            .tools/cargo
+            .tools/vendor/wow-ui-sim
+          key: sim-${{ runner.os }}-${{ hashFiles('scripts/setup-tools.sh') }}
+
+      # No GPU build: the visual regression tests need a display and stay local.
+      - name: Set up toolchain, reference sources and simulator
+        run: scripts/setup-tools.sh --no-gui
+
+      - name: Run checks with the simulator
+        run: scripts/test.sh --require-sim
