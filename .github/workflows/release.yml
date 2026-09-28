@@ -4,8 +4,9 @@
 #      for it (scripts/release-check.sh),
 #   3. BigWigsMods/packager builds the zip from .pkgmeta and uploads it to
 #      CurseForge (secret CF_API_KEY and variable CURSEFORGE_PROJECT_ID of the
-#      environment "curseforge") and to a GitHub release. Without CF_API_KEY
-#      the CurseForge upload is skipped.
+#      environment "curseforge"). Without CF_API_KEY the CurseForge upload is
+#      skipped.
+#   4. gh publishes the GitHub release with the zip attached.
 # Run it by hand (workflow_dispatch) for a dry run: it packages without
 # uploading and keeps the zip as a workflow artifact.
 name: Release
@@ -65,7 +66,21 @@ jobs:
           pandoc: false
         env:
           CF_API_KEY: ${{ secrets.CF_API_KEY }}
-          GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+
+      # The repository has immutable releases: a published release takes no
+      # more assets. The packager publishes first and uploads after, and ignores
+      # the rejected upload; gh creates a draft, attaches the zip and publishes
+      # only then.
+      - name: GitHub release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          flags=""
+          case "$GITHUB_REF_NAME" in *-*) flags="--prerelease" ;; esac
+          # shellcheck disable=SC2086
+          gh release create "$GITHUB_REF_NAME" .release/*.zip --verify-tag \
+            --title "$GITHUB_REF_NAME" --notes-file .release-notes.md $flags
 
       - name: Keep the package
         uses: actions/upload-artifact@v7
