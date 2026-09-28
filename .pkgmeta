@@ -1,0 +1,30 @@
+# BigWigsMods/packager configuration (release workflow, scripts/release-dry-run.sh).
+# The repository holds the addon in a subfolder next to tests and tooling; the
+# package contains only that folder.
+package-as: EllesmereUIBags_Alts
+
+move-folders:
+  EllesmereUIBags_Alts/EllesmereUIBags_Alts: EllesmereUIBags_Alts
+
+ignore:
+  - .github
+  - .busted
+  - .luacheckrc
+  - .pkgmeta
+  - .release-notes.md
+  - CHANGELOG.md
+  - CONTRIBUTING.md
+  - README.md
+  - docs
+  - scripts
+  - sim
+  - spec
+  - upstream
+
+# Written from CHANGELOG.md by scripts/release-check.sh for the tagged version.
+manual-changelog:
+  filename: .release-notes.md
+  markup-type: markdown
+
+required-dependencies:
+  - ellesmereui

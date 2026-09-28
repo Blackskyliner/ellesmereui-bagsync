@@ -1,4 +1,7 @@
 # Project-local toolchain, vendored references, simulator build (see scripts/setup-tools.sh)
 /.tools/
 /dist/
+# Release packaging (scripts/release-check.sh, BigWigsMods/packager)
+/.release/
+/.release-notes.md
 .DS_Store
