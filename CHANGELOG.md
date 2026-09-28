@@ -14,21 +14,8 @@ builds, each tested in the game by the maintainer.
 
 ## 0.8.4
 
-First public release.
-
-- **New:** Remembers bags, equipped gear, gold, character bank, warband bank,
-  mail, own auctions, currencies and (opt-in) the guild bank of every character
-  you use it on.
-- **New:** Tooltip counts (opt-in): which character holds how many of an item and
-  where, plus warband bank, guild banks and a total.
-- **New:** Browser (`/alts`) in EllesmereUI's look: every character, realm
-  overviews and an "All characters" view, tabs per location, search across items
-  and currencies.
-- **New:** Auction tracking: posted, cancelled, expired and sold auctions, with
-  the gold waiting in the mailbox.
-- **New:** Optional button in the EllesmereUI bag header.
-- **New:** English plus ten translations (AI-generated, corrections welcome).
-- **New:** Nothing runs until the first use in a session; no taint, no polling.
+First public release, on CurseForge and as a GitHub release. It works like 0.8.3;
+the development versions before it are listed in CHANGELOG.md in the repository.
 
 ## 0.8.3
 
