@@ -54,13 +54,7 @@ PY
 if [ -x "$T/vendor/wow-ui-sim/target/release/wow-sim" ]; then
   for mode in tests skin upstream; do
     step "wow-ui-sim ($mode)"
-    # A failed mode runs once more: the simulator's Lua now and then loses a
-    # string's type ("attempt to compare two string values", "string expected")
-    # in code that passes on every other run. A real failure fails twice.
-    if ! sim_run "$mode"; then
-      echo "-- $mode failed, running it once more (simulator flake?)"
-      sim_run "$mode" || fail=1
-    fi
+    sim_run "$mode" || fail=1
   done
 else
   step "wow-ui-sim skipped (not built)"
