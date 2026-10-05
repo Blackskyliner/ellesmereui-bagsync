@@ -30,6 +30,11 @@ mkdir -p "$T/src" "$T/vendor"
 # grows with every commit; EllesmereUI changes almost daily. ELLESMEREUI_REV=latest
 # takes EllesmereUI's newest commit instead (.github/workflows/upstream.yml).
 WOW_UI_SIM_REV=d08c5517aa029cecc94b01a64d37c5a8066803b5
+# rilua, the simulator's Lua VM, is built at the revision wow-ui-sim locks plus
+# this one fix: the rilua that wow-ui-sim locks hands out an interned string the
+# collector has already marked dead, and the sweep then frees it while it is in
+# use (a test fails now and then with "string expected" on a string).
+RILUA_FIX=a76ffa83f548da94b72777c96d51de38b7f9ef3c
 ELLESMEREUI_REV="${ELLESMEREUI_REV:-6dffe7cf03918cfc5c73c4f07f404abf425077e0}"
 
 case "$(uname -s)" in Darwin) LUA_TARGET=macosx ;; *) LUA_TARGET=linux ;; esac
@@ -64,8 +69,25 @@ pinned() {
 clone https://github.com/Gethe/wow-ui-source.git wow-ui-source live
 clone https://github.com/Ketho/vscode-wow-api.git vscode-wow-api
 pinned https://github.com/EllesmereGaming/EllesmereUI.git EllesmereUI "$ELLESMEREUI_REV"
+# rilua at the revision wow-ui-sim locks with RILUA_FIX applied, as one commit
+# with fixed metadata: cargo takes rilua only from a Git revision, and this one
+# has the same hash on every machine.
+rilua_with_fix() {
+  local dir="$T/vendor/rilua" base
+  base="$(sed -n 's/^rilua = .*rev = "\([0-9a-f]*\)".*/\1/p' "$T/vendor/wow-ui-sim/Cargo.toml")"
+  [ "$(git -C "$dir" log -1 --format=%s 2>/dev/null)" = "rilua $base with $RILUA_FIX" ] && return 0
+  rm -rf "$dir" && git init -q "$dir"
+  git -C "$dir" fetch -q --depth 1 https://github.com/Osso/rilua.git "$base"
+  git -C "$dir" checkout -q -B sim FETCH_HEAD
+  git -C "$dir" fetch -q --depth 2 https://github.com/Osso/rilua.git "$RILUA_FIX"
+  git -C "$dir" diff "$RILUA_FIX^" "$RILUA_FIX" | git -C "$dir" apply --index
+  GIT_AUTHOR_NAME=setup-tools GIT_AUTHOR_EMAIL=setup-tools@localhost GIT_AUTHOR_DATE="@0 +0000" \
+    GIT_COMMITTER_NAME=setup-tools GIT_COMMITTER_EMAIL=setup-tools@localhost GIT_COMMITTER_DATE="@0 +0000" \
+    git -C "$dir" commit -q -m "rilua $base with $RILUA_FIX"
+}
 if [ "$SIM" = 1 ]; then
   pinned https://github.com/Osso/wow-ui-sim.git wow-ui-sim "$WOW_UI_SIM_REV"
+  rilua_with_fix
 fi
 
 # Blizzard's own strings per client locale: the reference for game terms in our translations
@@ -80,16 +102,25 @@ done
 if [ "$SIM" = 0 ]; then
   echo "--no-sim: skipping wow-ui-sim" >&2
 elif command -v cargo >/dev/null 2>&1; then
-  if [ ! -x "$T/vendor/wow-ui-sim/target/release/wow-sim" ]; then
-    (cd "$T/vendor/wow-ui-sim" && CARGO_HOME="$T/cargo" cargo build --release --bin wow-sim \
-      --no-default-features --features client-retail --locked)
-  fi
+  # sim_build <target dir> <features>: builds wow-sim against rilua_with_fix
+  # unless the binary there was built from the same rilua commit (wow-sim.rilua).
+  # Cargo rewrites the rilua entry of Cargo.lock for the patch, so the build
+  # runs without --locked and the lock file is reset afterwards.
+  sim_build() {
+    local sim="$T/vendor/wow-ui-sim" rilua
+    rilua="$(git -C "$T/vendor/rilua" rev-parse HEAD)"
+    [ -x "$sim/$1/release/wow-sim" ] && [ "$(cat "$sim/$1/release/wow-sim.rilua" 2>/dev/null)" = "$rilua" ] && return 0
+    (cd "$sim" && CARGO_HOME="$T/cargo" CARGO_TARGET_DIR="$sim/$1" cargo build --release --bin wow-sim \
+      --no-default-features --features "$2" --config net.git-fetch-with-cli=true \
+      --config "patch.'https://github.com/Osso/rilua.git'.rilua.git='file://$T/vendor/rilua'" \
+      --config "patch.'https://github.com/Osso/rilua.git'.rilua.rev='$rilua'")
+    git -C "$sim" checkout -q Cargo.lock
+    echo "$rilua" > "$sim/$1/release/wow-sim.rilua"
+  }
+  sim_build target client-retail
   # Second build with the GPU renderer for screenshots (visual tests); own
   # target dir so the headless binary above stays untouched.
-  if [ "$GUI" = 1 ] && [ ! -x "$T/vendor/wow-ui-sim/target-gui/release/wow-sim" ]; then
-    (cd "$T/vendor/wow-ui-sim" && CARGO_HOME="$T/cargo" CARGO_TARGET_DIR="$T/vendor/wow-ui-sim/target-gui" \
-      cargo build --release --bin wow-sim --no-default-features --features gui,client-retail --locked)
-  fi
+  if [ "$GUI" = 1 ]; then sim_build target-gui gui,client-retail; fi
   # wow-sim reads Blizzard UI from $HOME/Library/Caches (macOS) or ~/.cache; point HOME at .tools/simhome.
   C="$T/simhome/Library/Caches/wow-ui-sim/blizzard-ui/retail/AddOns"
   if [ ! -f "$C/.wow-ui-sim-blizzard-ui-complete" ]; then

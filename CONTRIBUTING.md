@@ -180,7 +180,11 @@ The other sources follow their upstream branch. When EllesmereUI starts calling 
 client API the simulator lacks, a stand-in goes into
 `sim/EllesmereUIBags_Alts_SimTests/SimGaps.lua`, never into the addon.
 - [wow-ui-sim](https://github.com/Osso/wow-ui-sim) twice: headless for the test
-  runs (`target/`) and with the GPU renderer for screenshots (`target-gui/`);
+  runs (`target/`) and with the GPU renderer for screenshots (`target-gui/`).
+  Its Lua VM, [rilua](https://github.com/Osso/rilua), is built at the revision
+  wow-ui-sim locks plus one fix (`RILUA_FIX`): without it the collector now and
+  then frees a string still in use, and a test fails with "string expected" on
+  a string;
 - a Python venv with Pillow for the image comparison.
 
 ## Testing

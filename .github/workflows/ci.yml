@@ -50,7 +50,9 @@ jobs:
 
       - name: Pinned revisions
         id: pins
-        run: echo "sim=$(sed -n 's/^WOW_UI_SIM_REV=//p' scripts/setup-tools.sh)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "sim=$(sed -n 's/^WOW_UI_SIM_REV=//p' scripts/setup-tools.sh)" >> "$GITHUB_OUTPUT"
+          echo "rilua=$(sed -n 's/^RILUA_FIX=//p' scripts/setup-tools.sh)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Lua toolchain
         uses: actions/cache@v6
@@ -61,15 +63,18 @@ jobs:
             .tools/rocks
           key: lua-${{ runner.os }}-${{ hashFiles('scripts/setup-tools.sh') }}
 
-      # Only the finished binary (about 80 MB): with it setup-tools.sh skips the
-      # Rust build; the sources are fetched again at the pinned revision. A new
-      # pin builds once (about ten minutes) and is cached from then on.
+      # Only the finished binary (about 80 MB) and the rilua commit it was built
+      # from: with both setup-tools.sh skips the Rust build; the sources are
+      # fetched again at the pinned revisions. A new pin or rilua fix builds
+      # once (about ten minutes) and is cached from then on.
       - name: Cache simulator binary
         id: sim-cache
         uses: actions/cache@v6
         with:
-          path: .tools/vendor/wow-ui-sim/target/release/wow-sim
-          key: wow-sim-${{ runner.os }}-${{ steps.pins.outputs.sim }}-headless
+          path: |
+            .tools/vendor/wow-ui-sim/target/release/wow-sim
+            .tools/vendor/wow-ui-sim/target/release/wow-sim.rilua
+          key: wow-sim-${{ runner.os }}-${{ steps.pins.outputs.sim }}-${{ steps.pins.outputs.rilua }}-headless
 
       - name: Rust toolchain (only to build the simulator)
         if: steps.sim-cache.outputs.cache-hit != 'true'
