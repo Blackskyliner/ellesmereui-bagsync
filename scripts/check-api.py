@@ -171,25 +171,26 @@ def main():
             if method not in ("AddTooltipPostCall", "AddTooltipPreCall"):
                 problems.append("%s: unknown TooltipDataProcessor.%s" % (rel, method))
 
-    # 6. EllesmereUI contract
-    eui_main = read(os.path.join(EUI, "EllesmereUI.lua"))
-    eui_core = read(os.path.join(EUI, "EllesmereUI_UICore.lua"))
-    eui_locale = read(os.path.join(EUI, "EllesmereUI_Locale.lua"))
-    bags = read(os.path.join(EUI, "EllesmereUIBags", "EllesmereUIBags.lua"))
-    cats = read(os.path.join(EUI, "EllesmereUIBags", "EllesmereUIBags_Categories.lua"))
+    # 6. EllesmereUI contract. Each symbol is searched in all files of its
+    # addon, since EllesmereUI moves code between files without changing it.
+    def addon_source(*parts):
+        d = os.path.join(EUI, *parts)
+        return "\n".join(read(os.path.join(d, f)) for f in sorted(os.listdir(d)) if f.endswith(".lua"))
+    eui = addon_source()
+    bags = addon_source("EllesmereUIBags")
     contract = [
-        ("EllesmereUI.RegisterSkin", r"function EllesmereUI\.RegisterSkin\(name, applyFn\)", eui_main),
-        ("EllesmereUI.GetFontPath", r"function EllesmereUI\.GetFontPath\(", eui_main),
-        ("EllesmereUI.GetFontOutlineFlag", r"function EllesmereUI\.GetFontOutlineFlag\(", eui_main),
-        ("EllesmereUI:ShowConfirmPopup(opts)", r"function EllesmereUI:ShowConfirmPopup\(opts\)", eui_main),
-        ("EllesmereUI.ShowWidgetTooltip", r"EllesmereUI\.ShowWidgetTooltip = ShowWidgetTooltip", eui_core),
-        ("EllesmereUI.HideWidgetTooltip", r"EllesmereUI\.HideWidgetTooltip = HideWidgetTooltip", eui_core),
-        ("EllesmereUI.GetAccentColor", r"EllesmereUI\.GetAccentColor = function\(\)", eui_core),
-        ("EllesmereUI.PP.mult", r"EllesmereUI\.PP = PP[\s\S]*PP\.mult = PP\.perfect /", eui_main),
-        ("EllesmereUI.PanelPP.CreateBorder", r"PanelPP\.CreateBorder\s*=\s*PP\.CreateBorder", eui_main),
+        ("EllesmereUI.RegisterSkin", r"function EllesmereUI\.RegisterSkin\(name, applyFn\)", eui),
+        ("EllesmereUI.GetFontPath", r"function EllesmereUI\.GetFontPath\(", eui),
+        ("EllesmereUI.GetFontOutlineFlag", r"function EllesmereUI\.GetFontOutlineFlag\(", eui),
+        ("EllesmereUI:ShowConfirmPopup(opts)", r"function EllesmereUI:ShowConfirmPopup\(opts\)", eui),
+        ("EllesmereUI.ShowWidgetTooltip", r"EllesmereUI\.ShowWidgetTooltip = ShowWidgetTooltip", eui),
+        ("EllesmereUI.HideWidgetTooltip", r"EllesmereUI\.HideWidgetTooltip = HideWidgetTooltip", eui),
+        ("EllesmereUI.GetAccentColor", r"EllesmereUI\.GetAccentColor = function\(\)", eui),
+        ("EllesmereUI.PP.mult", r"EllesmereUI\.PP = PP[\s\S]*PP\.mult = PP\.perfect /", eui),
+        ("EllesmereUI.PanelPP.CreateBorder", r"PanelPP\.CreateBorder\s*=\s*PP\.CreateBorder", eui),
         ("PP.CreateBorder(frame, r, g, b, a, borderSize, drawLayer, subLevel)",
-         r"function PP\.CreateBorder\(frame, r, g, b, a, borderSize, drawLayer, subLevel", eui_main),
-        ("EllesmereUI.L", r"EllesmereUI\.L = L", eui_locale),
+         r"function PP\.CreateBorder\(frame, r, g, b, a, borderSize, drawLayer, subLevel", eui),
+        ("EllesmereUI.L", r"EllesmereUI\.L = L", eui),
         ("_ModuleNS[EllesmereUIBags]", r'EllesmereUI\._ModuleNS\["EllesmereUIBags"\] = ns', bags),
         ("global EUI_Bags frame", r'^EUI_Bags = CreateFrame\("Frame", "EUI_MainBagFrame"', bags),
         ("EUI_Bags.Header", r"EUI_Bags\.Header = header", bags),
@@ -197,9 +198,9 @@ def main():
         ("EUI_Bags._searchBox", r"EUI_Bags\._searchBox = search", bags),
         ("ns.SkinItemButton(btn, opts)", r"function ns\.SkinItemButton\(btn, opts\)", bags),
         ("ns.SetInsetBorderColor", r"ns\.SetInsetBorderColor = SetInsetBorderColor", bags),
-        ("EUI_CategoryManager global", r"_G\.EUI_CategoryManager = CategoryManager", cats),
-        ("CategoryManager:ClassifyItem(link, id, bag, slot)", r"function CategoryManager:ClassifyItem\(itemLink, itemID, bag, slot\)", cats),
-        ("CategoryManager:GetCategories", r"function CategoryManager:GetCategories\(\)", cats),
+        ("EUI_CategoryManager global", r"_G\.EUI_CategoryManager = CategoryManager", bags),
+        ("CategoryManager:ClassifyItem(link, id, bag, slot)", r"function CategoryManager:ClassifyItem\(itemLink, itemID, bag, slot\)", bags),
+        ("CategoryManager:GetCategories", r"function CategoryManager:GetCategories\(\)", bags),
         ("characterGold key Name-GetRealmName()", r'return UnitName\("player"\) \.\. "-" \.\. GetRealmName\(\)', bags),
         ("EllesmereUIDB.characterGold[charID] = { gold, lastUpdated }",
          r"EllesmereUIDB\.characterGold\[charID\] = \{\s*gold = currentGold,\s*lastUpdated = time\(\)", bags),
