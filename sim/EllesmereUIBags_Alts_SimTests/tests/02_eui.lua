@@ -33,6 +33,7 @@ end)
 
 simtest("connector skins a plain ItemButton with EUI's slot look", function()
     local btn = CreateFrame("ItemButton", nil, UIParent)
+    btn.simTestFixture = true
     assertTrue(Ext:SkinItemButton(btn))
     assertTrue(Ext:SetItemBorderColor(btn, 1, 0, 0, 1))
     assertEquals(34, math.floor(btn:GetWidth() + 0.5))

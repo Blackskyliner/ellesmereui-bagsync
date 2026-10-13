@@ -2,11 +2,12 @@
 --   * protected-frame enforcement: insecure caller + combat + protected frame
 --     -> call is dropped and ADDON_ACTION_BLOCKED fires (verified by a positive
 --     control in every run, so a silent simulator cannot fake a pass);
---   * slot taint for globals written while an addon's files load.
--- Not modelled by the simulator (and therefore NOT covered here): execution
--- taint inside event/script handlers (the simulator computes it and drops it)
--- and taint propagation into Blizzard's secure code paths. Those remain for the
--- in-game test with taintLog (README, test plan step 10).
+--   * slot taint for globals and table fields an addon writes, while its files
+--     load and at run time.
+-- Not fully modelled by the simulator (and therefore not fully covered here):
+-- execution taint inside event/script handlers and taint propagation into
+-- Blizzard's secure code paths. Those remain for the in-game test with
+-- taintLog (README, test plan step 10).
 local ns = EllesmereUIBagsAlts._ns
 
 local blocked = {}
@@ -16,11 +17,6 @@ watcher:RegisterEvent("ADDON_ACTION_FORBIDDEN")
 watcher:SetScript("OnEvent", function(_, event, addon, fn)
     blocked[#blocked + 1] = event .. " " .. tostring(addon) .. " " .. tostring(fn)
 end)
-
-local function itemTooltipInfo(itemID)
-    return { tooltipData = { type = Enum.TooltipDataType.Item, id = itemID,
-        lines = { { type = 0, leftText = "Item", leftColor = CreateColor(1, 1, 1) } } } }
-end
 
 local function assertNoneProtected(frame, path)
     assertTrue(not frame:IsProtected(), (path or "frame") .. " is protected")
@@ -51,9 +47,8 @@ local function exerciseEverything()
     -- tooltip on and through Blizzard's pipeline
     ns.db.settings.tooltip.enabled = true
     ns.SettingsChanged()
-    GameTooltip:SetOwner(UIParent, "ANCHOR_NONE")
-    GameTooltip:ProcessInfo(itemTooltipInfo(2589))
-    GameTooltip:Hide()
+    simShowItemTooltip(2589)
+    simHideTooltip()
     -- browser: open, search, switch owners/tabs, close
     SlashCmdList["EUIALTS"]("")
     ns.Browser:SetQuery("id:2589")
@@ -100,7 +95,9 @@ simtest("the addon's frames are never protected", function()
 end)
 
 -- Regions the ItemButton intrinsic names itself ($parentNormalTexture etc.);
--- for anonymous buttons these become fresh globals owned by the addon's frames.
+-- for anonymous buttons these become fresh globals owned by the addon's frames,
+-- or by the buttons the tests create and hand to the connector to skin
+-- (simTestFixture).
 local function OwnedByAddon(value)
     if type(value) ~= "table" or type(value.GetParent) ~= "function" then return false end
     local browser = _G.EllesmereUIBagsAltsBrowser
@@ -108,13 +105,15 @@ local function OwnedByAddon(value)
     for _ = 1, 20 do
         node = node:GetParent()
         if not node then return false end
-        if node == browser then return true end
+        if node == browser or node.simTestFixture then return true end
     end
     return false
 end
 
 simtest("taint: only the addon's own globals carry its taint", function()
-    local expected = { EllesmereUIBagsAlts = true, EllesmereUIBagsAltsDB = true, EllesmereUIBagsExt = true }
+    -- SLASH_EUIALTS1/2: the slash command's names, set when the addon activates
+    local expected = { EllesmereUIBagsAlts = true, EllesmereUIBagsAltsDB = true, EllesmereUIBagsExt = true,
+        SLASH_EUIALTS1 = true, SLASH_EUIALTS2 = true }
     local unexpected = {}
     for key, value in pairs(_G) do
         if type(key) == "string" then
@@ -128,12 +127,15 @@ simtest("taint: only the addon's own globals carry its taint", function()
     -- Blizzard / EUI tables the addon interacts with keep secure slots
     local watched = { SlashCmdList = SlashCmdList, GameTooltip = GameTooltip, ItemRefTooltip = ItemRefTooltip,
         TooltipDataProcessor = TooltipDataProcessor, EUI_Bags = EUI_Bags, EllesmereUI = EllesmereUI }
+    -- SlashCmdList.EUIALTS: the slash command's own entry, which every addon
+    -- writes the same way
+    local ownSlots = { SlashCmdList = { EUIALTS = true } }
     local taintedSlots = {}
     for name, tbl in pairs(watched) do
         if type(tbl) == "table" then
             for key in pairs(tbl) do
                 local secure, source = issecurevariable(tbl, key)
-                if not secure and source == "EllesmereUIBags_Alts" then
+                if not secure and source == "EllesmereUIBags_Alts" and not (ownSlots[name] and ownSlots[name][key]) then
                     taintedSlots[#taintedSlots + 1] = name .. "." .. tostring(key)
                 end
             end
@@ -142,7 +144,9 @@ simtest("taint: only the addon's own globals carry its taint", function()
     if #taintedSlots > 0 then error("tainted slots: " .. table.concat(taintedSlots, ", ")) end
     -- Blizzard functions the addon hooks stay secure (hooksecurefunc, never replaced).
     -- The auction post-hooks are installed on the first auction house visit.
-    assertTrue((issecurevariable("SendMail")))
+    -- (the simulator's own Admin addon provides SendMail, so that taint is its own)
+    local mailSecure, mailSource = issecurevariable("SendMail")
+    assertTrue(mailSecure or mailSource ~= "EllesmereUIBags_Alts", "SendMail tainted by the addon")
     A_Admin.FireEvent("AUCTION_HOUSE_SHOW")
     for _, name in ipairs({ "PostItem", "PostCommodity", "ConfirmPostItem", "ConfirmPostCommodity" }) do
         if type(C_AuctionHouse[name]) == "function" then
