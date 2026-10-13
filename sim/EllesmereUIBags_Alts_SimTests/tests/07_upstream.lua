@@ -35,6 +35,7 @@ end)
 
 simtest("item buttons are skinned through the native API", function()
     local btn = CreateFrame("ItemButton", nil, UIParent)
+    btn.simTestFixture = true
     assertTrue(EllesmereUIBagsExt:SkinItemButton(btn))
     assertTrue(EllesmereUIBagsExt:SetItemBorderColor(btn, 0, 1, 0, 1))
 end)

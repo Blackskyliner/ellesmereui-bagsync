@@ -10,16 +10,6 @@ local function lines()
     return table.concat(out, "\n")
 end
 
--- The simulator's C_TooltipInfo.GetItemByID returns item data without id,
--- hyperlink or guid (the client always sets id; see Blizzard's
--- TooltipUtil.GetDisplayedItem). So the tests feed ProcessInfo tooltip data in
--- the client's shape and run Blizzard's real pipeline (pre-calls, ProcessLines,
--- TooltipDataProcessor post-calls) from there.
-local function itemTooltipInfo(itemID, name)
-    return { tooltipData = { type = Enum.TooltipDataType.Item, id = itemID,
-        lines = { { type = 0, leftText = name, leftColor = CreateColor(1, 1, 1) } } } }
-end
-
 simtest("tooltip counts appear through the real TooltipDataProcessor once enabled", function()
     A_Admin.AddBagItem(0, 2, 2589, 7)
     A_Admin.FireEvent("BAG_UPDATE", 0)
@@ -35,21 +25,19 @@ simtest("tooltip counts appear through the real TooltipDataProcessor once enable
     assertTrue(ns.IsFeatureActive("tooltip"))
 
     -- Blizzard's own Lua pipeline (TooltipDataHandlerMixin:ProcessInfo), which is
-    -- what GameTooltip:SetItemByID/SetHyperlink run in the client.
-    GameTooltip:SetOwner(UIParent, "ANCHOR_NONE")
-    GameTooltip:ProcessInfo(itemTooltipInfo(2589, "Linen Cloth"))
+    -- what GameTooltip:SetItemByID/SetHyperlink run in the client (SimTests.lua).
+    simShowItemTooltip(2589, "Linen Cloth")
     local text = lines()
     assertContains(text, "Othertwink")
     assertContains(text, "Bags: 5")
-    GameTooltip:Hide()
+    simHideTooltip()
 end)
 
 simtest("tooltip adds nothing once disabled again", function()
     ns.db.settings.tooltip.enabled = false
     ns.SettingsChanged()
-    GameTooltip:SetOwner(UIParent, "ANCHOR_NONE")
-    GameTooltip:ProcessInfo(itemTooltipInfo(2589, "Linen Cloth"))
+    simShowItemTooltip(2589, "Linen Cloth")
     local text = lines()
     assertTrue(not text:find("Othertwink", 1, true))
-    GameTooltip:Hide()
+    simHideTooltip()
 end)

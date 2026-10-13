@@ -362,6 +362,32 @@ describe("Character, equipment and currency", function()
         assert.are.same({}, env.__errors)
     end)
 
+    it("repairs 0g from EllesmereUI's shared gold ledger before its older Bags store", function()
+        local sv = {
+            schema = 1,
+            chars = {
+                ["Bob-Blackhand"] = { name = "Bob", realm = "Blackhand", realmName = "Blackhand", money = 0 },
+                ["Eve-Azjol-Nerub"] = { name = "Eve", realm = "AzjolNerub", realmName = "Azjol-Nerub", money = 0 },
+            },
+        }
+        local env, ns = wow.boot(wow.defaultState({ money = 123 }), sv, { beforeLoad = function(e)
+            fakeEUI.install(e)
+            e.EllesmereUIDB = {
+                goldLedger = { chars = {
+                    ["Bob-Blackhand"] = { money = 2500000, updated = 1789990000, name = "Bob", realm = "Blackhand" },
+                    ["Eve-Azjol-Nerub"] = { money = 40000, name = "Eve", realm = "Azjol-Nerub" },
+                } },
+                characterGold = { ["Bob-Blackhand"] = { gold = 7, lastUpdated = 1 } },
+            }
+        end })
+        assert.are.equal(2500000, ns.db.chars["Bob-Blackhand"].money)
+        assert.are.equal(1789990000, ns.db.chars["Bob-Blackhand"].moneyAt)
+        -- a ledger entry absorbed from DataBars carries no age
+        assert.are.equal(40000, ns.db.chars["Eve-Azjol-Nerub"].money)
+        assert.is_nil(ns.db.chars["Eve-Azjol-Nerub"].moneyAt)
+        assert.are.same({}, env.__errors)
+    end)
+
     it("does not store 0g from a teardown PLAYER_MONEY on a loading screen", function()
         local env, ns = wow.boot(wow.defaultState({ money = 777 }))
         env.FireEvent("PLAYER_LEAVING_WORLD")

@@ -160,9 +160,11 @@ scripts/setup-tools.sh
 ```
 
 Prerequisites on the host: `git`, `curl`, a C compiler and `make`, `python3`,
-`rsync`, `zip`/`unzip` (packaging) and a Rust toolchain (`cargo`) for the
-simulator. It runs on macOS and Linux (there Lua's `linux` target needs the
-readline headers, e.g. `libreadline-dev`). `--no-sim` skips the simulator and
+`rsync`, `zip`/`unzip` (packaging), and for the simulator a Rust toolchain
+(`cargo`) plus ICU4C 72 or newer found by `pkg-config` (macOS: Homebrew's
+`icu4c`, which the script finds itself; Linux: `libicu-dev`). It runs on macOS
+and Linux (there Lua's `linux` target needs the readline headers, e.g.
+`libreadline-dev`). `--no-sim` skips the simulator and
 the venv, `--no-gui` only the GPU build and the venv; CI uses both. It builds or
 fetches:
 
@@ -176,15 +178,15 @@ EllesmereUI and wow-ui-sim are pinned to revisions the whole suite passes agains
 own changes; `ELLESMEREUI_REV=latest scripts/setup-tools.sh` (in a fresh `.tools`)
 tests the newest EllesmereUI. Move a pin deliberately: change the revision, rerun
 the script (it moves the checkout) and run the whole suite, visual tests included.
-The other sources follow their upstream branch. When EllesmereUI starts calling a
+The other sources follow their upstream branch, on every run of the script. As
+Blizzard's UI comes from the live branch, wow-ui-sim is built for the API of the
+live client (`SIM_FEATURES`, e.g. `retail-12-1-5`): when a patch goes live and
+Blizzard's code calls natives the simulator lacks, that feature moves to the new
+patch. When EllesmereUI starts calling a
 client API the simulator lacks, a stand-in goes into
 `sim/EllesmereUIBags_Alts_SimTests/SimGaps.lua`, never into the addon.
 - [wow-ui-sim](https://github.com/Osso/wow-ui-sim) twice: headless for the test
-  runs (`target/`) and with the GPU renderer for screenshots (`target-gui/`).
-  Its Lua VM, [rilua](https://github.com/Osso/rilua), is built at the revision
-  wow-ui-sim locks plus one fix (`RILUA_FIX`): without it the collector now and
-  then frees a string still in use, and a test fails with "string expected" on
-  a string;
+  runs (`target/`) and with the GPU renderer for screenshots (`target-gui/`);
 - a Python venv with Pillow for the image comparison.
 
 ## Testing
@@ -277,7 +279,7 @@ skipped). It runs on Linux because private repositories are billed ten times the
 minutes on macOS.
 
 What is cached: the Lua toolchain and the simulator binary alone (about 80 MB,
-keyed on `WOW_UI_SIM_REV`). A cache hit skips the Rust build; moving the pin
+keyed on `WOW_UI_SIM_REV` and `SIM_FEATURES`). A cache hit skips the Rust build; moving the pin
 builds once (about ten minutes on a runner) and caches the result. The CI sets
 `RUSTFLAGS`, because wow-ui-sim's own Linux flags compile for the runner's CPU
 (`target-cpu=native`) and a cached binary could then fail on the next runner.

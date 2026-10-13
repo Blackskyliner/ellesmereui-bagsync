@@ -10,10 +10,13 @@ simtest("all-characters view merges stacks and lists owners in the private toolt
     b:GetScript("OnEnter")(b)
     local tooltip = _G.EllesmereUIBagsAltsTooltip
     assertEquals(b.itemID, tooltip.processingInfo.euiAltsOwners)
-    -- the simulator renders no native tooltip lines: ours are spacer + holder
-    assertTrue(tooltip:NumLines() >= 2)
-    local left2 = _G.EllesmereUIBagsAltsTooltipTextLeft2:GetText() or ""
-    assertTrue(left2:find(UnitName("player"), 1, true) ~= nil)
+    -- the item's own lines come first, the holders follow them
+    local holder
+    for i = 2, tooltip:NumLines() do
+        local text = _G["EllesmereUIBagsAltsTooltipTextLeft" .. i]:GetText() or ""
+        if text:find(UnitName("player"), 1, true) then holder = i end
+    end
+    assertTrue(holder ~= nil)
     assertTrue(GameTooltip:GetOwner() ~= b)
     b:GetScript("OnLeave")(b)
 end)
@@ -36,10 +39,13 @@ simtest("currency rows show Blizzard's currency tooltip plus the holders", funct
     row:GetScript("OnEnter")(row)
     local tooltip = _G.EllesmereUIBagsAltsTooltip
     assertTrue(tooltip:IsShown())
-    -- the simulator renders no native tooltip lines: ours are spacer + holder
-    assertTrue(tooltip:NumLines() >= 2)
-    local left2 = _G.EllesmereUIBagsAltsTooltipTextLeft2:GetText() or ""
-    assertTrue(left2:find(UnitName("player"), 1, true) ~= nil)
+    -- the item's own lines come first, the holders follow them
+    local holder
+    for i = 2, tooltip:NumLines() do
+        local text = _G["EllesmereUIBagsAltsTooltipTextLeft" .. i]:GetText() or ""
+        if text:find(UnitName("player"), 1, true) then holder = i end
+    end
+    assertTrue(holder ~= nil)
     row:GetScript("OnLeave")(row)
     assertTrue(not tooltip:IsShown())
     if injected then c.currency[3008] = nil end

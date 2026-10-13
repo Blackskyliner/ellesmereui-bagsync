@@ -171,6 +171,15 @@ def main():
             if method not in ("AddTooltipPostCall", "AddTooltipPreCall"):
                 problems.append("%s: unknown TooltipDataProcessor.%s" % (rel, method))
 
+    # TOC: the client marks an addon out of date when its Interface line lacks
+    # the client's number. The live client is the one wow-ui-source mirrors
+    # (version.txt, e.g. "12.1.5.70340" -> 120105).
+    m = re.match(r"(\d+)\.(\d+)\.(\d+)", read(os.path.join(VENDOR, "wow-ui-source", "version.txt")))
+    live = int(m.group(1)) * 10000 + int(m.group(2)) * 100 + int(m.group(3))
+    toc = re.search(r"^## Interface:\s*(.+)$", read(os.path.join(ADDON, "EllesmereUIBags_Alts.toc")), re.M)
+    if not toc or live not in [int(v) for v in re.findall(r"\d+", toc.group(1))]:
+        problems.append("EllesmereUIBags_Alts.toc: ## Interface lacks %d (live client)" % live)
+
     # 6. EllesmereUI contract. Each symbol is searched in all files of its
     # addon, since EllesmereUI moves code between files without changing it.
     def addon_source(*parts):
@@ -199,11 +208,15 @@ def main():
         ("ns.SkinItemButton(btn, opts)", r"function ns\.SkinItemButton\(btn, opts\)", bags),
         ("ns.SetInsetBorderColor", r"ns\.SetInsetBorderColor = SetInsetBorderColor", bags),
         ("EUI_CategoryManager global", r"_G\.EUI_CategoryManager = CategoryManager", bags),
-        ("CategoryManager:ClassifyItem(link, id, bag, slot)", r"function CategoryManager:ClassifyItem\(itemLink, itemID, bag, slot\)", bags),
+        ("CategoryManager:ClassifyItem(link, id, bag, slot, ...)", r"function CategoryManager:ClassifyItem\(itemLink, itemID, bag, slot[,)]", bags),
         ("CategoryManager:GetCategories", r"function CategoryManager:GetCategories\(\)", bags),
-        ("characterGold key Name-GetRealmName()", r'return UnitName\("player"\) \.\. "-" \.\. GetRealmName\(\)', bags),
-        ("EllesmereUIDB.characterGold[charID] = { gold, lastUpdated }",
-         r"EllesmereUIDB\.characterGold\[charID\] = \{\s*gold = currentGold,\s*lastUpdated = time\(\)", bags),
+        ("goldLedger key Name-GetRealmName()",
+         r'local name, realm = UnitName\("player"\), GetRealmName\(\)\s+if not name or not realm then return nil end\s+return name \.\. "-" \.\. realm', eui),
+        ("EllesmereUIDB.goldLedger.chars", r"local ledger = db\.goldLedger[\s\S]*ledger\.chars = \{\}", eui),
+        ("goldLedger.chars[key] = { money, updated }",
+         r"e\.money, e\.class, e\.name, e\.realm, e\.updated = money, class, UnitName\(\"player\"\), GetRealmName\(\), time\(\)", eui),
+        ("characterGold { gold, lastUpdated } moved into goldLedger",
+         r"local bags, dbars, wband = db\.characterGold[\s\S]*chars\[key\] = \{ money = e\.gold,[^}]*updated = IsUsable\(e\.lastUpdated\)", eui),
     ]
     for label, pattern, text in contract:
         if not re.search(pattern, text, re.M):
