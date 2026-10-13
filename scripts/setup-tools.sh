@@ -56,6 +56,18 @@ for rock in busted luacheck; do
 done
 
 clone() { [ -d "$T/vendor/$2" ] || git clone -q --depth 1 ${3:+--branch "$3"} "$1" "$T/vendor/$2"; }
+# follow <url> <dir> [branch]: the newest commit of the branch (default: the
+# remote's default branch), on every run, like a fresh CI checkout. Offline the
+# checkout stays where it is.
+follow() {
+  local dir="$T/vendor/$2"
+  if [ ! -d "$dir" ]; then clone "$@"; return; fi
+  if git -C "$dir" fetch -q --depth 1 "$1" "${3:-HEAD}"; then
+    git -C "$dir" -c advice.detachedHead=false checkout -q FETCH_HEAD
+  else
+    echo "offline? keeping $2 at $(git -C "$dir" rev-parse --short HEAD)" >&2
+  fi
+}
 # pinned <url> <dir> <commit|latest>: one commit, fetched without history; a
 # checkout at another commit (the pin moved) is moved along.
 pinned() {
@@ -66,8 +78,8 @@ pinned() {
   git -C "$dir" fetch -q --depth 1 "$1" "$3"
   git -C "$dir" -c advice.detachedHead=false checkout -q FETCH_HEAD
 }
-clone https://github.com/Gethe/wow-ui-source.git wow-ui-source live
-clone https://github.com/Ketho/vscode-wow-api.git vscode-wow-api
+follow https://github.com/Gethe/wow-ui-source.git wow-ui-source live
+follow https://github.com/Ketho/vscode-wow-api.git vscode-wow-api
 pinned https://github.com/EllesmereGaming/EllesmereUI.git EllesmereUI "$ELLESMEREUI_REV"
 # rilua at the revision wow-ui-sim locks with RILUA_FIX applied, as one commit
 # with fixed metadata: cargo takes rilua only from a Git revision, and this one
@@ -122,9 +134,13 @@ elif command -v cargo >/dev/null 2>&1; then
   # target dir so the headless binary above stays untouched.
   if [ "$GUI" = 1 ]; then sim_build target-gui gui,client-retail; fi
   # wow-sim reads Blizzard UI from $HOME/Library/Caches (macOS) or ~/.cache; point HOME at .tools/simhome.
+  # The copy is redone whenever wow-ui-source moved (.wow-ui-source-rev), so the
+  # simulator runs the same Blizzard UI the API check reads.
   C="$T/simhome/Library/Caches/wow-ui-sim/blizzard-ui/retail/AddOns"
-  if [ ! -f "$C/.wow-ui-sim-blizzard-ui-complete" ]; then
-    mkdir -p "$C" && rsync -a "$T/vendor/wow-ui-source/Interface/AddOns/" "$C/"
+  UI_REV="$(git -C "$T/vendor/wow-ui-source" rev-parse HEAD)"
+  if [ ! -f "$C/.wow-ui-sim-blizzard-ui-complete" ] || [ "$(cat "$C/.wow-ui-source-rev" 2>/dev/null)" != "$UI_REV" ]; then
+    mkdir -p "$C" && rsync -a --delete --exclude '.wow-ui-*' "$T/vendor/wow-ui-source/Interface/AddOns/" "$C/"
+    echo "$UI_REV" > "$C/.wow-ui-source-rev"
     touch "$C/.wow-ui-sim-blizzard-ui-complete"
     printf 'profile=retail\nsource=gethe-image-build\nfallback=none\n' > "$C/.wow-ui-sim-blizzard-ui-provenance"
   fi
