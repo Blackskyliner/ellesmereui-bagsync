@@ -44,15 +44,16 @@ jobs:
       - uses: actions/checkout@v7
 
       # readline: Lua's linux target. clang, mold: wow-ui-sim's linker setup.
+      # ICU (pkg-config, libicu-dev): wow-ui-sim links ICU4C, also at run time.
       # DejaVu: the simulator measures text with it when no game fonts exist.
       - name: Install build dependencies
-        run: sudo apt-get update -q && sudo apt-get install -y -q libreadline-dev clang mold fonts-dejavu-core
+        run: sudo apt-get update -q && sudo apt-get install -y -q libreadline-dev clang mold pkg-config libicu-dev fonts-dejavu-core
 
       - name: Pinned revisions
         id: pins
         run: |
           echo "sim=$(sed -n 's/^WOW_UI_SIM_REV=//p' scripts/setup-tools.sh)" >> "$GITHUB_OUTPUT"
-          echo "rilua=$(sed -n 's/^RILUA_FIX=//p' scripts/setup-tools.sh)" >> "$GITHUB_OUTPUT"
+          echo "features=$(sed -n 's/^ *SIM_FEATURES=//p' scripts/setup-tools.sh)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Lua toolchain
         uses: actions/cache@v6
@@ -63,18 +64,18 @@ jobs:
             .tools/rocks
           key: lua-${{ runner.os }}-${{ hashFiles('scripts/setup-tools.sh') }}
 
-      # Only the finished binary (about 80 MB) and the rilua commit it was built
-      # from: with both setup-tools.sh skips the Rust build; the sources are
-      # fetched again at the pinned revisions. A new pin or rilua fix builds
-      # once (about ten minutes) and is cached from then on.
+      # Only the finished binary (about 80 MB) and the revision and features it
+      # was built from: with both setup-tools.sh skips the Rust build; the sources are
+      # fetched again at the pinned revision. A new pin builds once (about ten
+      # minutes) and is cached from then on.
       - name: Cache simulator binary
         id: sim-cache
         uses: actions/cache@v6
         with:
           path: |
             .tools/vendor/wow-ui-sim/target/release/wow-sim
-            .tools/vendor/wow-ui-sim/target/release/wow-sim.rilua
-          key: wow-sim-${{ runner.os }}-${{ steps.pins.outputs.sim }}-${{ steps.pins.outputs.rilua }}-headless
+            .tools/vendor/wow-ui-sim/target/release/wow-sim.rev
+          key: wow-sim-${{ runner.os }}-${{ steps.pins.outputs.sim }}-${{ steps.pins.outputs.features }}-headless
 
       - name: Rust toolchain (only to build the simulator)
         if: steps.sim-cache.outputs.cache-hit != 'true'
