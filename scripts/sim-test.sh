@@ -40,6 +40,10 @@ fi
 
 cd "$SIM"
 export HOME="$ROOT/.tools/simhome"
+# EllesmereUI's TOCs trail the live client's interface number (12.1.5:
+# 120105), and wow-sim skips out-of-date addons like the client does. Ours is
+# checked by scripts/check-api.py.
+export WOW_SIM_LOAD_OUT_OF_DATE_ADDONS=1
 export WOW_SIM_NO_SOUND=1
 # The binary also looks next to the sources it was built from; naming the
 # directory keeps a cached or copied binary on this checkout's addons.
