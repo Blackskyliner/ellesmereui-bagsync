@@ -26,7 +26,7 @@ window across all characters, similar to Baganator, in EllesmereUI's look.
 > reviewed by native speakers. **Corrections are very welcome**, see
 > [Languages](#languages).
 
-Version 0.8.6, by Blackskyliner.
+Version 0.8.7, by Blackskyliner.
 
 ## What it does
 
@@ -85,8 +85,9 @@ extension points in EllesmereUI Bags is in [`upstream/`](upstream/).
 
 ## Requirements
 
-- World of Warcraft: Midnight 12.1 or later. The TOC lists only 12.1: EllesmereUI
-  still lists 12.0 as well, but switches itself off on clients before 12.1.
+- World of Warcraft: Midnight 12.1 or later. The TOC lists only 12.1 and 12.1.5:
+  EllesmereUI still lists 12.0 as well, but switches itself off on clients
+  before 12.1.
 - **EllesmereUI with the Bags module** (a dependency; EllesmereUI's core plus the
   Bags module is enough, the other modules are not needed).
 - Optional: EllesmereUI's Blizzard skin module (EllesmereUIBlizzardSkin). With it

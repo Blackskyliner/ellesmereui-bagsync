@@ -12,6 +12,14 @@ better, faster or reads better), **Bugfix** (something did not work as intended)
 0.8.5 is the first public release. The versions before it were development
 builds, each tested in the game by the maintainer.
 
+## 0.8.7
+
+- **Enhanced:** The TOC lists 12.1.5 as well, so the 12.1.5 client no longer
+  marks the addon as out of date.
+- **Bugfix:** The one-time repair of characters stored with 0 gold also reads
+  the gold record of newer EllesmereUI versions, which moved character gold to
+  a shared ledger.
+
 ## 0.8.6
 
 - **Enhanced:** CurseForge lists 12.1 as the only game version, the one the
