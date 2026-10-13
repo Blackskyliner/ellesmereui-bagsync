@@ -53,7 +53,8 @@ jobs:
         id: pins
         run: |
           echo "sim=$(sed -n 's/^WOW_UI_SIM_REV=//p' scripts/setup-tools.sh)" >> "$GITHUB_OUTPUT"
-          echo "features=$(sed -n 's/^ *SIM_FEATURES=//p' scripts/setup-tools.sh)" >> "$GITHUB_OUTPUT"
+          # cache keys must not contain commas
+          echo "features=$(sed -n 's/^ *SIM_FEATURES=//p' scripts/setup-tools.sh | tr , +)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Lua toolchain
         uses: actions/cache@v6
