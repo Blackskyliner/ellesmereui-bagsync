@@ -337,18 +337,31 @@ function lib:GetNativeAPIVersion()
 end
 
 -------------------------------------------------------------------------------
---  Character gold tracked by EUI Bags (read-only)
---  EllesmereUIDB.characterGold["Name-Realm Name"] = { gold, lastUpdated, ... },
+--  Character gold tracked by EllesmereUI (read-only)
+--  EllesmereUIDB.goldLedger.chars["Name-Realm Name"] = { money, updated, ... },
 --  keyed by UnitName .. "-" .. GetRealmName() (display realm, spaces kept).
+--  EllesmereUI moves the older Bags store EllesmereUIDB.characterGold
+--  (same key, { gold, lastUpdated }) into the ledger only when one of its
+--  modules first asks for it, so until then the balances are still there.
+--  The table is read directly: EllesmereUI.GetGoldLedger() would run that
+--  move and write EllesmereUI's saved variables.
 -------------------------------------------------------------------------------
 -- -> gold (copper), lastUpdated (epoch) or nil
 function lib:GetCharacterGold(name, realmName)
     if not EUI() or type(name) ~= "string" or type(realmName) ~= "string" then return nil end
     local db = _G.EllesmereUIDB
-    local all = type(db) == "table" and db.characterGold
-    local entry = type(all) == "table" and all[name .. "-" .. realmName]
-    if type(entry) ~= "table" or type(entry.gold) ~= "number" then return nil end
-    return entry.gold, type(entry.lastUpdated) == "number" and entry.lastUpdated or nil
+    if type(db) ~= "table" then return nil end
+    local key = name .. "-" .. realmName
+    local ledger = type(db.goldLedger) == "table" and db.goldLedger.chars
+    local entry = type(ledger) == "table" and ledger[key]
+    if type(entry) == "table" and type(entry.money) == "number" then
+        return entry.money, type(entry.updated) == "number" and entry.updated or nil
+    end
+    local legacy = type(db.characterGold) == "table" and db.characterGold[key]
+    if type(legacy) == "table" and type(legacy.gold) == "number" then
+        return legacy.gold, type(legacy.lastUpdated) == "number" and legacy.lastUpdated or nil
+    end
+    return nil
 end
 
 -------------------------------------------------------------------------------
