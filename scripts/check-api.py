@@ -199,11 +199,15 @@ def main():
         ("ns.SkinItemButton(btn, opts)", r"function ns\.SkinItemButton\(btn, opts\)", bags),
         ("ns.SetInsetBorderColor", r"ns\.SetInsetBorderColor = SetInsetBorderColor", bags),
         ("EUI_CategoryManager global", r"_G\.EUI_CategoryManager = CategoryManager", bags),
-        ("CategoryManager:ClassifyItem(link, id, bag, slot)", r"function CategoryManager:ClassifyItem\(itemLink, itemID, bag, slot\)", bags),
+        ("CategoryManager:ClassifyItem(link, id, bag, slot, ...)", r"function CategoryManager:ClassifyItem\(itemLink, itemID, bag, slot[,)]", bags),
         ("CategoryManager:GetCategories", r"function CategoryManager:GetCategories\(\)", bags),
-        ("characterGold key Name-GetRealmName()", r'return UnitName\("player"\) \.\. "-" \.\. GetRealmName\(\)', bags),
-        ("EllesmereUIDB.characterGold[charID] = { gold, lastUpdated }",
-         r"EllesmereUIDB\.characterGold\[charID\] = \{\s*gold = currentGold,\s*lastUpdated = time\(\)", bags),
+        ("goldLedger key Name-GetRealmName()",
+         r'local name, realm = UnitName\("player"\), GetRealmName\(\)\s+if not name or not realm then return nil end\s+return name \.\. "-" \.\. realm', eui),
+        ("EllesmereUIDB.goldLedger.chars", r"local ledger = db\.goldLedger[\s\S]*ledger\.chars = \{\}", eui),
+        ("goldLedger.chars[key] = { money, updated }",
+         r"e\.money, e\.class, e\.name, e\.realm, e\.updated = money, class, UnitName\(\"player\"\), GetRealmName\(\), time\(\)", eui),
+        ("characterGold { gold, lastUpdated } moved into goldLedger",
+         r"local bags, dbars, wband = db\.characterGold[\s\S]*chars\[key\] = \{ money = e\.gold,[^}]*updated = IsUsable\(e\.lastUpdated\)", eui),
     ]
     for label, pattern, text in contract:
         if not re.search(pattern, text, re.M):

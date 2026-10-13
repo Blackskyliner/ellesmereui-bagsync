@@ -1,16 +1,16 @@
 diff --git a/EllesmereUIBags/EllesmereUIBags.toc b/EllesmereUIBags/EllesmereUIBags.toc
-index ed29d49..16bbdf3 100644
+index 6acc0436..bc7a3953 100644
 --- a/EllesmereUIBags/EllesmereUIBags.toc
 +++ b/EllesmereUIBags/EllesmereUIBags.toc
-@@ -18,3 +18,5 @@ EllesmereUIBags.lua
- EllesmereUIBags_Grid.lua
- EllesmereUIBags_List.lua
+@@ -20,3 +20,5 @@ EllesmereUIBags_List.lua
+ EllesmereUIBags_Compact.lua
  EllesmereUIBags_Bank.lua
+ EllesmereUIBags_QuickActions.lua
 +
 +EllesmereUIBags_ExtAPI.lua
 diff --git a/EllesmereUIBags/EllesmereUIBags_ExtAPI.lua b/EllesmereUIBags/EllesmereUIBags_ExtAPI.lua
 new file mode 100644
-index 0000000..6506a4c
+index 00000000..6506a4c3
 --- /dev/null
 +++ b/EllesmereUIBags/EllesmereUIBags_ExtAPI.lua
 @@ -0,0 +1,118 @@

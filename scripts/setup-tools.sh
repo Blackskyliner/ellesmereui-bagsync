@@ -35,7 +35,7 @@ WOW_UI_SIM_REV=d08c5517aa029cecc94b01a64d37c5a8066803b5
 # collector has already marked dead, and the sweep then frees it while it is in
 # use (a test fails now and then with "string expected" on a string).
 RILUA_FIX=a76ffa83f548da94b72777c96d51de38b7f9ef3c
-ELLESMEREUI_REV="${ELLESMEREUI_REV:-6dffe7cf03918cfc5c73c4f07f404abf425077e0}"
+ELLESMEREUI_REV="${ELLESMEREUI_REV:-eccc25a0f9ebd18b48a6345654e80e7c78ee4927}"
 
 case "$(uname -s)" in Darwin) LUA_TARGET=macosx ;; *) LUA_TARGET=linux ;; esac
 if [ ! -x "$T/lua/bin/lua" ]; then
