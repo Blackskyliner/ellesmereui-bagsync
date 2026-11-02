@@ -665,8 +665,10 @@ local function RenderSidebar(f)
         Row(key, name .. (c.level and (" |cff888888" .. c.level .. "|r") or ""), W.FormatGold(c.money), r, g, b)
     end
 
-    Header(L["Account"])
-    Row(ns.WARBAND_OWNER, L["Warband Bank"], W.FormatGold(ns.db.warband.money), 0.31, 0.76, 0.97)
+    if ns.Compat.HAS_WARBAND_BANK then
+        Header(L["Account"])
+        Row(ns.WARBAND_OWNER, L["Warband Bank"], W.FormatGold(ns.db.warband.money), 0.31, 0.76, 0.97)
+    end
 
     local guildKeys = ns.GetSortedGuildKeys()
     if #guildKeys > 0 then

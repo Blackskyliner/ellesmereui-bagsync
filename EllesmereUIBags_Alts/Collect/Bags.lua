@@ -1,19 +1,29 @@
 -------------------------------------------------------------------------------
 --  Collect/Bags.lua
---  Backpack, the four bag slots and the reagent bag (Enum.BagIndex 0..5).
+--  Backpack, the four bag slots and the reagent bag (Enum.BagIndex 0..5),
+--  plus the keyring on clients that have one (WoW Forever). Forever's special
+--  bags (quivers, soul bags, ...) sit in the four bag slots like any bag.
 -------------------------------------------------------------------------------
 local _, ns = ...
 
 local FIRST_BAG = Enum.BagIndex.Backpack      -- 0
 local LAST_BAG  = Enum.BagIndex.ReagentBag    -- 5
+local KEYRING   = Enum.BagIndex.Keyring       -- -1
 
 local dirty = ns.NewDirtySet()
 local deferredForCombat = false
+local hasKeyring = false   -- decided when the feature starts
 
 local function IsInventoryBag(bagID)
-    return type(bagID) == "number" and bagID >= FIRST_BAG and bagID <= LAST_BAG
+    return type(bagID) == "number"
+        and (bagID >= FIRST_BAG and bagID <= LAST_BAG or hasKeyring and bagID == KEYRING)
 end
 ns.IsInventoryBag = IsInventoryBag
+
+local function MarkAll()
+    for bagID = FIRST_BAG, LAST_BAG do dirty:Mark(bagID) end
+    if hasKeyring then dirty:Mark(KEYRING) end
+end
 
 local feature
 
@@ -42,7 +52,8 @@ feature = ns.RegisterFeature({
     key = "bags",
     IsEnabled = function(s) return s.collect.bags end,
     OnEnable = function(self)
-        for bagID = FIRST_BAG, LAST_BAG do dirty:Mark(bagID) end
+        hasKeyring = ns.Compat.HasKeyring()
+        MarkAll()
         self:Flush()
         ns.RegisterEvent(self, "BAG_UPDATE", function(_, _, bagID)
             if IsInventoryBag(bagID) then dirty:Mark(bagID) end
@@ -50,19 +61,19 @@ feature = ns.RegisterFeature({
         ns.RegisterEvent(self, "BAG_UPDATE_DELAYED", function() self:Flush() end)
         -- Set membership changes without item events; rescan every bag once.
         ns.RegisterEvent(self, "EQUIPMENT_SETS_CHANGED", function()
-            for bagID = FIRST_BAG, LAST_BAG do dirty:Mark(bagID) end
+            MarkAll()
             self:Flush()
         end)
         -- A swapped bag changes the slot count without item events.
         ns.RegisterEvent(self, "BAG_CONTAINER_UPDATE", function()
-            for bagID = FIRST_BAG, LAST_BAG do dirty:Mark(bagID) end
+            MarkAll()
             self:Flush()
         end)
         -- Activated between login and the first world entry: bag data is only
         -- complete from there. Later loading screens change nothing.
         ns.RegisterEvent(self, "PLAYER_ENTERING_WORLD", function(_, _, isInitialLogin, isReloadingUi)
             if not (isInitialLogin or isReloadingUi) then return end
-            for bagID = FIRST_BAG, LAST_BAG do dirty:Mark(bagID) end
+            MarkAll()
             self:Flush()
         end)
     end,

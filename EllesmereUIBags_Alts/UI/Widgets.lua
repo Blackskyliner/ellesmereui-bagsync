@@ -198,9 +198,11 @@ end
 
 -- Caged battle pets. Blizzard's BattlePetToolTip_ShowLink fills its shared
 -- BattlePetTooltip through a shared state table; the browser fills a private
--- frame of the same template instead. -> true when a pet tooltip is shown.
+-- frame of the same template instead. -> true when a pet tooltip is shown;
+-- false on clients without pet battles, whose template lacks the battle stats.
 local petTooltip
 function W.ShowPetTooltip(owner, link)
+    if not ns.Compat.HAS_PET_BATTLES then return false end
     local speciesID, level, quality, health, power, speed = BattlePetToolTip_UnpackBattlePetLink(link)
     if not speciesID or speciesID <= 0 then return false end
     local name, _, petType = C_PetJournal.GetPetInfoBySpeciesID(speciesID)
