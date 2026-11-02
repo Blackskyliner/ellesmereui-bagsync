@@ -1,16 +1,23 @@
 #!/usr/bin/env bash
-# Runs the simulator tests: real Blizzard FrameXML (12.1) + real EllesmereUI
-# (core + Bags) + this addon, inside Osso/wow-ui-sim (built by setup-tools.sh).
+# Runs the simulator tests: real Blizzard FrameXML + real EllesmereUI (core +
+# Bags) + this addon, inside Osso/wow-ui-sim (built by setup-tools.sh).
 #   scripts/sim-test.sh            run-tests (sim/EllesmereUIBags_Alts_SimTests/tests)
 #   scripts/sim-test.sh errors     startup Lua errors as JSON
 #   scripts/sim-test.sh skin       run-tests with EUI's Blizzard skin module loaded too
 #   scripts/sim-test.sh upstream   run-tests with EUI Bags patched with upstream/EllesmereUIBags_ExtAPI.lua
+# --client=forever before the mode runs the WoW Forever client (1.60 FrameXML,
+# its own simulator build) instead of retail (12.1).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SIM="$ROOT/.tools/vendor/wow-ui-sim"
+CLIENT=retail
+case "${1:-}" in
+  --client=retail|--client=forever) CLIENT="${1#--client=}"; shift ;;
+  --client=*) echo "unknown client: ${1#--client=}" >&2; exit 2 ;;
+esac
+if [ "$CLIENT" = forever ]; then SIM="$ROOT/.tools/vendor/wow-ui-sim-forever"; else SIM="$ROOT/.tools/vendor/wow-ui-sim"; fi
 EUI="$ROOT/.tools/vendor/EllesmereUI"
 BIN="$SIM/target/release/wow-sim"
-[ -x "$BIN" ] || { echo "wow-sim not built; run scripts/setup-tools.sh" >&2; exit 2; }
+[ -x "$BIN" ] || { echo "wow-sim ($CLIENT) not built; run scripts/setup-tools.sh" >&2; exit 2; }
 ADDONS="$SIM/Interface/AddOns"
 MODE="${1:-tests}"
 
@@ -42,7 +49,7 @@ cd "$SIM"
 export HOME="$ROOT/.tools/simhome"
 # EllesmereUI's TOCs trail the live client's interface number (12.1.5:
 # 120105), and wow-sim skips out-of-date addons like the client does. Ours is
-# checked by scripts/check-api.py.
+# checked by scripts/check-api.py, for every client.
 export WOW_SIM_LOAD_OUT_OF_DATE_ADDONS=1
 export WOW_SIM_NO_SOUND=1
 # The binary also looks next to the sources it was built from; naming the

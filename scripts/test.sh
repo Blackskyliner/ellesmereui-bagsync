@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
 # Full verification: lint, API surface, unit/integration tests (busted),
-# simulator tests with and without EllesmereUI, and a scan of every simulator
-# run for Lua errors raised by this addon.
-#   --require-sim   fail instead of skipping when the simulator is not built
-#                   (CI: a broken simulator build must not pass as "skipped")
+# simulator tests with and without EllesmereUI per client, and a scan of every
+# simulator run for Lua errors raised by this addon.
+#   --require-sim       fail instead of skipping when a simulator is not built
+#                       (CI: a broken simulator build must not pass as "skipped")
+#   --client=<name>     simulator tests of one client only: retail or forever
+#                       (default: both; lint, API check and busted cover both
+#                       clients in every run, the visual tests retail only)
 set -uo pipefail
-REQUIRE_SIM=0
+REQUIRE_SIM=0 CLIENTS="retail forever"
 for arg in "$@"; do
   case "$arg" in
     --require-sim) REQUIRE_SIM=1 ;;
+    --client=retail|--client=forever) CLIENTS="${arg#--client=}" ;;
     *) echo "unknown option: $arg" >&2; exit 2 ;;
   esac
 done
@@ -21,7 +25,7 @@ step() { printf '\n== %s\n' "$1"; }
 step "luacheck"
 "$T/rocks/bin/luacheck" -q EllesmereUIBags_Alts spec sim upstream || fail=1
 
-step "API surface (Blizzard 12.x sources, EllesmereUI contract, ASCII)"
+step "API surface (Blizzard sources of every client, EllesmereUI contract, ASCII)"
 python3 scripts/check-api.py || fail=1
 
 step "busted"
@@ -30,9 +34,9 @@ step "busted"
 # One simulator run: prints the test lines; returns 1 on a failed test or a Lua
 # error raised by the addon.
 sim_run() {
-  local mode="$1" log rc=0
+  local client="$1" mode="$2" log rc=0
   log="$(mktemp)"
-  bash scripts/sim-test.sh "$mode" >"$log" 2>&1 || rc=1
+  bash scripts/sim-test.sh --client="$client" "$mode" >"$log" 2>&1 || rc=1
   python3 - "$log" <<'PY'
 import sys
 s = open(sys.argv[1], encoding="utf-8", errors="ignore").read()
@@ -57,17 +61,21 @@ PY
   return $rc
 }
 
-if [ -x "$T/vendor/wow-ui-sim/target/release/wow-sim" ]; then
-  for mode in tests skin upstream; do
-    step "wow-ui-sim ($mode)"
-    sim_run "$mode" || fail=1
-  done
-else
-  step "wow-ui-sim skipped (not built)"
-  [ "$REQUIRE_SIM" = 0 ] || { echo "--require-sim: simulator missing"; fail=1; }
-fi
+for client in $CLIENTS; do
+  if [ "$client" = forever ]; then sim="$T/vendor/wow-ui-sim-forever"; else sim="$T/vendor/wow-ui-sim"; fi
+  if [ -x "$sim/target/release/wow-sim" ]; then
+    for mode in tests skin upstream; do
+      step "wow-ui-sim $client ($mode)"
+      sim_run "$client" "$mode" || fail=1
+    done
+  else
+    step "wow-ui-sim $client skipped (not built)"
+    [ "$REQUIRE_SIM" = 0 ] || { echo "--require-sim: simulator missing"; fail=1; }
+  fi
+done
 
-if [ -x "$T/vendor/wow-ui-sim/target-gui/release/wow-sim" ] && [ -x "$T/venv/bin/python" ]; then
+case " $CLIENTS " in *" retail "*) visual=1 ;; *) visual=0 ;; esac
+if [ "$visual" = 1 ] && [ -x "$T/vendor/wow-ui-sim/target-gui/release/wow-sim" ] && [ -x "$T/venv/bin/python" ]; then
   step "visual regression (wow-ui-sim screenshots vs sim/visual/baselines)"
   vlog="$(mktemp)"
   if bash scripts/visual-test.sh >"$vlog" 2>&1; then
@@ -78,7 +86,7 @@ if [ -x "$T/vendor/wow-ui-sim/target-gui/release/wow-sim" ] && [ -x "$T/venv/bin
   fi
   rm -f "$vlog"
 else
-  step "visual regression skipped (GUI build or venv missing)"
+  step "visual regression skipped (retail only; GUI build or venv missing)"
 fi
 
 printf '\n'

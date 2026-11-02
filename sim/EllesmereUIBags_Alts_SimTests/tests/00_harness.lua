@@ -5,8 +5,10 @@
 -- `sim-test.sh skin` every texture drawn afterwards is faded, our item slots
 -- included. That is why scripts/visual-test.sh renders without the skin
 -- module. When this test fails, the simulator is fixed: add the skin mode to
--- the visual tests (scripts/visual-test.sh, visual-compare.py MODES).
-simtest("known sim limitation: object method hooks leak to every object of the type", function()
+-- the visual tests (scripts/visual-test.sh, visual-compare.py MODES). Pinned
+-- for the retail simulator, which renders the visual tests; the Forever
+-- simulator runs a newer revision without the limitation.
+simtest_only("retail", "known sim limitation: object method hooks leak to every object of the type", function()
     local a, b = UIParent:CreateTexture(), UIParent:CreateTexture()
     local hits = 0
     hooksecurefunc(a, "SetTexture", function() hits = hits + 1 end)
