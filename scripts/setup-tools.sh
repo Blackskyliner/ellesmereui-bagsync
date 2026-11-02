@@ -93,14 +93,17 @@ if [ "$SIM" = 0 ]; then
   echo "--no-sim: skipping wow-ui-sim" >&2
 elif command -v cargo >/dev/null 2>&1; then
   # sim_build <target dir> <features>: builds wow-sim unless the binary there
-  # was built from the pinned revision with these features (wow-sim.rev). The
+  # was built from the pinned revision with these features against the ICU
+  # installed now (wow-sim.rev): the binary links ICU's versioned libraries, so
+  # an ICU update (Homebrew, a new runner image) leaves it unable to start. The
   # stamp lets CI restore only the binary from its cache and skip the Rust build.
   sim_build() {
-    local sim="$T/vendor/wow-ui-sim"
-    [ -x "$sim/$1/release/wow-sim" ] && [ "$(cat "$sim/$1/release/wow-sim.rev" 2>/dev/null)" = "$WOW_UI_SIM_REV $2" ] && return 0
+    local sim="$T/vendor/wow-ui-sim" stamp
+    stamp="$WOW_UI_SIM_REV $2 icu-$(pkg-config --modversion icu-i18n 2>/dev/null)"
+    [ -x "$sim/$1/release/wow-sim" ] && [ "$(cat "$sim/$1/release/wow-sim.rev" 2>/dev/null)" = "$stamp" ] && return 0
     (cd "$sim" && CARGO_HOME="$T/cargo" CARGO_TARGET_DIR="$sim/$1" cargo build --release --locked --bin wow-sim \
       --no-default-features --features "$2")
-    echo "$WOW_UI_SIM_REV $2" > "$sim/$1/release/wow-sim.rev"
+    echo "$stamp" > "$sim/$1/release/wow-sim.rev"
   }
   # wow-ui-sim links ICU4C >= 72 through pkg-config: libicu-dev on Linux, the
   # keg-only icu4c of Homebrew on macOS (not on pkg-config's default path).
