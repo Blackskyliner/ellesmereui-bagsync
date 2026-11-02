@@ -3,7 +3,7 @@
 <img src="docs/media/icon-400.png" alt="" width="96" align="right">
 
 A companion addon for **[EllesmereUI](https://github.com/EllesmereGaming/EllesmereUI) Bags** in
-World of Warcraft: Midnight (12.x). It remembers what all your characters carry: bags,
+World of Warcraft: Midnight (12.x) and WoW Forever. It remembers what all your characters carry: bags,
 equipped gear, character bank, warband bank, mailbox, own auctions, currencies and,
 if you want, your guild bank. It shows that stock in item tooltips and in a browser
 window across all characters, similar to Baganator, in EllesmereUI's look.
@@ -26,7 +26,7 @@ window across all characters, similar to Baganator, in EllesmereUI's look.
 > reviewed by native speakers. **Corrections are very welcome**, see
 > [Languages](#languages).
 
-Version 0.8.7, by Blackskyliner.
+Version 0.9.0, by Blackskyliner.
 
 ## What it does
 
@@ -77,7 +77,8 @@ The addon follows the five acceptance criteria EllesmereUI sets for its own code
 - **No taint.** No secure templates, no fields written onto EllesmereUI or Blizzard
   frames, no hooks on Blizzard's bag windows; the browser shows items and caged
   pets on tooltips of its own.
-- **Midnight only.**
+- **Midnight and WoW Forever.** Everything that differs between the two
+  clients sits in one file (`Core/ClientCompat.lua`); the tests run against both.
 
 Every access to EllesmereUI goes through a small connector layer
 (`Libs/EUIBagsExt`). EllesmereUI itself is never modified. A proposal for native
@@ -85,9 +86,12 @@ extension points in EllesmereUI Bags is in [`upstream/`](upstream/).
 
 ## Requirements
 
-- World of Warcraft: Midnight 12.1 or later. The TOC lists only 12.1 and 12.1.5:
-  EllesmereUI still lists 12.0 as well, but switches itself off on clients
-  before 12.1.
+- World of Warcraft: Midnight 12.1 or later, or WoW Forever (1.60). The TOC
+  lists 12.1, 12.1.5 and Forever's 1.60.1: EllesmereUI still lists 12.0 as well,
+  but switches itself off on clients before 12.1.
+- On WoW Forever the addon also records the keyring, the ammo slot and the bank
+  bags. Characters are grouped by realm type (Normal, PvP, RP, ...), as Forever
+  and EllesmereUI do; there is no warband bank there.
 - **EllesmereUI with the Bags module** (a dependency; EllesmereUI's core plus the
   Bags module is enough, the other modules are not needed).
 - Optional: EllesmereUI's Blizzard skin module (EllesmereUIBlizzardSkin). With it
@@ -274,6 +278,10 @@ and [BugSack](https://www.curseforge.com/wow/addons/bugsack), then enter
     turned off in the options it leaves the bag header.
 12. **Without EUI's skin module (optional):** disable EllesmereUIBlizzardSkin. The
     addon keeps working with its plain look; the item slots keep EUI Bags' look.
+13. **WoW Forever:** repeat steps 1 to 6 there. The browser groups the characters
+    by realm type and lists no warband bank. Put a key on the keyring, equip ammo
+    as a hunter and put a bag into a bank bag slot: each shows up in the browser
+    and in the tooltip counts.
 
 If something is off, please run `/alts status` and `/alts selftest` and keep their
 output and the BugSack message.

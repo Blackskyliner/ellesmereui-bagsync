@@ -82,11 +82,16 @@ all five.
      combat and instances, where the collectors defer until combat ends.
    - A template that pins an absolute frame level (e.g. `UIPanelCloseButton`) is
      not used.
-5. **Midnight only.** The TOC lists the same interface versions as EllesmereUI;
-   current `C_*` APIs only, no version gates, no legacy paths and no fallbacks for
-   APIs every 12.x client has. The only gate is EllesmereUI's own failsafe
-   (`EUI_CLIENT_BLOCKED` on clients before 12.1, `Core/Boot.lua`), under which the
-   addon stays inert with its dependency.
+5. **Midnight engine only.** The addon runs on retail 12.x and on WoW Forever
+   (1.60, the 12.1 engine with vanilla content); the TOC lists both like
+   EllesmereUI. Current `C_*` APIs only, no version gates, no legacy paths and no
+   fallbacks for APIs every supported client has. Everything that differs between
+   the two clients lives in `Core/ClientCompat.lua` (`ns.Compat`): the rest of the
+   code asks it and never checks the client itself, and `scripts/check-api.py`
+   lets only that file use an API one of the clients lacks. The client comes from
+   EllesmereUI (`EllesmereUI.IS_FOREVER`), so both addons always agree on it. The
+   only gate is EllesmereUI's own failsafe (`EUI_CLIENT_BLOCKED` on clients before
+   12.1, `Core/Boot.lua`), under which the addon stays inert with its dependency.
 
 ## Code style
 
@@ -162,19 +167,24 @@ scripts/setup-tools.sh
 Prerequisites on the host: `git`, `curl`, a C compiler and `make`, `python3`,
 `rsync`, `zip`/`unzip` (packaging), and for the simulator a Rust toolchain
 (`cargo`) plus ICU4C 72 or newer found by `pkg-config` (macOS: Homebrew's
-`icu4c`, which the script finds itself; Linux: `libicu-dev`). It runs on macOS
+`icu4c`, which the script finds itself; Linux: `libicu-dev`), and for the
+Forever spell data OpenSSL (Linux: `libssl-dev`; macOS has what it needs). It runs on macOS
 and Linux (there Lua's `linux` target needs the readline headers, e.g.
 `libreadline-dev`). `--no-sim` skips the simulator and
-the venv, `--no-gui` only the GPU build and the venv; CI uses both. It builds or
-fetches:
+the venv, `--no-gui` only the GPU build and the venv; `--client=retail` or
+`--client=forever` builds the simulator of one client only (CI uses `--no-gui`
+and one client per job). It builds or fetches:
 
 - Lua 5.1, LuaRocks, busted and luacheck;
-- reference sources: Blizzard's UI source (Gethe/wow-ui-source, live), Ketho's API
-  annotations, EllesmereUI's source and Blizzard's GlobalStrings of every client
-  locale (Ketho/BlizzardInterfaceResources);
+- reference sources: Blizzard's UI source per client (Gethe/wow-ui-source: the
+  `live` branch for retail, `forever` for WoW Forever), Ketho's API annotations,
+  EllesmereUI's source and Blizzard's GlobalStrings of every client locale
+  (Ketho/BlizzardInterfaceResources);
 
 EllesmereUI and wow-ui-sim are pinned to revisions the whole suite passes against
-(`ELLESMEREUI_REV`, `WOW_UI_SIM_REV` in the script), so a push is judged by its
+(`ELLESMEREUI_REV`, `WOW_UI_SIM_REV` and `WOW_UI_SIM_FOREVER_REV` in the script;
+Forever needs a newer simulator than retail, whose newer revisions only accept
+Blizzard UI pinned from Blizzard's CDN), so a push is judged by its
 own changes; `ELLESMEREUI_REV=latest scripts/setup-tools.sh` (in a fresh `.tools`)
 tests the newest EllesmereUI. Move a pin deliberately: change the revision, rerun
 the script (it moves the checkout) and run the whole suite, visual tests included.
@@ -182,11 +192,22 @@ The other sources follow their upstream branch, on every run of the script. As
 Blizzard's UI comes from the live branch, wow-ui-sim is built for the API of the
 live client (`SIM_FEATURES`, e.g. `retail-12-1-5`): when a patch goes live and
 Blizzard's code calls natives the simulator lacks, that feature moves to the new
-patch. When EllesmereUI starts calling a
-client API the simulator lacks, a stand-in goes into
-`sim/EllesmereUIBags_Alts_SimTests/SimGaps.lua`, never into the addon.
-- [wow-ui-sim](https://github.com/Osso/wow-ui-sim) twice: headless for the test
-  runs (`target/`) and with the GPU renderer for screenshots (`target-gui/`);
+patch. When EllesmereUI or Blizzard's UI starts calling a client API the
+simulator lacks, a stand-in goes into
+`sim/EllesmereUIBags_Alts_SimTests/SimGaps.lua`, never into the addon:
+`Gap(name, client, fn, opts)` with the client it is missing for. Its returns
+follow the client's API docs (or, where the docs are wrong, what the client's own
+Blizzard code shows, named in `opts.nilable`); `scripts/check-api.py
+--write-gap-signatures` writes the documented returns to `SimGapSignatures.lua`.
+`scripts/check-api.py` rejects a stand-in for an API its client does not have,
+and `tests/99_sim_gaps.lua` fails when a stand-in is no longer missing in the
+simulator, is never called (unless `opts.rarely`) or returns something else
+than documented.
+- [wow-ui-sim](https://github.com/Osso/wow-ui-sim) for retail twice, headless for
+  the test runs (`target/`) and with the GPU renderer for screenshots
+  (`target-gui/`), and headless for Forever (`wow-ui-sim-forever/target/`), plus
+  the Forever spell data it reads, generated from Blizzard's CDN by wow-cli and
+  checked against `FOREVER_SPELLS_SHA256`;
 - a Python venv with Pillow for the image comparison.
 
 ## Testing
@@ -201,11 +222,13 @@ fails without the fix, then make it pass.
 
 1. **luacheck**: Lua 5.1, every global declared (`.luacheckrc`).
 2. **API check** (`scripts/check-api.py`): every global function, every `C_*`
-   function, `Enum` value, event and template the addon uses must exist in
-   Blizzard's live UI source (the `live` branch of Gethe/wow-ui-source, Midnight
-   12.x) or Ketho's API annotations. It also checks the contract
-   with EllesmereUI's source (every EllesmereUI symbol the connector relies on)
-   and that the code is ASCII outside the locales.
+   function, `Enum` value, event and template the addon uses must exist in the
+   UI source of every client (Gethe/wow-ui-source `live` and `forever`) or in
+   Ketho's API annotations (for Forever only those its own Blizzard code uses);
+   in `Core/ClientCompat.lua` one client is enough. The TOC must list each
+   client's interface number. It also checks the contract with EllesmereUI's
+   source (every EllesmereUI symbol the connector relies on), the simulator
+   stand-ins, and that the code is ASCII outside the locales.
 3. **busted** (`spec/`): the addon runs against a client mock in
    `spec/helpers/wow.lua`: bags, bank, mail, auctions, guild bank, currencies,
    secret values, frames, events, and relogs with saved variables serialized like
@@ -216,15 +239,19 @@ fails without the fix, then make it pass.
      (`spec/fixtures/widget_methods.lua`, generated from Blizzard's docs).
    - `wow.boot` logs in and opens the bags once (the first use); pass
      `{ inactive = true }` to test the unused state.
-4. **Simulator** (`scripts/sim-test.sh [tests|skin|upstream|errors]`; `errors`
-   only prints the startup Lua errors as JSON): the addon runs in
-   wow-ui-sim with Blizzard's real FrameXML 12.1 and the real EllesmereUI (core +
-   Bags; `skin` adds the Blizzard skin module; `upstream` patches EllesmereUI Bags
-   with the proposed extension API). Tests live in
+   - `state.client = "forever"` plays WoW Forever: realm groups by ruleset,
+     keyring, ammo slot, no warband bank (`spec/forever_spec.lua`).
+4. **Simulator** (`scripts/sim-test.sh [--client=forever] [tests|skin|upstream|errors]`;
+   `errors` only prints the startup Lua errors as JSON): the addon runs in
+   wow-ui-sim with Blizzard's real FrameXML (12.1, or Forever's 1.60) and the real
+   EllesmereUI (core + Bags; `skin` adds the Blizzard skin module; `upstream`
+   patches EllesmereUI Bags with the proposed extension API). `scripts/test.sh`
+   runs every mode for both clients (`--client=` limits it to one). Tests live in
    `sim/EllesmereUIBags_Alts_SimTests/tests/`:
    - Write them with `simtest(name, fn)` or `simtest_when(condition, name, fn)`
      (both async; the latter waits frame by frame, e.g. for EllesmereUI's bag
-     window, which is built 0.5 s after login).
+     window, which is built 0.5 s after login). `simtest_only(client, name, fn)`
+     registers a test for `"retail"` or `"forever"` only.
    - `Fixture.lua` installs three characters on two realms with bank, mail,
      auctions, currencies, warband and guild bank; always uninstall it again.
    - `08_secure_combat.lua` runs the user-facing paths (tooltip, browser with
@@ -239,7 +266,7 @@ fails without the fix, then make it pass.
      text, no frame far above its window's level. New UI must keep these
      invariants.
    - Any Lua error raised by the addon fails the run.
-5. **Visual regression** (`scripts/visual-test.sh`): every scenario in
+5. **Visual regression** (`scripts/visual-test.sh`, retail): every scenario in
    `sim/visual/scenarios/` is rendered with the GPU build, cropped to its frame
    and compared with `sim/visual/baselines/bags/`. Results, diff images (changes
    in red) and `report.html` go to `.tools/visual-out/`.
@@ -257,10 +284,12 @@ fails without the fix, then make it pass.
   `OnTextChanged`, and runtime taint that spreads from event handlers into
   Blizzard's secure code is not tracked.
 - Method hooks placed on one object fire for every object of that type
-  (`tests/00_harness.lua` pins this). EllesmereUI's skin module then fades every
-  texture, which is why the visual tests render without it; the `skin` run still
-  checks the geometry. When that harness test starts failing, the simulator is
-  fixed and the skin mode can join the visual tests.
+  (`tests/00_harness.lua` pins this for the retail simulator). EllesmereUI's skin
+  module then fades every texture, which is why the visual tests render without
+  it; the `skin` run still checks the geometry. When that harness test starts
+  failing, the simulator is fixed and the skin mode can join the visual tests.
+- Its Forever profile models neither the keyring nor bank bags nor the ammo slot
+  yet (placeholders report none); `spec/forever_spec.lua` covers those paths.
 
 ## In-game validation
 
@@ -272,15 +301,17 @@ with BugSack and `taint.log`. For bug reports, include the output of
 ## Continuous integration
 
 `.github/workflows/ci.yml` runs on every push to `main` and every pull request
-that changes more than documentation: one Linux job with `setup-tools.sh
---no-gui` and `test.sh --require-sim` (luacheck, API check, busted and the three
-simulator modes; a simulator that fails to build fails the job instead of being
-skipped). It runs on Linux because private repositories are billed ten times the
-minutes on macOS.
+that changes more than documentation: one Linux job per client (retail,
+forever) with `setup-tools.sh --no-gui --client=<client>` and `test.sh
+--require-sim --client=<client>` (luacheck, API check and busted for both
+clients, the three simulator modes for the job's client; a simulator that fails
+to build fails the job instead of being skipped). It runs on Linux because
+private repositories are billed ten times the minutes on macOS.
 
-What is cached: the Lua toolchain and the simulator binary alone (about 80 MB,
-keyed on `WOW_UI_SIM_REV` and `SIM_FEATURES`). A cache hit skips the Rust build; moving the pin
-builds once (about ten minutes on a runner) and caches the result. The CI sets
+What is cached: the Lua toolchain, each client's simulator binary alone (about
+80 MB, keyed on its pin, its features and the ICU version) and Forever's spell
+data (keyed on `FOREVER_SPELLS_SHA256`). A cache hit skips the Rust build; moving
+a pin builds once (about ten minutes on a runner) and caches the result. The CI sets
 `RUSTFLAGS`, because wow-ui-sim's own Linux flags compile for the runner's CPU
 (`target-cpu=native`) and a cached binary could then fail on the next runner.
 The sources and references are fetched on every run (a minute or so).
