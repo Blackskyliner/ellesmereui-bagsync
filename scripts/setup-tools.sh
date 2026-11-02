@@ -30,7 +30,7 @@ mkdir -p "$T/src" "$T/vendor"
 # grows with every commit; EllesmereUI changes almost daily. ELLESMEREUI_REV=latest
 # takes EllesmereUI's newest commit instead (.github/workflows/upstream.yml).
 WOW_UI_SIM_REV=fcb0b7823d2f70ea61d5b2f2d2b69c94b8920157
-ELLESMEREUI_REV="${ELLESMEREUI_REV:-eccc25a0f9ebd18b48a6345654e80e7c78ee4927}"
+ELLESMEREUI_REV="${ELLESMEREUI_REV:-6f94dc07cfe9c7e1aea75f56459ef6fd0ac71c52}"
 
 case "$(uname -s)" in Darwin) LUA_TARGET=macosx ;; *) LUA_TARGET=linux ;; esac
 if [ ! -x "$T/lua/bin/lua" ]; then
