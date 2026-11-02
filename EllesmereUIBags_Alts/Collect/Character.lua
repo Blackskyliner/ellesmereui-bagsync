@@ -60,7 +60,8 @@ local function UpdateMeta()
     if not key then return end
     local c = ns.GetChar(key, true)
     c.name, c.realm = ns.SplitKey(key)
-    c.realmName = GetRealmName() or c.realm
+    -- The realm part of EllesmereUI's gold ledger key (RepairMoneyFromEUI).
+    c.realmName = ns.Compat.RealmGroupName() or c.realm
     local _, classFile = UnitClass("player")
     c.class = classFile or c.class
     local _, raceFile = UnitRace("player")

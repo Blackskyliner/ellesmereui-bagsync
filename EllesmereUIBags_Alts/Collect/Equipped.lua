@@ -1,6 +1,7 @@
 -------------------------------------------------------------------------------
 --  Collect/Equipped.lua
---  Worn gear (inventory slots INVSLOT_FIRST_EQUIPPED..INVSLOT_LAST_EQUIPPED).
+--  Worn gear (inventory slots INVSLOT_FIRST_EQUIPPED..INVSLOT_LAST_EQUIPPED)
+--  and, on WoW Forever, the ammo stack (INVSLOT_AMMO, ns.Compat.AmmoStack).
 -------------------------------------------------------------------------------
 local _, ns = ...
 
@@ -30,6 +31,8 @@ local function Scan()
             end
         end
     end
+    local ammoID, ammoCount, ammoLink = ns.Compat.AmmoStack()
+    if ammoID then items[INVSLOT_AMMO] = ns.EncodeItem(ammoID, ammoCount, ammoLink) end
     local holder = { equipped = c.equipped }
     if ns.StoreContainer(holder, "equipped", { size = LAST_SLOT, items = ns.PackItems(items), sets = sets }, key, "equipped") then
         c.equipped = holder.equipped

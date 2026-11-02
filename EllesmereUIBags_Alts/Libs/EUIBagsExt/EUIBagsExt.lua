@@ -339,7 +339,8 @@ end
 -------------------------------------------------------------------------------
 --  Character gold tracked by EllesmereUI (read-only)
 --  EllesmereUIDB.goldLedger.chars["Name-Realm Name"] = { money, updated, ... },
---  keyed by UnitName .. "-" .. GetRealmName() (display realm, spaces kept).
+--  keyed by UnitName .. "-" .. EllesmereUI.RealmGroupName(): the display realm
+--  (spaces kept), on WoW Forever the realm group (ruleset name).
 --  EllesmereUI moves the older Bags store EllesmereUIDB.characterGold
 --  (same key, { gold, lastUpdated }) into the ledger only when one of its
 --  modules first asks for it, so until then the balances are still there.

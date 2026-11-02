@@ -1,10 +1,10 @@
-## Interface: 120100, 120105
+## Interface: 120100, 120105, 16001
 ## Title: |cff0cd29fEllesmereUI|r Bags: Alts
 ## Notes: Cross-character inventory for EllesmereUI Bags: saved bags, bank, warband bank, mail, auctions and guild bank of all your characters, optional tooltip counts and a browser.
 ## Category: |cff0cd29fEllesmere|rUI
 ## Author: Blackskyliner
 ## X-License: MIT
-## Version: 0.8.7
+## Version: 0.9.0
 ## Dependencies: EllesmereUIBags
 ## SavedVariables: EllesmereUIBagsAltsDB
 ## IconTexture: Interface\AddOns\EllesmereUIBags_Alts\media\icon.tga
@@ -24,6 +24,7 @@ Locales\zhTW.lua
 
 # Core
 Core\Init.lua
+Core\ClientCompat.lua
 Core\Keys.lua
 Core\DB.lua
 Core\Activation.lua

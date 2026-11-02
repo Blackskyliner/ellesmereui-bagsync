@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
-"""API surface check: every WoW API the addon touches must exist in the
-current client (Blizzard UI source, live branch, incl. generated API docs)
-or in Ketho's vscode-wow-api annotations (C-level globals).
+"""API surface check: every WoW API the addon touches must exist in every
+client it supports (CLIENTS: Blizzard UI source of that client, incl. generated
+API docs, plus Ketho's vscode-wow-api annotations for C-level globals).
+
+Code that only one client offers belongs in Core/ClientCompat.lua: a symbol
+used there must exist in at least one client, a symbol used anywhere else in
+all of them.
 
 Checks
   * read_globals from .luacheckrc (addon section)
@@ -9,8 +13,13 @@ Checks
   * every Enum.Type.Value referenced in the addon source
   * every event name passed to ns.RegisterEvent / RegisterEvent
   * every Blizzard template / frame type passed to CreateFrame
+  * the TOC lists the interface number of every client
   * the EllesmereUI symbols the connector relies on (contract with EUI source)
-Exit code 1 on any unknown symbol.
+  * every simulator stand-in (sim/.../SimGaps.lua) stands in for an API of its
+    client, and SimGapSignatures.lua holds the documented returns of each
+Exit code 1 on any problem.
+
+  --write-gap-signatures   regenerate sim/.../SimGapSignatures.lua and exit
 """
 import os
 import re
@@ -20,10 +29,19 @@ import glob
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ADDON = os.path.join(ROOT, "EllesmereUIBags_Alts")
 VENDOR = os.path.join(ROOT, ".tools", "vendor")
-UI = os.path.join(VENDOR, "wow-ui-source", "Interface", "AddOns")
-DOCS = os.path.join(UI, "Blizzard_APIDocumentationGenerated")
 KETHO = os.path.join(VENDOR, "vscode-wow-api", "Annotations")
 EUI = os.path.join(VENDOR, "EllesmereUI")
+SIMTESTS = os.path.join(ROOT, "sim", "EllesmereUIBags_Alts_SimTests")
+GAP_SIGNATURES = os.path.join(SIMTESTS, "SimGapSignatures.lua")
+COMPAT = "EllesmereUIBags_Alts/Core/ClientCompat.lua"
+
+# Blizzard UI source per supported client (scripts/setup-tools.sh fetches them).
+# Ketho's annotations describe retail; for another client one of them only
+# counts when that client's own Blizzard code uses it.
+CLIENTS = [
+    {"name": "retail", "source": os.path.join(VENDOR, "wow-ui-source"), "ketho": "all"},
+    {"name": "forever", "source": os.path.join(VENDOR, "wow-ui-source-forever"), "ketho": "used"},
+]
 
 LUA_STD = set("""assert error ipairs next pairs pcall print rawequal rawget rawset select setmetatable
 getmetatable tonumber tostring type unpack xpcall string table math os coroutine _G""".split())
@@ -33,6 +51,14 @@ C_CONSTANTS = {"INVSLOT_FIRST_EQUIPPED", "INVSLOT_LAST_EQUIPPED"}
 # these have existed since the original client (ITEM_ACCOUNTBOUND now reads "Warbound").
 GLOBAL_STRINGS = {"CANCEL", "OKAY", "ITEM_SOULBOUND", "ITEM_ACCOUNTBOUND"}
 EUI_SYMBOLS = {"EllesmereUI", "EllesmereUIDB", "EUI_Bags", "EUI_CategoryManager", "EUI_CLIENT_BLOCKED"}
+
+# Documented return types -> the Lua type a value of it has. Enumerations are
+# numbers and structures tables; any other type is checked for nil only.
+LUA_TYPES = {
+    "bool": "boolean", "cstring": "string", "string": "string", "number": "number",
+    "luaIndex": "number", "size": "number", "time_t": "number", "fileID": "number",
+    "WOWGUID": "string", "table": "table",
+}
 
 
 def read(path):
@@ -49,48 +75,52 @@ def addon_sources():
     return out
 
 
-def load_docs():
-    functions, enums, events, doc_globals = set(), {}, set(), set()
-    for path in glob.glob(os.path.join(DOCS, "*.lua")):
+def load_docs(ui):
+    functions, enums, events, doc_globals, structs, returns = set(), {}, set(), set(), set(), {}
+    for path in glob.glob(os.path.join(ui, "Blizzard_APIDocumentationGenerated", "*.lua")):
         s = read(path)
         ns = re.search(r'Namespace = "([^"]+)"', s)
         ns = ns.group(1) if ns else None
         fsec = re.search(r"Functions =\s*\{(.*?)\n\t\},\n\n\tEvents", s, re.S)
         if fsec:
-            for name in re.findall(r'\n\t\t\{\n\t\t\tName = "(\w+)",\n\t\t\tType = "Function"', fsec.group(1)):
-                if ns:
-                    functions.add(ns + "." + name)
-                else:
-                    doc_globals.add(name)
+            for m in re.finditer(r'\n\t\t\{\n\t\t\tName = "(\w+)",\n\t\t\tType = "Function",(.*?)\n\t\t\},', fsec.group(1), re.S):
+                full = ns + "." + m.group(1) if ns else m.group(1)
+                (functions if ns else doc_globals).add(full)
+                rsec = re.search(r"Returns =\s*\{(.*?)\n\t\t\t\}", m.group(2), re.S)
+                returns[full] = [(t, n == "true") for t, n in re.findall(
+                    r'\{ Name = "\w+", Type = "(\w+)",[^\n]*?Nilable = (true|false)', rsec.group(1) if rsec else "")]
         for name in re.findall(r'LiteralName = "(\w+)"', s):
             events.add(name)
         for m in re.finditer(r'Name = "(\w+)",\n\t\t\tType = "Enumeration",.*?Fields =\s*\{(.*?)\n\t\t\t\},', s, re.S):
             enums.setdefault(m.group(1), set()).update(re.findall(r'\{ Name = "(\w+)"', m.group(2)))
-    return functions, enums, events, doc_globals
+        structs.update(re.findall(r'Name = "(\w+)",\n\t\t\tType = "Structure"', s))
+    return functions, enums, events, doc_globals, structs, returns
 
 
-def load_framexml_globals():
-    names = set()
-    for path in glob.glob(os.path.join(UI, "**", "*.lua"), recursive=True):
+def load_framexml(ui):
+    names, calls, c_calls = set(), set(), set()
+    for path in glob.glob(os.path.join(ui, "**", "*.lua"), recursive=True):
         if "APIDocumentation" in path:
             continue
         s = read(path)
         names.update(re.findall(r"^function ([A-Za-z_][\w]*)\s*\(", s, re.M))
         names.update(re.findall(r"^([A-Za-z_][\w]*)\s*=", s, re.M))
+        calls.update(re.findall(r"(?<![\w.:])([A-Za-z_]\w*)", s))
+        c_calls.update(a + "." + b for a, b in re.findall(r"\b(C_\w+)\.(\w+)\s*\(", s))
     xml_names = set()
     templates = set()
-    for path in glob.glob(os.path.join(UI, "**", "*.xml"), recursive=True):
+    for path in glob.glob(os.path.join(ui, "**", "*.xml"), recursive=True):
         s = read(path)
         names.update(re.findall(r"^\s*([A-Z][A-Z0-9_]+) = ", s, re.M))   # globals set in <Script> blocks
         for m in re.finditer(r'<(\w+)\s[^>]*?name="([\w$]+)"([^>]*)>', s):
-            tag, name, rest = m.group(1), m.group(2), m.group(3)
+            name = m.group(2)
             if "$" in name:
                 continue
             if 'virtual="true"' in m.group(0) or 'intrinsic="true"' in m.group(0):
                 templates.add(name)
             else:
                 xml_names.add(name)
-    return names, xml_names, templates
+    return names, xml_names, templates, calls, c_calls
 
 
 def load_ketho_globals():
@@ -106,6 +136,33 @@ def load_ketho_globals():
     return names, functions
 
 
+def load_client(client, ketho):
+    ui = os.path.join(client["source"], "Interface", "AddOns")
+    functions, enums, events, doc_globals, structs, returns = load_docs(ui)
+    fx_globals, xml_names, templates, calls, c_calls = load_framexml(ui)
+    ketho_names, ketho_functions = ketho
+    if client["ketho"] == "used":
+        ketho_names, ketho_functions = ketho_names & calls, ketho_functions & c_calls
+    settings = os.path.join(ui, "Blizzard_Settings_Shared", "Blizzard_Settings.lua")
+    m = re.match(r"(\d+)\.(\d+)\.(\d+)", read(os.path.join(client["source"], "version.txt")))
+    return {
+        "name": client["name"],
+        "functions": functions | ketho_functions,
+        "enums": enums,
+        "events": events,
+        "fx_globals": fx_globals,
+        "ketho": ketho_names,
+        "globals": fx_globals | xml_names | ketho_names | doc_globals | LUA_STD | C_CONSTANTS | GLOBAL_STRINGS,
+        "templates": templates,
+        "settings": read(settings) if os.path.exists(settings) else "",
+        "structs": structs,
+        "returns": returns,
+        "calls": calls,
+        "c_calls": c_calls,
+        "interface": int(m.group(1)) * 10000 + int(m.group(2)) * 100 + int(m.group(3)),
+    }
+
+
 def luacheck_read_globals():
     s = read(os.path.join(ROOT, ".luacheckrc"))
     block = re.search(r'files\["EllesmereUIBags_Alts/\*\*/\*\.lua"\]\s*=\s*\{(.*?)\n\}', s, re.S).group(1)
@@ -114,71 +171,123 @@ def luacheck_read_globals():
     return re.findall(r'"(\w+)"', rg)
 
 
+def has_namespace(c, name):
+    return name in c["fx_globals"] or name in c["ketho"] or any(f.startswith(name + ".") for f in c["functions"])
+
+
+# Simulator stand-ins: Gap("C_Name.Function" | "Global", "retail" | "forever" | "both", ...)
+def sim_gaps():
+    path = os.path.join(SIMTESTS, "SimGaps.lua")
+    if not os.path.exists(path):
+        return []
+    return re.findall(r'^Gap\("([\w.]+)",\s*"(retail|forever|both)"', read(path), re.M)
+
+
+def gap_clients(scope, clients):
+    return [c for c in clients if scope in ("both", c["name"])]
+
+
+def gap_signatures(clients):
+    """Lua source of SimGapSignatures: per client and stand-in, the documented
+    returns as type names ("string", "number?" when nilable, "*" when the type
+    has no Lua equivalent), or false for a function without documentation."""
+    out = ["-- Generated by scripts/check-api.py --write-gap-signatures from the API",
+           "-- docs of each client; do not edit. The returns every stand-in of",
+           "-- SimGaps.lua must match (tests/99_sim_gaps.lua).",
+           "SimGapSignatures = {"]
+    gaps = sim_gaps()
+    for c in clients:
+        out.append("    %s = {" % c["name"])
+        for name, scope in sorted(set(gaps)):
+            if c not in gap_clients(scope, clients):
+                continue
+            sig = c["returns"].get(name)
+            if sig is None:
+                out.append('        ["%s"] = false,' % name)
+                continue
+            types = []
+            for t, nilable in sig:
+                lua = LUA_TYPES.get(t) or ("number" if t in c["enums"] else "table" if t in c["structs"] else "*")
+                types.append('"%s%s"' % (lua, "?" if nilable else ""))
+            out.append('        ["%s"] = { %s },' % (name, ", ".join(types)))
+        out.append("    },")
+    out.append("}")
+    return "\n".join(out) + "\n"
+
+
 def main():
-    functions, enums, events, doc_globals = load_docs()
-    fx_globals, xml_names, templates = load_framexml_globals()
-    ketho, ketho_functions = load_ketho_globals()
-    functions = functions | ketho_functions
-    known_globals = fx_globals | xml_names | ketho | doc_globals | LUA_STD | C_CONSTANTS | GLOBAL_STRINGS
+    ketho = load_ketho_globals()
+    clients = [load_client(c, ketho) for c in CLIENTS]
+    if "--write-gap-signatures" in sys.argv[1:]:
+        with open(GAP_SIGNATURES, "w", encoding="utf-8") as fh:
+            fh.write(gap_signatures(clients))
+        print("wrote " + os.path.relpath(GAP_SIGNATURES, ROOT))
+        return 0
     sources = addon_sources()
     problems = []
 
-    # 1. read globals
+    # Where a symbol has to exist: in every client, or in one client when only
+    # Core/ClientCompat.lua uses it.
+    def require(rel, present, what):
+        missing = [c["name"] for c, ok in zip(clients, present) if not ok]
+        if not missing or (rel == COMPAT and len(missing) < len(clients)):
+            return
+        problems.append("%s: unknown %s (missing in %s)" % (rel, what, ", ".join(missing)))
+
+    # 1. read globals: a global only some clients know is fine when no file
+    # but Core/ClientCompat.lua reads it.
     for name in luacheck_read_globals():
         if name in EUI_SYMBOLS:
             continue
         if name.startswith("C_") or name in ("Enum", "Settings", "TooltipDataProcessor"):
-            if name not in fx_globals and name not in ketho and not any(f.startswith(name + ".") for f in functions):
-                problems.append("unknown namespace/global " + name)
-            continue
-        if name not in known_globals:
-            problems.append("unknown global " + name)
+            present = [has_namespace(c, name) for c in clients]
+        else:
+            present = [name in c["globals"] for c in clients]
+        users = {rel for rel, s in sources.items() if re.search(r"\b%s\b" % re.escape(name), s)}
+        require(COMPAT if users <= {COMPAT} else ".luacheckrc", present, "global " + name)
 
     # 2. C_ functions, 3. Enum values, 4. events, 5. templates
     for rel, s in sources.items():
         for ns_name, fn in re.findall(r"\b(C_\w+)\.(\w+)\s*[\(,)]", s):
             full = ns_name + "." + fn
-            if full not in functions:
-                problems.append("%s: unknown function %s" % (rel, full))
+            require(rel, [full in c["functions"] for c in clients], "function " + full)
         for ns_name, fn in re.findall(r'hooksecurefunc\((C_\w+),\s*"(\w+)"', s):
-            if ns_name + "." + fn not in functions:
-                problems.append("%s: hook on unknown function %s.%s" % (rel, ns_name, fn))
+            full = ns_name + "." + fn
+            require(rel, [full in c["functions"] for c in clients], "hooked function " + full)
         for fn in re.findall(r'hooksecurefunc\("(\w+)"', s):
-            if fn not in known_globals:
-                problems.append("%s: hook on unknown global %s" % (rel, fn))
+            require(rel, [fn in c["globals"] for c in clients], "hooked global " + fn)
         for m in re.finditer(r"local hooks = \{(.*?)\}", s, re.S):
             for fn in re.findall(r"(\w+)\s*=", m.group(1)):
-                if "C_AuctionHouse." + fn not in functions:
-                    problems.append("%s: hook on unknown function C_AuctionHouse.%s" % (rel, fn))
+                full = "C_AuctionHouse." + fn
+                require(rel, [full in c["functions"] for c in clients], "hooked function " + full)
         for enum_type, value in re.findall(r"\bEnum\.(\w+)\.(\w+)", s):
-            if value not in enums.get(enum_type, ()):
-                problems.append("%s: unknown enum Enum.%s.%s" % (rel, enum_type, value))
+            require(rel, [value in c["enums"].get(enum_type, ()) for c in clients],
+                    "enum Enum.%s.%s" % (enum_type, value))
         for ev in re.findall(r'RegisterEvent\([^,]+,\s*"(\w+)"', s) + re.findall(r'RegisterEvent\("(\w+)"', s):
-            if ev not in events:
-                problems.append("%s: unknown event %s" % (rel, ev))
+            require(rel, [ev in c["events"] for c in clients], "event " + ev)
         for m in re.finditer(r'CreateFrame\("(\w+)"\s*,\s*[^,()]*(?:\([^)]*\))?[^,()]*,\s*[^,()]*,\s*"([\w, ]+)"', s):
             for tmpl in [t.strip() for t in m.group(2).split(",")]:
-                if tmpl not in templates:
-                    problems.append("%s: unknown template %s" % (rel, tmpl))
+                require(rel, [tmpl in c["templates"] for c in clients], "template " + tmpl)
         for ftype in re.findall(r'CreateFrame\("(\w+)"', s):
             if ftype not in ("Frame", "Button", "EditBox", "ScrollFrame", "ItemButton", "StatusBar", "CheckButton", "GameTooltip"):
                 problems.append("%s: unexpected frame type %s" % (rel, ftype))
         for method in re.findall(r"\bSettings\.(\w+)", s):
-            if method not in ("VarType",) and not re.search(r"^function Settings\.%s\b" % method,
-                                                            read(os.path.join(UI, "Blizzard_Settings_Shared", "Blizzard_Settings.lua")), re.M):
-                problems.append("%s: unknown Settings.%s" % (rel, method))
+            if method in ("VarType",):
+                continue
+            require(rel, [bool(re.search(r"^function Settings\.%s\b" % method, c["settings"], re.M)) for c in clients],
+                    "Settings." + method)
         for method in re.findall(r"\bTooltipDataProcessor\.(\w+)", s):
             if method not in ("AddTooltipPostCall", "AddTooltipPreCall"):
                 problems.append("%s: unknown TooltipDataProcessor.%s" % (rel, method))
 
-    # TOC: the client marks an addon out of date when its Interface line lacks
-    # the client's number. The live client is the one wow-ui-source mirrors
-    # (version.txt, e.g. "12.1.5.70340" -> 120105).
-    m = re.match(r"(\d+)\.(\d+)\.(\d+)", read(os.path.join(VENDOR, "wow-ui-source", "version.txt")))
-    live = int(m.group(1)) * 10000 + int(m.group(2)) * 100 + int(m.group(3))
+    # TOC: a client marks an addon out of date when its Interface line lacks
+    # the client's number, taken from the version of that client's source
+    # (version.txt, e.g. "12.1.5.70340" -> 120105, "1.60.1.70707" -> 16001).
     toc = re.search(r"^## Interface:\s*(.+)$", read(os.path.join(ADDON, "EllesmereUIBags_Alts.toc")), re.M)
-    if not toc or live not in [int(v) for v in re.findall(r"\d+", toc.group(1))]:
-        problems.append("EllesmereUIBags_Alts.toc: ## Interface lacks %d (live client)" % live)
+    listed = [int(v) for v in re.findall(r"\d+", toc.group(1))] if toc else []
+    for c in clients:
+        if c["interface"] not in listed:
+            problems.append("EllesmereUIBags_Alts.toc: ## Interface lacks %d (%s client)" % (c["interface"], c["name"]))
 
     # 6. EllesmereUI contract. Each symbol is searched in all files of its
     # addon, since EllesmereUI moves code between files without changing it.
@@ -210,8 +319,12 @@ def main():
         ("EUI_CategoryManager global", r"_G\.EUI_CategoryManager = CategoryManager", bags),
         ("CategoryManager:ClassifyItem(link, id, bag, slot, ...)", r"function CategoryManager:ClassifyItem\(itemLink, itemID, bag, slot[,)]", bags),
         ("CategoryManager:GetCategories", r"function CategoryManager:GetCategories\(\)", bags),
-        # Off Forever (the 1.x client this addon does not load on) the realm
-        # group is GetRealmName(), so the key stays Name-Realm.
+        # Core/ClientCompat.lua takes the client from EllesmereUI, so both
+        # always agree on it: WoW Forever reports a 1.60+ interface (16001).
+        ("EllesmereUI.IS_FOREVER from the client gate",
+         r"if iface >= 16000 and iface < 20000 then\s+EUI_CLIENT_FOREVER = true[\s\S]*EllesmereUI\.IS_FOREVER = \(EUI_CLIENT_FOREVER == true\)", eui),
+        # The realm group is GetRealmName() off Forever and the ruleset name
+        # on it; characters and the gold ledger are keyed by it.
         ("goldLedger key Name-RealmGroupName()",
          r'local name, realm = UnitName\("player"\), EUI\.RealmGroupName\(\)\s+if not name or not realm then return nil end\s+return name \.\. "-" \.\. realm', eui),
         ("RealmGroupName() is GetRealmName() off Forever",
@@ -229,6 +342,19 @@ def main():
     for media in ("media/icons/eui-close.png",):
         if not os.path.exists(os.path.join(EUI, media)):
             problems.append("EllesmereUI contract broken: missing " + media)
+
+    # 7. Simulator stand-ins: each one stands in for an API its client really
+    # has (documented, or used by that client's Blizzard code), and the
+    # generated signatures match the docs.
+    for name, scope in sim_gaps():
+        for c in gap_clients(scope, clients):
+            known = name in c["functions"] or name in c["globals"] or name in c["c_calls"] or name in c["calls"]
+            if not known:
+                problems.append("SimGaps.lua: %s is no %s API (not documented, not used by its Blizzard code)"
+                                % (name, c["name"]))
+    expected = gap_signatures(clients)
+    if not os.path.exists(GAP_SIGNATURES) or read(GAP_SIGNATURES) != expected:
+        problems.append("SimGapSignatures.lua is stale: run scripts/check-api.py --write-gap-signatures")
 
     # ASCII-only source (EUI house rule). Locale files are the documented
     # exception (CONTRIBUTING_TRANSLATIONS.md): UTF-8 without BOM, real
@@ -256,8 +382,9 @@ def main():
         for p in sorted(set(problems)):
             print("  - " + p)
         return 1
-    print("API check OK: %d globals, %d C_ functions/enums/events/templates scanned, EUI contract (%d symbols) intact"
-          % (checked, len(functions), len(contract)))
+    print("API check OK for %s: %d globals, %s C_ functions scanned, EUI contract (%d symbols) intact, %d simulator stand-ins"
+          % (", ".join(c["name"] for c in clients), checked, "/".join(str(len(c["functions"])) for c in clients),
+             len(contract), len(sim_gaps())))
     return 0
 
 

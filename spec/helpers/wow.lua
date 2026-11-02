@@ -9,6 +9,8 @@
 --  * A scriptable game state (player, bags, bank tabs, warband, mail, guild
 --    bank, currencies, equipment, combat/secret mode) behind the real API
 --    names and return shapes (verified against Blizzard's 12.1 API docs).
+--    state.client = "forever" plays WoW Forever (1.60 docs): realm groups by
+--    ruleset (player.ruleset), keyring, ammo slot, no warband bank.
 --  * SavedVariables survive "relogs": wow.relog(env, newPlayer) serializes the
 --    SV like the client and boots a fresh environment for another character.
 --
@@ -371,8 +373,10 @@ end
 --------------------------------------------------------------------------------
 function M.defaultState(overrides)
     local s = {
+        client = "retail",
         player = { name = "Alice", realm = "Blackhand", realmName = "Blackhand", class = "MAGE", race = "Human",
-                   faction = "Alliance", level = 80 },
+                   faction = "Alliance", level = 80, ruleset = "PvP" },
+        keyringSize = 32,   -- Forever: slots of the keyring (Enum.BagIndex.Keyring)
         connectedRealms = { "Blackhand", "Mal'Ganis" },
         money = 12345678,
         now = 1790000000,
@@ -497,7 +501,7 @@ function M.newEnv(state, savedVariables)
     env.ITEM_QUALITY_COLORS = {}
     for q = 0, 8 do env.ITEM_QUALITY_COLORS[q] = { r = q / 8, g = 0.5, b = 1 - q / 8 } end
     env.ITEM_QUALITY4_DESC = "Epic"
-    env.INVSLOT_FIRST_EQUIPPED, env.INVSLOT_LAST_EQUIPPED = 1, 19
+    env.INVSLOT_FIRST_EQUIPPED, env.INVSLOT_LAST_EQUIPPED, env.INVSLOT_AMMO = 1, 19, 0
     env.ATTACHMENTS_MAX_RECEIVE, env.ATTACHMENTS_MAX_SEND = 16, 12
     env.SlashCmdList = {}
     env.Enum = Enums()
@@ -679,6 +683,19 @@ function M.newEnv(state, savedVariables)
     -- Equipment
     env.GetInventoryItemLink = function(_, slot) local it = S.equipped[slot]; return it and it.link end
     env.GetInventoryItemID = function(_, slot) local it = S.equipped[slot]; return it and it.id end
+    env.GetInventoryItemCount = function(_, slot) local it = S.equipped[slot]; return it and (it.count or 1) or 0 end
+    env.C_ActionBar = {}
+
+    -- WoW Forever only (1.60 docs): keyring and ammo; its bank is the
+    -- character bank alone (tab 1 the base slots, further tabs bank bags).
+    if S.client == "forever" then
+        env.C_ActionBar.ShouldShowKeyring = function() return true end
+        env.UnitUsesAmmo = function() return true end
+        S.bags[-1] = S.bags[-1] or { size = S.keyringSize, slots = {} }
+        S.canViewBank[2] = false
+        S.bankTabs[2] = {}
+        S.warbandMoney = 0
+    end
 
     -- Currency
     env.C_CurrencyInfo = {

@@ -36,7 +36,14 @@ function M.install(env, opts)
         end },
         ShowWidgetTooltip = function(owner, text) table.insert(rec.tooltips, { owner, text }) end,
         HideWidgetTooltip = function() rec.tooltipHidden = true end,
+        -- EllesmereUI_ClientGate.lua / EllesmereUI_Lite.lua and EllesmereUI.lua:
+        -- Forever groups characters by ruleset instead of realm.
+        IS_FOREVER = env.__state.client == "forever",
     }
+    function EUI.RealmGroupName()
+        if not EUI.IS_FOREVER then return env.GetRealmName() end
+        return env.__state.player.ruleset
+    end
     function EUI:ShowConfirmPopup(o) table.insert(rec.popups, o) end
     EUI._ModuleNS["EllesmereUIBags"] = {
         SkinItemButton = function(btn, o) rec.skinned[btn] = o; return {} end,

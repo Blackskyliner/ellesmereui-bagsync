@@ -5,7 +5,8 @@
 --
 --  Character key: "Name-NormalizedRealm" (the same shape the client uses for
 --  cross-realm names, e.g. mail recipients), never cached before the client
---  can answer (UnitName/GetNormalizedRealmName may be nil very early).
+--  can answer (UnitName/GetNormalizedRealmName may be nil very early). On WoW
+--  Forever the realm part is the realm group (ns.Compat.RealmKey).
 --
 --  Item encoding: one string per stack.
 --      "<itemID>,<count>"            plain items (the vast majority)
@@ -37,7 +38,7 @@ local playerKey, playerRealm
 
 function ns.GetPlayerRealm()
     if playerRealm then return playerRealm end
-    local realm = GetNormalizedRealmName()
+    local realm = ns.Compat.RealmKey()
     if realm and realm ~= "" then playerRealm = realm end
     return playerRealm
 end
@@ -124,7 +125,7 @@ function ns.GetPlayerGuildKey()
     if not IsInGuild() then return nil end
     local guildName, _, _, guildRealm = GetGuildInfo("player")
     if not guildName or guildName == "" then return nil end
-    local realm = guildRealm and guildRealm ~= "" and strgsub(guildRealm, "[%s%-']", "") or ns.GetPlayerRealm()
+    local realm = ns.Compat.GuildRealmKey(guildRealm) or ns.GetPlayerRealm()
     if not realm then return nil end
     return guildName .. "-" .. realm, guildName
 end

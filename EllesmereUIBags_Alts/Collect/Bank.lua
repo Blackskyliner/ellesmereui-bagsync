@@ -1,6 +1,9 @@
 -------------------------------------------------------------------------------
 --  Collect/Bank.lua
---  Character bank tabs and the warband (account) bank.
+--  Character bank tabs and the warband (account) bank. On WoW Forever the
+--  character bank tabs are its bank bag slots: tab 1 holds the base slots,
+--  each further tab the bag placed in that slot (empty without one); Forever
+--  has no warband bank (ns.Compat.HAS_WARBAND_BANK).
 --
 --  Bank contents are only readable while a banker interaction is open. While
 --  closed this feature listens to the open/close events only; the item events
@@ -84,12 +87,13 @@ end
 
 local function ScanAll()
     local a = ScanBankType("character", BankType.Character)
-    local b = ScanBankType("account", BankType.Account)
+    local b = ns.Compat.HAS_WARBAND_BANK and ScanBankType("account", BankType.Account)
     if a then ns.Fire("CHAR_UPDATED", ns.GetPlayerKey(), "bank") end
     if b then ns.Fire("WARBAND_UPDATED") end
 end
 
 local function CaptureWarbandMoney()
+    if not ns.Compat.HAS_WARBAND_BANK then return end
     local money = C_Bank.FetchDepositedMoney(BankType.Account)
     if money and not ns.IsSecret(money) then
         ns.db.warband.money = money

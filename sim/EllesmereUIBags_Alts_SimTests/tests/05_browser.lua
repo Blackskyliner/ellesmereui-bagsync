@@ -83,7 +83,7 @@ simtest("hovering a grid item uses the private tooltip through Blizzard's Proces
     ns.Browser:Close()
 end)
 
-simtest("caged pets show on a private BattlePetTooltipTemplate frame", function()
+simtest_only("retail", "caged pets show on a private BattlePetTooltipTemplate frame", function()
     -- species 39 (Mechanical Squirrel) is in the simulator's pet journal
     local link = "|cff0070dd|Hbattlepet:39:25:3:1627:289:289:0000000000000000:0|h[Pet]|h|r"
     local owner = CreateFrame("Frame", nil, UIParent)

@@ -26,7 +26,13 @@ concurrency:
 
 jobs:
   checks:
-    name: Lint, API check, busted, simulator
+    name: Lint, API check, busted, simulator (${{ matrix.client }})
+    # One job per client the addon runs on: lint, API check and busted cover
+    # both clients in each job, the simulator tests the job's own client.
+    strategy:
+      fail-fast: false
+      matrix:
+        client: [retail, forever]
     # Linux: private repositories are billed ten times the minutes on macOS.
     # wow-ui-sim's own action does not fit: its image (newest tag v0.1.32)
     # runs as a 12.0.7 client with 12.0.7 FrameXML, where EllesmereUI switches
@@ -46,15 +52,21 @@ jobs:
       # readline: Lua's linux target. clang, mold: wow-ui-sim's linker setup.
       # ICU (pkg-config, libicu-dev): wow-ui-sim links ICU4C, also at run time.
       # DejaVu: the simulator measures text with it when no game fonts exist.
+      # OpenSSL (libssl-dev): wow-cli, which fetches Forever's spell data.
       - name: Install build dependencies
-        run: sudo apt-get update -q && sudo apt-get install -y -q libreadline-dev clang mold pkg-config libicu-dev fonts-dejavu-core
+        run: sudo apt-get update -q && sudo apt-get install -y -q libreadline-dev clang mold pkg-config libicu-dev fonts-dejavu-core libssl-dev
 
       - name: Pinned revisions
         id: pins
+        env:
+          CLIENT: ${{ matrix.client }}
         run: |
-          echo "sim=$(sed -n 's/^WOW_UI_SIM_REV=//p' scripts/setup-tools.sh)" >> "$GITHUB_OUTPUT"
+          if [ "$CLIENT" = forever ]; then dir=wow-ui-sim-forever prefix=FOREVER_; else dir=wow-ui-sim prefix=; fi
+          echo "dir=$dir" >> "$GITHUB_OUTPUT"
+          echo "sim=$(sed -n "s/^WOW_UI_SIM_${prefix}REV=//p" scripts/setup-tools.sh)" >> "$GITHUB_OUTPUT"
           # cache keys must not contain commas
-          echo "features=$(sed -n 's/^ *SIM_FEATURES=//p' scripts/setup-tools.sh | tr , +)" >> "$GITHUB_OUTPUT"
+          echo "features=$(sed -n "s/^ *${prefix}SIM_FEATURES=//p" scripts/setup-tools.sh | tr , +)" >> "$GITHUB_OUTPUT"
+          echo "spells=$(sed -n 's/^FOREVER_SPELLS_SHA256=//p' scripts/setup-tools.sh)" >> "$GITHUB_OUTPUT"
           # wow-sim links the system's ICU by its versioned soname; a runner
           # image with another ICU cannot load a binary built on the old one.
           echo "icu=$(pkg-config --modversion icu-i18n)" >> "$GITHUB_OUTPUT"
@@ -77,19 +89,29 @@ jobs:
         uses: actions/cache@v6
         with:
           path: |
-            .tools/vendor/wow-ui-sim/target/release/wow-sim
-            .tools/vendor/wow-ui-sim/target/release/wow-sim.rev
+            .tools/vendor/${{ steps.pins.outputs.dir }}/target/release/wow-sim
+            .tools/vendor/${{ steps.pins.outputs.dir }}/target/release/wow-sim.rev
           key: wow-sim-${{ runner.os }}-icu${{ steps.pins.outputs.icu }}-${{ steps.pins.outputs.sim }}-${{ steps.pins.outputs.features }}-headless
 
+      # Forever's simulator reads spell data that wow-cli generates from
+      # Blizzard's CDN; setup-tools.sh checks it against its pinned checksum.
+      - name: Cache Forever spell data
+        id: spells-cache
+        if: matrix.client == 'forever'
+        uses: actions/cache@v6
+        with:
+          path: .tools/simhome/Library/Caches/wow-ui-sim/spells/wowforever/spells.json
+          key: forever-spells-${{ steps.pins.outputs.spells }}
+
       - name: Rust toolchain (only to build the simulator)
-        if: steps.sim-cache.outputs.cache-hit != 'true'
+        if: steps.sim-cache.outputs.cache-hit != 'true' || (matrix.client == 'forever' && steps.spells-cache.outputs.cache-hit != 'true')
         uses: dtolnay/rust-toolchain@stable
 
       # Blizzard's sources, the annotations and the GlobalStrings are fetched
       # fresh, so the API check reports Blizzard changes on the next run.
       # No GPU build: the visual regression tests need a display and stay local.
       - name: Set up toolchain, reference sources and simulator
-        run: scripts/setup-tools.sh --no-gui
+        run: scripts/setup-tools.sh --no-gui --client=${{ matrix.client }}
 
       - name: Run checks
-        run: scripts/test.sh --require-sim
+        run: scripts/test.sh --require-sim --client=${{ matrix.client }}

@@ -1,8 +1,9 @@
-## Interface: 120100, 120105
+## Interface: 120100, 120105, 16001
 ## Title: EllesmereUIBags_Alts simulator tests
 ## Notes: Test-only addon for wow-ui-sim run-tests. Never ship.
 ## Dependencies: EllesmereUIBags_Alts
 
+SimGapSignatures.lua
 SimGaps.lua
 SimTests.lua
 

@@ -283,10 +283,15 @@ describe("Acceptance criteria", function()
     end)
 
     describe("5: Midnight only", function()
-        it("targets 12.x interface versions and avoids deprecated globals", function()
+        it("targets the 12.x engine and avoids deprecated globals", function()
             local toc = readAll(wow.ROOT .. "/EllesmereUIBags_Alts/EllesmereUIBags_Alts.toc")
             local iface = toc:match("## Interface: ([%d, ]+)")
-            for v in iface:gmatch("%d+") do assert.is_true(tonumber(v) >= 120000, v) end
+            -- retail 12.x, or WoW Forever 1.60+ (16001), which runs the 12.1
+            -- engine (EllesmereUI_ClientGate.lua draws the same line)
+            for v in iface:gmatch("%d+") do
+                v = tonumber(v)
+                assert.is_true(v >= 120000 or (v >= 16000 and v < 20000), v)
+            end
             for rel, src in pairs(addonSources()) do
                 -- pre-12 globals that Midnight moved into namespaces must only appear namespaced
                 for _, fn in ipairs({ "GetContainerItemInfo", "GetContainerNumSlots", "GetItemInfo",

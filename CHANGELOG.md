@@ -12,6 +12,12 @@ better, faster or reads better), **Bugfix** (something did not work as intended)
 0.8.5 is the first public release. The versions before it were development
 builds, each tested in the game by the maintainer.
 
+## 0.9.0
+
+- **New:** Runs on WoW Forever as well. There it also records the keyring, the
+  ammo slot and the bank bags, groups characters by realm type like EllesmereUI,
+  and shows no warband bank.
+
 ## 0.8.7
 
 - **Enhanced:** The TOC lists 12.1.5 as well, so the 12.1.5 client no longer

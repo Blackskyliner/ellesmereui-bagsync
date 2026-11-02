@@ -33,7 +33,7 @@ local function ScanInbox()
             for attachment = 1, ATTACHMENTS_MAX_RECEIVE do
                 local _, itemID, _, count, _, _, isCurrency = GetInboxItem(index, attachment)
                 if itemID and not isCurrency and not ns.IsSecret(itemID) then
-                    local link = GetInboxItemLink(index, attachment)
+                    local link = ns.Compat.InboxItemLink(index, attachment)
                     items[#items + 1] = { e = ns.EncodeItem(itemID, count, link), x = expires, from = sender }
                 end
             end
@@ -63,7 +63,7 @@ local function CaptureOutgoing(recipient)
     for i = 1, ATTACHMENTS_MAX_SEND do
         local _, itemID, _, count = GetSendMailItem(i)
         if itemID and not ns.IsSecret(itemID) then
-            items[#items + 1] = ns.EncodeItem(itemID, count, GetSendMailItemLink(i))
+            items[#items + 1] = ns.EncodeItem(itemID, count, ns.Compat.SendMailItemLink(i))
         end
     end
     pendingSend = #items > 0 and { recipient = known, items = items } or nil

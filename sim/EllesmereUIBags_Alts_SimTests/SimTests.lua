@@ -5,6 +5,12 @@ function simtest(name, fn)
     async_test(name, function(done) done(fn) end)
 end
 
+-- A test for one client only ("retail" or "forever", SIM_CLIENT from
+-- SimGaps.lua); on the other client it is not registered at all.
+function simtest_only(client, name, fn)
+    if client == SIM_CLIENT then simtest(name, fn) end
+end
+
 -- Like simtest, but waits (one check per simulator frame) until cond() is
 -- true, e.g. for EllesmereUI Bags, which builds its window 0.5 s after login.
 -- Never true -> the simulator reports a timeout, i.e. a failure.

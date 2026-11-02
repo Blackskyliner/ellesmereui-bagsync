@@ -62,7 +62,9 @@ function Options:Register()
     })
     Checkbox(category, "tooltip_showTotal", { "tooltip", "showTotal" }, L["Show total"])
     Checkbox(category, "tooltip_hideCurrent", { "tooltip", "hideCurrent" }, L["Hide the current character"])
-    Checkbox(category, "tooltip_showWarband", { "tooltip", "showWarband" }, L["Include the warband bank"])
+    if ns.Compat.HAS_WARBAND_BANK then
+        Checkbox(category, "tooltip_showWarband", { "tooltip", "showWarband" }, L["Include the warband bank"])
+    end
     Checkbox(category, "tooltip_showGuild", { "tooltip", "showGuild" }, L["Include guild banks"])
 
     layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(L["EllesmereUI integration"]))
