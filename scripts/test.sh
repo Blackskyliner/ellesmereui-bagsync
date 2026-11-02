@@ -43,6 +43,12 @@ for line in body.splitlines():
     elif line.startswith("    ") and not any(x in line for x in ("in function", "xpcall", "tail call", "main chunk", "MerchantFrame")):
         print(line)
 PY
+  # No summary means the run never got to the tests (crash, missing library):
+  # the filter above would print nothing, so show the end of the raw output.
+  if ! grep -a -q "tests," "$log"; then
+    echo "no test summary; last lines of the run:"; tail -n 15 "$log"
+    rc=1
+  fi
   if grep -a "Lua error" "$log" | grep -a -q "EllesmereUIBags_Alts/\|EUIBagsExt"; then
     echo "Lua errors raised by the addon:"; grep -a "Lua error" "$log" | grep -a "EllesmereUIBags_Alts/\|EUIBagsExt" | sort -u
     rc=1

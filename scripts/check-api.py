@@ -210,11 +210,15 @@ def main():
         ("EUI_CategoryManager global", r"_G\.EUI_CategoryManager = CategoryManager", bags),
         ("CategoryManager:ClassifyItem(link, id, bag, slot, ...)", r"function CategoryManager:ClassifyItem\(itemLink, itemID, bag, slot[,)]", bags),
         ("CategoryManager:GetCategories", r"function CategoryManager:GetCategories\(\)", bags),
-        ("goldLedger key Name-GetRealmName()",
-         r'local name, realm = UnitName\("player"\), GetRealmName\(\)\s+if not name or not realm then return nil end\s+return name \.\. "-" \.\. realm', eui),
+        # Off Forever (the 1.x client this addon does not load on) the realm
+        # group is GetRealmName(), so the key stays Name-Realm.
+        ("goldLedger key Name-RealmGroupName()",
+         r'local name, realm = UnitName\("player"\), EUI\.RealmGroupName\(\)\s+if not name or not realm then return nil end\s+return name \.\. "-" \.\. realm', eui),
+        ("RealmGroupName() is GetRealmName() off Forever",
+         r"function EllesmereUI\.RealmGroupName\(\)\s+if not EllesmereUI\.IS_FOREVER then return GetRealmName\(\) end", eui),
         ("EllesmereUIDB.goldLedger.chars", r"local ledger = db\.goldLedger[\s\S]*ledger\.chars = \{\}", eui),
         ("goldLedger.chars[key] = { money, updated }",
-         r"e\.money, e\.class, e\.name, e\.realm, e\.updated = money, class, UnitName\(\"player\"\), GetRealmName\(\), time\(\)", eui),
+         r"e\.money, e\.class, e\.name, e\.realm, e\.updated = money, class, UnitName\(\"player\"\), EUI\.RealmGroupName\(\), time\(\)", eui),
         ("characterGold { gold, lastUpdated } moved into goldLedger",
          r"local bags, dbars, wband = db\.characterGold[\s\S]*chars\[key\] = \{ money = e\.gold,[^}]*updated = IsUsable\(e\.lastUpdated\)", eui),
     ]

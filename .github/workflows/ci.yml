@@ -55,6 +55,9 @@ jobs:
           echo "sim=$(sed -n 's/^WOW_UI_SIM_REV=//p' scripts/setup-tools.sh)" >> "$GITHUB_OUTPUT"
           # cache keys must not contain commas
           echo "features=$(sed -n 's/^ *SIM_FEATURES=//p' scripts/setup-tools.sh | tr , +)" >> "$GITHUB_OUTPUT"
+          # wow-sim links the system's ICU by its versioned soname; a runner
+          # image with another ICU cannot load a binary built on the old one.
+          echo "icu=$(pkg-config --modversion icu-i18n)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Lua toolchain
         uses: actions/cache@v6
@@ -76,7 +79,7 @@ jobs:
           path: |
             .tools/vendor/wow-ui-sim/target/release/wow-sim
             .tools/vendor/wow-ui-sim/target/release/wow-sim.rev
-          key: wow-sim-${{ runner.os }}-${{ steps.pins.outputs.sim }}-${{ steps.pins.outputs.features }}-headless
+          key: wow-sim-${{ runner.os }}-icu${{ steps.pins.outputs.icu }}-${{ steps.pins.outputs.sim }}-${{ steps.pins.outputs.features }}-headless
 
       - name: Rust toolchain (only to build the simulator)
         if: steps.sim-cache.outputs.cache-hit != 'true'
