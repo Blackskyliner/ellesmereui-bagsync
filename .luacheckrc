@@ -1,6 +1,7 @@
 -- luacheck config: WoW runs Lua 5.1. Every global the addon reads is listed
 -- here on purpose; scripts/check-api.py verifies each one exists in the
--- Blizzard 12.x client sources / API annotations.
+-- client sources / API annotations of every supported client (retail 12.x,
+-- WoW Forever 1.60), or of one of them when only Core/ClientCompat.lua reads it.
 std = "lua51"
 max_line_length = false
 codes = true
@@ -36,6 +37,8 @@ files["EllesmereUIBags_Alts/**/*.lua"] = {
         "UnitName", "UnitClass", "UnitRace", "UnitFactionGroup", "UnitLevel", "GetRealmName",
         "GetNormalizedRealmName", "GetMoney", "IsInGuild", "GetGuildInfo",
         "GetInventoryItemLink", "GetInventoryItemID", "INVSLOT_FIRST_EQUIPPED", "INVSLOT_LAST_EQUIPPED",
+        -- WoW Forever (only through Core/ClientCompat.lua)
+        "C_ActionBar", "UnitUsesAmmo", "GetInventoryItemCount", "INVSLOT_AMMO",
         -- Mail
         "GetInboxNumItems", "GetInboxHeaderInfo", "GetInboxItem", "GetInboxItemLink",
         "GetSendMailItem", "GetSendMailItemLink", "ATTACHMENTS_MAX_RECEIVE", "ATTACHMENTS_MAX_SEND",
