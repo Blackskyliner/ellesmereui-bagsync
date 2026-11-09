@@ -323,15 +323,19 @@ def main():
         # always agree on it: WoW Forever reports a 1.60+ interface (16001).
         ("EllesmereUI.IS_FOREVER from the client gate",
          r"if iface >= 16000 and iface < 20000 then\s+EUI_CLIENT_FOREVER = true[\s\S]*EllesmereUI\.IS_FOREVER = \(EUI_CLIENT_FOREVER == true\)", eui),
-        # The realm group is GetRealmName() off Forever and the ruleset name
-        # on it; characters and the gold ledger are keyed by it.
-        ("goldLedger key Name-RealmGroupName()",
-         r'local name, realm = UnitName\("player"\), EUI\.RealmGroupName\(\)\s+if not name or not realm then return nil end\s+return name \.\. "-" \.\. realm', eui),
+        # The gold ledger is keyed by GUID; its entries carry the full name
+        # (surname included on Forever) and the realm group, GetRealmName()
+        # off Forever and the ruleset name on it. Entries of older builds keep
+        # their "Name-RealmGroupName()" key until the character logs in.
+        ("goldLedger key UnitGUID(\"player\")",
+         r'function GL\.CharKey\(\)\s+local guid = UnitGUID\("player"\)', eui),
         ("RealmGroupName() is GetRealmName() off Forever",
          r"function EllesmereUI\.RealmGroupName\(\)\s+if not EllesmereUI\.IS_FOREVER then return GetRealmName\(\) end", eui),
+        ("WithSurname joins by CHARACTERNAME_SURNAME_SEPARATOR or \" \"",
+         r'local SEP = Constants and Constants\.CharacterNameSeparatorConsts\s+and Constants\.CharacterNameSeparatorConsts\.CHARACTERNAME_SURNAME_SEPARATOR or " "[\s\S]*function EllesmereUI\.WithSurname\(', eui),
         ("EllesmereUIDB.goldLedger.chars", r"local ledger = db\.goldLedger[\s\S]*ledger\.chars = \{\}", eui),
-        ("goldLedger.chars[key] = { money, updated }",
-         r"e\.money, e\.class, e\.name, e\.realm, e\.updated = money, class, UnitName\(\"player\"\), EUI\.RealmGroupName\(\), time\(\)", eui),
+        ("goldLedger.chars[guid] = { money, name, realm, updated }",
+         r"e\.money, e\.class, e\.name, e\.realm, e\.updated = money, class, EUI\.WithSurname\(name, surname, true\), EUI\.RealmGroupName\(\), time\(\)", eui),
         ("characterGold { gold, lastUpdated } moved into goldLedger",
          r"local bags, dbars, wband = db\.characterGold[\s\S]*chars\[key\] = \{ money = e\.gold,[^}]*updated = IsUsable\(e\.lastUpdated\)", eui),
     ]

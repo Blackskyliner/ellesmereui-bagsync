@@ -48,7 +48,7 @@ WOW_UI_SIM_FOREVER_REV=c0d7225c59b9aa3ebc95c7576c2a7d6f962d71e1
 # which wow-cli generates from Blizzard's CDN (wow-ui-sim
 # docs/specs/forever-spell-data.md gives this checksum for it).
 FOREVER_SPELLS_SHA256=13122873d813481e85815946ddf964068b04132d4d2b2b44ba5ce61491595ad0
-ELLESMEREUI_REV="${ELLESMEREUI_REV:-6f94dc07cfe9c7e1aea75f56459ef6fd0ac71c52}"
+ELLESMEREUI_REV="${ELLESMEREUI_REV:-aa82437a3a60ac078fd7772942ea9d8f97f8036e}"
 
 case "$(uname -s)" in Darwin) LUA_TARGET=macosx ;; *) LUA_TARGET=linux ;; esac
 if [ ! -x "$T/lua/bin/lua" ]; then
