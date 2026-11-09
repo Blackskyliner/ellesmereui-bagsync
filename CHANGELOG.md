@@ -12,6 +12,12 @@ better, faster or reads better), **Bugfix** (something did not work as intended)
 0.8.5 is the first public release. The versions before it were development
 builds, each tested in the game by the maintainer.
 
+## 0.9.1
+
+- **Bugfix:** The one-time repair of characters stored with 0 gold also finds
+  them in EllesmereUI's gold ledger, which now files each character under its
+  GUID with the full name.
+
 ## 0.9.0
 
 - **New:** Runs on WoW Forever as well. There it also records the keyring, the
