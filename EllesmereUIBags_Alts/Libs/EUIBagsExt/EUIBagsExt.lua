@@ -338,15 +338,35 @@ end
 
 -------------------------------------------------------------------------------
 --  Character gold tracked by EllesmereUI (read-only)
---  EllesmereUIDB.goldLedger.chars["Name-Realm Name"] = { money, updated, ... },
---  keyed by UnitName .. "-" .. EllesmereUI.RealmGroupName(): the display realm
---  (spaces kept), on WoW Forever the realm group (ruleset name).
+--  EllesmereUIDB.goldLedger.chars[guid] = { money, updated, name, realm, ... }:
+--  name is the full name (on WoW Forever with the surname, joined by
+--  CHARACTERNAME_SURNAME_SEPARATOR like EllesmereUI.WithSurname),
+--  realm is EllesmereUI.RealmGroupName(): the display realm (spaces kept), on
+--  WoW Forever the realm group (ruleset name). Entries of older EllesmereUI
+--  builds stay under "Name-Realm Name" until that character logs in again.
 --  EllesmereUI moves the older Bags store EllesmereUIDB.characterGold
---  (same key, { gold, lastUpdated }) into the ledger only when one of its
---  modules first asks for it, so until then the balances are still there.
+--  (key "Name-Realm Name", { gold, lastUpdated }) into the ledger only when one
+--  of its modules first asks for it, so until then the balances are still there.
 --  The table is read directly: EllesmereUI.GetGoldLedger() would run that
 --  move and write EllesmereUI's saved variables.
 -------------------------------------------------------------------------------
+-- The one ledger entry whose name and realm belong to this character, or nil.
+-- Two entries that both match (WoW Forever: same first name, other surname)
+-- give nil, because the balance could be either one's.
+local function LedgerEntryByName(ledger, name, realmName)
+    local found
+    local consts = _G.Constants and _G.Constants.CharacterNameSeparatorConsts
+    local prefix = name .. (consts and consts.CHARACTERNAME_SURNAME_SEPARATOR or " ")
+    for _, e in pairs(ledger) do
+        if type(e) == "table" and e.realm == realmName and type(e.name) == "string"
+            and (e.name == name or e.name:sub(1, #prefix) == prefix) then
+            if found then return nil end
+            found = e
+        end
+    end
+    return found
+end
+
 -- -> gold (copper), lastUpdated (epoch) or nil
 function lib:GetCharacterGold(name, realmName)
     if not EUI() or type(name) ~= "string" or type(realmName) ~= "string" then return nil end
@@ -354,7 +374,7 @@ function lib:GetCharacterGold(name, realmName)
     if type(db) ~= "table" then return nil end
     local key = name .. "-" .. realmName
     local ledger = type(db.goldLedger) == "table" and db.goldLedger.chars
-    local entry = type(ledger) == "table" and ledger[key]
+    local entry = type(ledger) == "table" and (ledger[key] or LedgerEntryByName(ledger, name, realmName))
     if type(entry) == "table" and type(entry.money) == "number" then
         return entry.money, type(entry.updated) == "number" and entry.updated or nil
     end

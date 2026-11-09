@@ -50,6 +50,25 @@ describe("Client compatibility", function()
         assert.are.equal(2500000, ns.db.chars["Bob-PvP"].money)
         assert.are.same({}, env.__errors)
     end)
+
+    it("repairs 0g from a GUID-keyed ledger entry that carries the surname", function()
+        local sv = { schema = 1, chars = {
+            ["Bob-PvP"] = { name = "Bob", realm = "PvP", realmName = "PvP", money = 0 },
+            ["Ann-PvP"] = { name = "Ann", realm = "PvP", realmName = "PvP", money = 0 },
+        } }
+        local env, ns = wow.boot(forever(), sv, { beforeLoad = function(e)
+            fakeEUI.install(e)
+            e.EllesmereUIDB = { goldLedger = { chars = {
+                ["Player-1-0000000B"] = { money = 2500000, name = "Bob Miller", realm = "PvP" },
+                -- two characters named Ann: the balance could be either one's
+                ["Player-1-0000000A"] = { money = 10, name = "Ann Smith", realm = "PvP" },
+                ["Player-1-0000000C"] = { money = 20, name = "Ann Jones", realm = "PvP" },
+            } } }
+        end })
+        assert.are.equal(2500000, ns.db.chars["Bob-PvP"].money)
+        assert.are.equal(0, ns.db.chars["Ann-PvP"].money)
+        assert.are.same({}, env.__errors)
+    end)
 end)
 
 describe("Keyring (Forever)", function()
