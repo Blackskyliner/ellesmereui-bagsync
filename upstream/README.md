@@ -48,7 +48,7 @@ Blackskyliner), so they can go into EllesmereUI under its own license.
 
 - `EllesmereUIBags_ExtAPI.lua`: the drop-in file.
 - `0001-EllesmereUIBags-extension-API.patch`: `git apply`-able against EllesmereUI
-  `main` at `6f94dc0` (2026-11-02). It adds the file and the TOC line.
+  `main` at `aa82437` (2026-11-09). It adds the file and the TOC line.
 
 ## Verified
 

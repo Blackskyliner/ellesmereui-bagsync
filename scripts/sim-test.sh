@@ -47,6 +47,18 @@ fi
 
 cd "$SIM"
 export HOME="$ROOT/.tools/simhome"
+# Without game fonts the simulator measures all text in the first system font
+# it finds, so the layout tests would depend on which fonts the machine has
+# and the order its directory listing returns them in. On Linux that font is
+# pinned to DejaVu Sans (installed by CI) through a fontconfig file whose only
+# font directory holds that one face.
+DEJAVU=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf
+if [ "$(uname -s)" = Linux ] && [ -f "$DEJAVU" ]; then
+  mkdir -p "$HOME/simfont"
+  ln -sfn "$DEJAVU" "$HOME/simfont/DejaVuSans.ttf"
+  printf '<?xml version="1.0"?>\n<fontconfig><dir>%s</dir></fontconfig>\n' "$HOME/simfont" > "$HOME/fonts.conf"
+  export FONTCONFIG_FILE="$HOME/fonts.conf"
+fi
 # EllesmereUI's TOCs trail the live client's interface number (12.1.5:
 # 120105), and wow-sim skips out-of-date addons like the client does. Ours is
 # checked by scripts/check-api.py, for every client.

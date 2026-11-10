@@ -48,11 +48,27 @@ WOW_UI_SIM_FOREVER_REV=c0d7225c59b9aa3ebc95c7576c2a7d6f962d71e1
 # which wow-cli generates from Blizzard's CDN (wow-ui-sim
 # docs/specs/forever-spell-data.md gives this checksum for it).
 FOREVER_SPELLS_SHA256=13122873d813481e85815946ddf964068b04132d4d2b2b44ba5ce61491595ad0
-ELLESMEREUI_REV="${ELLESMEREUI_REV:-6f94dc07cfe9c7e1aea75f56459ef6fd0ac71c52}"
+ELLESMEREUI_REV="${ELLESMEREUI_REV:-aa82437a3a60ac078fd7772942ea9d8f97f8036e}"
 
 case "$(uname -s)" in Darwin) LUA_TARGET=macosx ;; *) LUA_TARGET=linux ;; esac
+# Lua's sources from lua.org, else from the mirror at PUC-Rio (another host):
+# lua.org is at times unreachable from CI runners. The checksum is the one
+# both serve for lua-5.1.5.tar.gz.
+LUA_SHA256=2640fc56a795f29d28ef15e13c34a47e223960b0240e8cb0a82d9b0738695333
+fetch_lua() {
+  local url sum
+  for url in https://www.lua.org/ftp/lua-5.1.5.tar.gz \
+             https://webserver2.tecgraf.puc-rio.br/lua/ftp/lua-5.1.5.tar.gz; do
+    if curl -sSfL --connect-timeout 20 --retry 3 --retry-all-errors -o lua-5.1.5.tar.gz "$url"; then
+      sum=$( (sha256sum lua-5.1.5.tar.gz 2>/dev/null || shasum -a 256 lua-5.1.5.tar.gz) | cut -d' ' -f1)
+      [ "$sum" = "$LUA_SHA256" ] && return 0
+      echo "lua-5.1.5.tar.gz from $url: checksum $sum" >&2
+    fi
+  done
+  return 1
+}
 if [ ! -x "$T/lua/bin/lua" ]; then
-  (cd "$T/src" && curl -sSLO https://www.lua.org/ftp/lua-5.1.5.tar.gz && tar xzf lua-5.1.5.tar.gz \
+  (cd "$T/src" && fetch_lua && tar xzf lua-5.1.5.tar.gz \
     && cd lua-5.1.5 && make "$LUA_TARGET" INSTALL_TOP="$T/lua" >/dev/null && make install INSTALL_TOP="$T/lua" >/dev/null)
 fi
 

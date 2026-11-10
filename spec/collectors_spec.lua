@@ -388,6 +388,27 @@ describe("Character, equipment and currency", function()
         assert.are.same({}, env.__errors)
     end)
 
+    it("repairs 0g from a gold ledger keyed by GUID", function()
+        local sv = {
+            schema = 1,
+            chars = {
+                ["Bob-Blackhand"] = { name = "Bob", realm = "Blackhand", realmName = "Blackhand", money = 0 },
+                ["Eve-Blackhand"] = { name = "Eve", realm = "Blackhand", realmName = "Blackhand", money = 0 },
+            },
+        }
+        local env, ns = wow.boot(wow.defaultState({ money = 123 }), sv, { beforeLoad = function(e)
+            fakeEUI.install(e)
+            e.EllesmereUIDB = { goldLedger = { chars = {
+                ["Player-1-0000000B"] = { money = 2500000, updated = 1789990000, name = "Bob", realm = "Blackhand" },
+                ["Player-2-0000000E"] = { money = 40000, name = "Eve", realm = "Azjol-Nerub" },  -- other realm
+            } } }
+        end })
+        assert.are.equal(2500000, ns.db.chars["Bob-Blackhand"].money)
+        assert.are.equal(1789990000, ns.db.chars["Bob-Blackhand"].moneyAt)
+        assert.are.equal(0, ns.db.chars["Eve-Blackhand"].money)
+        assert.are.same({}, env.__errors)
+    end)
+
     it("does not store 0g from a teardown PLAYER_MONEY on a loading screen", function()
         local env, ns = wow.boot(wow.defaultState({ money = 777 }))
         env.FireEvent("PLAYER_LEAVING_WORLD")
