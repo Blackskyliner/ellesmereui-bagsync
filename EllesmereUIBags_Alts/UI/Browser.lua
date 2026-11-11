@@ -501,7 +501,7 @@ function Browser:Build()
             tooltip:AddDoubleLine(row[1], row[2], 1, 0.82, 0, 1, 1, 1)
         end
         tooltip:AddLine(" ")
-        for _, note in ipairs(help.notes) do tooltip:AddLine(note, 0.6, 0.6, 0.6, true) end
+        for _, note in ipairs(help.notes) do tooltip:AddLine(note, 0.6, 0.6, 0.6) end
         tooltip:Show()
     end)
     f.searchHelp:SetPoint("RIGHT", f.search, "LEFT", -6, 0)

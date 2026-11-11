@@ -138,9 +138,9 @@ function Search.HelpLines()
             { "12345  id:12345", L["Item ID"] },
             { "q:" .. quality .. "  q:4", L["Quality (name or number)"] },
             { "t:" .. itemType, L["Item type or subtype"] },
+            { "q:" .. quality .. " t:" .. itemType, L["All terms must match"] },
         },
         notes = {
-            string.format(L["All terms must match, e.g. %s"], "q:" .. quality .. " t:" .. itemType),
             L["Currencies match words and numbers only."],
         },
     }

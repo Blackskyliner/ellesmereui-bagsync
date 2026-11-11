@@ -151,5 +151,5 @@ L["Name contains every word"] = "Название содержит каждое 
 L["Item ID"] = "ID предмета"
 L["Quality (name or number)"] = "Качество (название или число)"
 L["Item type or subtype"] = "Тип или подтип предмета"
-L["All terms must match, e.g. %s"] = "Должны совпасть все условия, напр. %s"
+L["All terms must match"] = "Должны совпасть все условия"
 L["Currencies match words and numbers only."] = "Валюты ищутся только по словам и числам."
