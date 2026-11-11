@@ -22,6 +22,11 @@ Compat.IS_FOREVER = type(EUI) == "table" and EUI.IS_FOREVER == true
 -- Forever has no warband: no account bank, no warband gold.
 Compat.HAS_WARBAND_BANK = not Compat.IS_FOREVER
 
+-- How the browser shows balances by default (setting ui.moneyFormat): whole
+-- gold on retail; on Forever silver and copper too, because a character there
+-- takes long to reach its first gold.
+Compat.DEFAULT_MONEY_FORMAT = Compat.IS_FOREVER and "gsc" or "g"
+
 -- Forever characters with the same first name differ only by surname.
 Compat.UNIQUE_FIRST_NAMES = not Compat.IS_FOREVER
 

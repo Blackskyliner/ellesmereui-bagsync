@@ -227,14 +227,36 @@ function W.HidePetTooltip()
     if petTooltip then petTooltip:Hide() end
 end
 
--- Formats copper as "12,345g" (gold only; the browser is an overview).
+local GOLD, SILVER, COPPER = "|cffffd700g|r", "|cffc7c7cfs|r", "|cffeda55fc|r"
+
+-- 1234567 -> "1,234,567"
+local function Thousands(n)
+    local out = tostring(n):reverse():gsub("(%d%d%d)", "%1,"):reverse()
+    return (out:gsub("^,", ""))
+end
+
+-- A balance in the parts the ui.moneyFormat setting asks for: "12,345g"
+-- (whole gold), "12,345g 67s" or "12,345g 67s 89c". Below gold, parts that
+-- are 0 are left out; nothing left reads "0" in the smallest part shown.
 function W.FormatGold(copper)
     if not copper then return "-" end
+    local settings = ns.db and ns.db.settings.ui
+    local format = settings and settings.moneyFormat or "g"
+    copper = math.floor(copper)
     local gold = math.floor(copper / 10000)
-    local s = tostring(gold)
-    local out = s:reverse():gsub("(%d%d%d)", "%1,"):reverse()
-    out = out:gsub("^,", "")
-    return out .. "|cffffd700g|r"
+    if format ~= "gs" and format ~= "gsc" then return Thousands(gold) .. GOLD end
+    local silver = math.floor((copper % 10000) / 100)
+    local cop = copper % 100
+    local parts = {}
+    if gold > 0 then parts[#parts + 1] = Thousands(gold) .. GOLD end
+    if silver > 0 then parts[#parts + 1] = silver .. SILVER end
+    if format == "gsc" then
+        if cop > 0 then parts[#parts + 1] = cop .. COPPER end
+        if #parts == 0 then return "0" .. COPPER end
+    elseif #parts == 0 then
+        return "0" .. SILVER
+    end
+    return table.concat(parts, " ")
 end
 
 -- Copper as "1,234g 56s 7c" (zero parts left out; below 1g silver/copper shown).
@@ -244,10 +266,10 @@ function W.FormatMoney(copper)
     local silver = math.floor((copper % 10000) / 100)
     local cop = copper % 100
     local parts = {}
-    if gold > 0 then parts[#parts + 1] = W.FormatGold(copper) end
-    if silver > 0 then parts[#parts + 1] = silver .. "|cffc7c7cfs|r" end
-    if cop > 0 and gold == 0 then parts[#parts + 1] = cop .. "|cffeda55fc|r" end
-    if #parts == 0 then return "0|cffeda55fc|r" end
+    if gold > 0 then parts[#parts + 1] = Thousands(gold) .. GOLD end
+    if silver > 0 then parts[#parts + 1] = silver .. SILVER end
+    if cop > 0 and gold == 0 then parts[#parts + 1] = cop .. COPPER end
+    if #parts == 0 then return "0" .. COPPER end
     return table.concat(parts, " ")
 end
 

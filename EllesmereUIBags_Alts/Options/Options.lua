@@ -71,6 +71,10 @@ function Options:Register()
     Checkbox(category, "ui_headerButton", { "ui", "headerButton" }, L["Button in the EllesmereUI bag header"],
         L["Adds a small button next to the item count that opens the browser."])
     Checkbox(category, "ui_useEUICategories", { "ui", "useEUICategories" }, L["Group browser items by EllesmereUI categories"])
+    -- The choices are examples of the format and need no translation.
+    Dropdown(category, "ui_moneyFormat", { "ui", "moneyFormat" }, L["Money display in the browser"], nil, {
+        { "g", "12g" }, { "gs", "12g 34s" }, { "gsc", "12g 34s 56c" },
+    })
 
     layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(L["Data collection"]))
     Checkbox(category, "collect_bags", { "collect", "bags" }, L["Bags"])

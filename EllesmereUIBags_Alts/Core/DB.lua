@@ -59,6 +59,7 @@ ns.DEFAULTS = {
             headerButton     = false,
             useEUICategories = false,
             browserScale     = 1,
+            moneyFormat      = ns.Compat.DEFAULT_MONEY_FORMAT,   -- "g" | "gs" | "gsc": parts of a balance in the browser
         },
         firstRunAsked = false,
         debug = false,   -- /alts debug: chat diagnostics
