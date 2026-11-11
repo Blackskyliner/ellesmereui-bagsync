@@ -50,9 +50,9 @@ describe("Activation", function()
     end)
 
     it("does not walk the stored data at login", function()
-        local sv = { schema = 1, chars = { ["Bob-Blackhand"] = { bags = { [0] = { size = "x", items = { [1] = 5 } } } } } }
+        local sv = { schema = 1, chars = { ["Player-1-Bob"] = { bags = { [0] = { size = "x", items = { [1] = 5 } } } } } }
         local _, ns = bootUnused(nil, sv)
-        assert.are.equal("x", ns.db.chars["Bob-Blackhand"].bags[0].size)  -- untouched until activation
+        assert.are.equal("x", ns.db.chars["Player-1-Bob"].bags[0].size)  -- untouched until activation
     end)
 
     it("the first bag open activates: one scan, then event driven, never again", function()
@@ -80,10 +80,10 @@ describe("Activation", function()
     end)
 
     it("the stored data is checked on activation", function()
-        local sv = { schema = 1, chars = { ["Bob-Blackhand"] = { bags = { [0] = { size = "x", items = { [1] = 5 } } } } } }
+        local sv = { schema = 1, chars = { ["Player-1-Bob"] = { bags = { [0] = { size = "x", items = { [1] = 5 } } } } } }
         local env, ns = bootUnused(nil, sv)
         env.OpenBags()
-        assert.are_not.equal("x", ns.db.chars["Bob-Blackhand"].bags[0] and ns.db.chars["Bob-Blackhand"].bags[0].size)
+        assert.are_not.equal("x", ns.db.chars["Player-1-Bob"].bags[0] and ns.db.chars["Player-1-Bob"].bags[0].size)
     end)
 
     it("never hooks Blizzard's bag frames or bag functions", function()
@@ -188,12 +188,12 @@ describe("Activation", function()
 
     it("an unused session leaves the stored data alone at logout", function()
         local env = wow.boot(world())                          -- used session: Alice stored
-        local seen = env.EllesmereUIBagsAltsDB.chars["Alice-Blackhand"].lastSeen
+        local seen = env.EllesmereUIBagsAltsDB.chars["Player-1-Alice"].lastSeen
         local sv = wow.logout(env)
-        sv.chars["Alice-Blackhand"].lastSeen = seen - 5000
+        sv.chars["Player-1-Alice"].lastSeen = seen - 5000
         local env2, ns2 = bootUnused(world(), sv)
         local sv2 = wow.logout(env2)
-        assert.are.equal(seen - 5000, sv2.chars["Alice-Blackhand"].lastSeen)
+        assert.are.equal(seen - 5000, sv2.chars["Player-1-Alice"].lastSeen)
         assert.is_false(ns2.IsActivated())
     end)
 

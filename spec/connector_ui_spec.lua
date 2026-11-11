@@ -214,8 +214,8 @@ describe("Browser", function()
         assert.is_true(f:IsShown())
         local rows = {}
         for i = 1, f.sideRows.used do rows[#rows + 1] = f.sideRows.items[i].ownerKey end
-        assert.are.same({ "*all", "*realm:Blackhand", "Alice-Blackhand", "Bob-Blackhand", "#warband" }, rows)
-        assert.are.equal("Alice-Blackhand", ns.Browser:GetState().owner)
+        assert.are.same({ "*all", "*realm:Blackhand", "Player-1-Alice", "Player-1-Bob", "#warband" }, rows)
+        assert.are.equal("Player-1-Alice", ns.Browser:GetState().owner)
         assert.are.equal(4, f.grid.used)
         -- the rich link survives into the button reference
         local found = false
@@ -233,7 +233,7 @@ describe("Browser", function()
         ns.Browser:Select("#warband")
         assert.are.equal(1, f.grid.used)
         assert.are.equal("190396,500", "190396," .. f.grid.buttons[1].__count)
-        ns.Browser:Select("Bob-Blackhand")
+        ns.Browser:Select("Player-1-Bob")
         assert.are.equal(1, f.grid.used)
         ns.Browser:SelectTab("bank")
         assert.are.equal(0, f.grid.used)
@@ -292,11 +292,11 @@ describe("Browser", function()
         local renders = 0
         local orig = ns.Browser.Refresh
         ns.Browser.Refresh = function(self) renders = renders + 1; return orig(self) end
-        for _ = 1, 10 do ns.Fire("CHAR_UPDATED", "Alice-Blackhand", "bags") end
+        for _ = 1, 10 do ns.Fire("CHAR_UPDATED", "Player-1-Alice", "bags") end
         env.RunOnUpdates()
         assert.are.equal(1, renders)
         ns.Browser:Close()
-        ns.Fire("CHAR_UPDATED", "Alice-Blackhand", "bags")
+        ns.Fire("CHAR_UPDATED", "Player-1-Alice", "bags")
         env.RunOnUpdates()
         assert.are.equal(1, renders)
         ns.Browser:Open()
@@ -324,12 +324,12 @@ describe("Browser", function()
         ns.Browser:Open()
         local f = env.EllesmereUIBagsAltsBrowser
         assert.is_false(f.delete:IsShown())           -- current character
-        ns.Browser:Select("Bob-Blackhand")
+        ns.Browser:Select("Player-1-Bob")
         assert.is_true(f.delete:IsShown())
         f.delete:Click()
         rec.popups[#rec.popups].onConfirm()
-        assert.is_nil(ns.db.chars["Bob-Blackhand"])
-        assert.are.equal("Alice-Blackhand", ns.Browser:GetState().owner)
+        assert.is_nil(ns.db.chars["Player-1-Bob"])
+        assert.are.equal("Player-1-Alice", ns.Browser:GetState().owner)
         ns.Index:EnsureBuilt()
         assert.are.equal(20, ns.Index:GetTotal(2589))
     end)
@@ -383,7 +383,7 @@ describe("Browser", function()
             local env = wow.boot(wow.defaultState({ currencies = CURRENCIES }))
             -- Bob's client knows none of these currencies (no live info)
             local env2, ns2 = wow.relog(env, { name = "Bob" }, { currencies = {} })
-            ns2.Browser:Open("Alice-Blackhand")
+            ns2.Browser:Open("Player-1-Alice")
             ns2.Browser:SelectTab("currency")
             local f = env2.EllesmereUIBagsAltsBrowser
             local headers = {}

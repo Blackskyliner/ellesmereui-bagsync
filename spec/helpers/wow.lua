@@ -518,7 +518,18 @@ function M.newEnv(state, savedVariables)
     env.C_AddOns = { GetAddOnMetadata = function(_, field) if field == "Version" then return "test" end end }
 
     -- Player
-    env.UnitName = function(unit) if unit == "player" then return S.player.name end end
+    -- WoW Forever returns the surname second (player.surname); a GUID per
+    -- character unless the state names one (player.guid; false: not known yet).
+    env.UnitName = function(unit)
+        if unit ~= "player" then return nil end
+        if S.client == "forever" then return S.player.name, S.player.surname end
+        return S.player.name
+    end
+    env.UnitNameUnmodified = env.UnitName
+    env.UnitGUID = function(unit)
+        if unit ~= "player" or not S.player.name or S.player.guid == false then return nil end
+        return S.player.guid or ("Player-1-" .. S.player.name .. (S.player.surname or ""))
+    end
     env.GetNormalizedRealmName = function() return S.player.realm end
     env.GetRealmName = function() return S.player.realmName end
     env.UnitClass = function() return "Mage", S.player.class end

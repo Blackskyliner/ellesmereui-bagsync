@@ -100,7 +100,7 @@ describe("Bound state", function()
         s.bags[0].slots[1].bound = true
         local env = wow.boot(s)
         local env2, ns2 = wow.relog(env, { name = "Bob" })
-        ns2.Browser:Open("Alice-Blackhand")
+        ns2.Browser:Open("Player-1-Alice")
         local text = hoverFirst(env2, ns2, "bags", "230000")
         assert.truthy(text:find("Soulbound", 1, true))
     end)
@@ -180,10 +180,10 @@ describe("Equipment sets", function()
     end)
 
     it("sanitizes stored set data", function()
-        local sv = { schema = 1, chars = { ["Bob-Blackhand"] = { bags = { [0] = { size = 4,
+        local sv = { schema = 1, chars = { ["Player-1-Bob"] = { bags = { [0] = { size = 4,
             items = { [1] = "6948,1,!" }, sets = { [1] = "Tank", [2] = 5, x = "y" } } } } } }
         local env, ns = wow.boot(wow.defaultState(), sv)
-        assert.are.same({ [1] = "Tank" }, ns.db.chars["Bob-Blackhand"].bags[0].sets)
+        assert.are.same({ [1] = "Tank" }, ns.db.chars["Player-1-Bob"].bags[0].sets)
         assert.are.same({}, env.__errors)
     end)
 end)

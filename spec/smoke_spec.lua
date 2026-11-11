@@ -8,7 +8,7 @@ describe("boot smoke", function()
         local env, ns = wow.boot(state)
         assert.are.same({}, env.__errors)
         assert.is_true(ns.ready)
-        local c = ns.db.chars["Alice-Blackhand"]
+        local c = ns.db.chars["Player-1-Alice"]
         assert.is_table(c)
         assert.are.equal("6948,1", wow.items(c.bags[0])[1])
         assert.are.equal("2589,20", wow.items(c.bags[0])[2])

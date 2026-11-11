@@ -86,8 +86,8 @@ describe("All characters view", function()
         local f = env.EllesmereUIBagsAltsBrowser
         local rows = {}
         for i = 1, f.sideRows.used do rows[#rows + 1] = f.sideRows.items[i].ownerKey end
-        assert.are.same({ "*all", "*realm:Blackhand", "Alice-Blackhand", "Bob-Blackhand",
-            "*realm:Proudmoore", "Carol-Proudmoore", "#warband" }, rows)
+        assert.are.same({ "*all", "*realm:Blackhand", "Player-1-Alice", "Player-1-Bob",
+            "*realm:Proudmoore", "Player-1-Carol", "#warband" }, rows)
         assert.are.same({}, env.__errors)
     end)
 
@@ -155,7 +155,7 @@ describe("All characters view", function()
         local _, n = tooltipText(env):gsub("Total", "")
         assert.are.equal(1, n)
         -- a single character's bag tab keeps the normal (feature) lines
-        ns.Browser:Select("Alice-Blackhand")
+        ns.Browser:Select("Player-1-Alice")
         ns.Browser:SelectTab("bags")
         for i = 1, f.grid.used do
             if f.grid.buttons[i].itemID == 2589 then f.grid.buttons[i]:RunScript("OnEnter") end
@@ -189,7 +189,7 @@ end)
 describe("Everything tab of a character", function()
     it("merges all locations of that one character, without warband or guild", function()
         local env, ns = world()
-        ns.Browser:Open("Alice-Blackhand")
+        ns.Browser:Open("Player-1-Alice")
         ns.Browser:SelectTab("all")
         local f = env.EllesmereUIBagsAltsBrowser
         local shown = {}
@@ -208,7 +208,7 @@ describe("Everything tab of a character", function()
 
     it("tooltip shows where the stacks are", function()
         local env, ns = world()
-        ns.Browser:Open("Alice-Blackhand")
+        ns.Browser:Open("Player-1-Alice")
         ns.Browser:SelectTab("all")
         local f = env.EllesmereUIBagsAltsBrowser
         for i = 1, f.grid.used do
@@ -225,9 +225,9 @@ describe("Everything tab of a character", function()
 
     it("stays on Everything when switching characters", function()
         local env, ns = world()
-        ns.Browser:Open("Alice-Blackhand")
+        ns.Browser:Open("Player-1-Alice")
         ns.Browser:SelectTab("all")
-        ns.Browser:Select("Carol-Proudmoore")
+        ns.Browser:Select("Player-1-Carol")
         assert.are.equal("all", ns.Browser:GetState().tab)
         assert.are.equal(7, counts(env.EllesmereUIBagsAltsBrowser)["item:2589"])
     end)
@@ -262,9 +262,9 @@ describe("Realm view", function()
     it("falls back when the realm's last character is deleted", function()
         local env, ns = world()
         ns.Browser:Open(ns.Browser.RealmOwner("Proudmoore"))
-        ns.DeleteChar("Carol-Proudmoore")
+        ns.DeleteChar("Player-1-Carol")
         ns.Browser:Refresh()
-        assert.are.equal("Alice-Blackhand", ns.Browser:GetState().owner)
+        assert.are.equal("Player-1-Alice", ns.Browser:GetState().owner)
         local _ = env
     end)
 end)
@@ -272,7 +272,7 @@ end)
 describe("Currency tooltip", function()
     it("shows Blizzard's currency tooltip plus who holds how many", function()
         local env, ns = world()
-        ns.Browser:Open("Alice-Blackhand")
+        ns.Browser:Open("Player-1-Alice")
         ns.Browser:SelectTab("currency")
         local f = env.EllesmereUIBagsAltsBrowser
         currencyRow(f, "Valorstones"):RunScript("OnEnter")
