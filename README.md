@@ -174,7 +174,8 @@ first term is taken as an item ID too), `q:epic` or `q:4` (quality), `t:armor`
 (type/subtype). All terms must match. The search covers characters, the warband
 bank and guild banks and shows at most 300 items. Words and a number also search the
 names of stored currencies; those hits come first, with the total and the
-per-character amounts. `id:`, `q:` and `t:` filter items only.
+per-character amounts. `id:`, `q:` and `t:` filter items only. Hover the `?`
+beside the search box for this syntax in the game.
 
 **Tooltip counts.** One line per character with the split by location, plus the
 warband bank, guild banks and the total, at most ten characters. They appear on

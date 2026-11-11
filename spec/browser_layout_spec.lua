@@ -28,11 +28,32 @@ for _, withEUI in ipairs({ true, false }) do
             local env, ns, f = open(withEUI)
             assert.are.equal(ns.W.HEADER_H, f.header:GetHeight())
             assert.are.equal(35, ns.W.HEADER_H)                  -- EUI Bags HEADER_H
-            for _, w in ipairs({ f.title, f.search, f.close }) do centredInHeader(f, w) end
+            for _, w in ipairs({ f.title, f.search, f.searchHelp, f.close }) do centredInHeader(f, w) end
             assert.is_true(f.search:GetHeight() <= ns.W.HEADER_H - 2)
             assert.is_true(f.close:GetHeight() <= ns.W.HEADER_H - 2)
             -- content starts below the bar
             assert.is_true(-f.sidebar.points[1][3] >= ns.W.HEADER_H)
+            assert.are.same({}, env.__errors)
+        end)
+
+        it("explains the search syntax on hover of the ? beside the search box", function()
+            local env, ns, f = open(withEUI)
+            f.searchHelp:RunScript("OnEnter")
+            local tt = env.EllesmereUIBagsAltsTooltip
+            assert.are.equal(f.searchHelp, tt.owner)
+            local text = {}
+            for _, l in ipairs(tt.lines) do text[#text + 1] = table.concat(l, " | ") end
+            text = table.concat(text, "\n")
+            for _, token in ipairs({ "id:12345", "q:epic", "q:4", "t:armor" }) do
+                assert.truthy(text:find(token, 1, true), token .. " missing in:\n" .. text)
+            end
+            -- the combined example is a valid query: epic armor
+            local q = ns.Search.Parse("q:epic t:armor")
+            assert.are.equal(4, q.quality)
+            assert.are.equal("armor", q.typeText)
+            assert.truthy(text:find("q:epic t:armor", 1, true))
+            f.searchHelp:RunScript("OnLeave")
+            assert.is_false(tt:IsShown())
             assert.are.same({}, env.__errors)
         end)
 

@@ -144,3 +144,13 @@ L["FAILED"] = "失败"
 L["missing"] = "缺失"
 L["inconsistent (rebuilt)"] = "不一致（已重建）"
 L["Index"] = "索引"
+
+-- Search syntax help
+L["Search syntax"] = "搜索语法"
+L["words"] = "关键词"
+L["Name contains every word"] = "名称包含所有关键词"
+L["Item ID"] = "物品ID"
+L["Quality (name or number)"] = "品质（名称或数字）"
+L["Item type or subtype"] = "物品类型或子类型"
+L["All terms must match, e.g. %s"] = "所有条件都须匹配，例如 %s"
+L["Currencies match words and numbers only."] = "货币仅按关键词和数字匹配。"

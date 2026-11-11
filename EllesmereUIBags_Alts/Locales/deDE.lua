@@ -137,3 +137,13 @@ L["no (waiting for the first use: bags, bank, mailbox, auction house, guild bank
 L["FAILED"] = "FEHLGESCHLAGEN"
 L["missing"] = "fehlt"
 L["inconsistent (rebuilt)"] = "inkonsistent (neu aufgebaut)"
+
+-- Search syntax help
+L["Search syntax"] = "Suchsyntax"
+L["words"] = "Wörter"
+L["Name contains every word"] = "Name enthält jedes Wort"
+L["Item ID"] = "Gegenstands-ID"
+L["Quality (name or number)"] = "Qualität (Name oder Zahl)"
+L["Item type or subtype"] = "Gegenstandstyp oder -untertyp"
+L["All terms must match, e.g. %s"] = "Alle Begriffe müssen passen, z. B. %s"
+L["Currencies match words and numbers only."] = "Währungen passen nur auf Wörter und Zahlen."
