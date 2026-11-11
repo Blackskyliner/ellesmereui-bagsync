@@ -300,13 +300,17 @@ with BugSack and `taint.log`. For bug reports, include the output of
 
 ## Continuous integration
 
-`.github/workflows/ci.yml` runs on every push to `main` and every pull request
-that changes more than documentation: one Linux job per client (retail,
-forever) with `setup-tools.sh --no-gui --client=<client>` and `test.sh
---require-sim --client=<client>` (luacheck, API check and busted for both
-clients, the three simulator modes for the job's client; a simulator that fails
-to build fails the job instead of being skipped). It runs on Linux because
-private repositories are billed ten times the minutes on macOS.
+`.github/workflows/ci.yml` runs on every push to `main` and every pull request:
+one Linux job per client (retail, forever) with `setup-tools.sh --no-gui
+--client=<client>` and `test.sh --require-sim --client=<client>` (luacheck, API
+check and busted for both clients, the three simulator modes for the job's
+client; a simulator that fails to build fails the job instead of being
+skipped). It runs on Linux because private repositories are billed ten times
+the minutes on macOS. Both jobs are required checks of `main`, so they always
+start; their first step skips the others and passes when the change touches
+nothing the checks read (the addon, `sim/`, `spec/`, `upstream/*.lua`, the
+scripts the job runs, `scripts/patches/`, `.busted`, `.luacheckrc`,
+`ci.yml`). Releases, the weekly upstream run and manual runs always test.
 
 What is cached: the Lua toolchain, each client's simulator binary alone (about
 80 MB, keyed on its pin, its features and the ICU version) and Forever's spell
