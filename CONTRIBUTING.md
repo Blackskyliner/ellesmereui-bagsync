@@ -324,6 +324,53 @@ a pin builds once (about ten minutes on a runner) and caches the result. The CI 
 (`target-cpu=native`) and a cached binary could then fail on the next runner.
 The sources and references are fetched on every run (a minute or so).
 
+### Self-hosted runner
+
+The CI and Changelog jobs run on a self-hosted runner when the repository
+variable `CI_RUNNER` (Settings -> Secrets and variables -> Actions ->
+Variables) holds the runner's labels as JSON, for example
+`["self-hosted","linux","eui-ci"]`. Unset or empty, they run on
+`ubuntu-latest`; clear the variable when the runner is offline, otherwise the
+jobs wait for it. Two kinds of jobs never use it:
+
+- the jobs of pull requests from forks: the repository is public, and such a
+  pull request runs code nobody with write access has reviewed;
+- the release job, which holds the CurseForge key and publishes the release
+  (the CI jobs it waits for do use the runner).
+
+The jobs check out without leaving the token in `.git/config` and use `sudo`
+only for packages that are missing. `scripts/setup-ci-runner.sh` sets up a
+fresh Debian or Ubuntu machine (a VM that runs nothing else, as root):
+
+```bash
+gh api -X POST repos/Blackskyliner/ellesmereui-bagsync/actions/runners/registration-token -q .token
+```
+
+prints a registration token on your own machine (valid for one hour); on the
+runner machine
+
+```bash
+RUNNER_TOKEN=<token> ./setup-ci-runner.sh
+```
+
+installs the packages, turns on automatic security updates, adds a 4 GB swap
+file for the simulator's Rust build, creates the user `ghrunner` without a
+password or sudo, installs Rust (rustup, stable) and the newest runner
+release for that user after checking their SHA-256, registers the runner with
+the label `eui-ci` and runs it as a service with `~/.cargo/bin` on its PATH.
+Running it again updates Rust and restarts the service. It
+prints the `gh variable set CI_RUNNER` call at the end; `--help` lists the
+options. The runner needs no inbound ports, so the firewall allows only SSH.
+`--ephemeral` with a fresh VM per job would be safer still. Keep "Require
+approval for all external contributors" under Settings -> Actions -> General.
+
+The caches are shared with GitHub's runners; their keys carry the system
+(`/etc/os-release`) and the architecture, so a binary built on one system is
+never restored on another. They also carry the work directory: LuaRocks'
+scripts start with the absolute path of `lua`, and wow-sim looks for its
+bundled addons in the source directory it was built in. A self-hosted runner
+therefore builds the simulator once per pin itself.
+
 The visual regression tests need a display and stay local. Blizzard's sources,
 the annotations and the GlobalStrings are fetched fresh on every run, so the API
 check reports Blizzard changes there first. `.github/workflows/upstream.yml`
