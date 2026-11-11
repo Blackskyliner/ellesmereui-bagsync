@@ -43,7 +43,7 @@ WOW_UI_SIM_REV=fcb0b7823d2f70ea61d5b2f2d2b69c94b8920157
 # pin. The retail pin stays where it is, because from this revision on the
 # retail profile only accepts Blizzard UI pinned from Blizzard's CDN, while the
 # suite runs the Gethe live tree the API check reads.
-WOW_UI_SIM_FOREVER_REV=c0d7225c59b9aa3ebc95c7576c2a7d6f962d71e1
+WOW_UI_SIM_FOREVER_REV=079afe1f0df7fdea03ec83d6a0775685b9d1fcce
 # The Forever profile reads selected spell data of client build 1.60.1.70685,
 # which wow-cli generates from Blizzard's CDN (wow-ui-sim
 # docs/specs/forever-spell-data.md gives this checksum for it).
