@@ -12,6 +12,18 @@ better, faster or reads better), **Bugfix** (something did not work as intended)
 0.8.5 is the first public release. The versions before it were development
 builds, each tested in the game by the maintainer.
 
+## 0.10.0
+
+- **Bugfix:** On WoW Forever, characters with the same first name, e.g.
+  "Tåsk Force" and "Tåsk Fôrce", no longer share one entry: every character is
+  stored under its GUID, like in EllesmereUI's gold ledger, with its full name.
+  An entry from an older version moves to the GUID when that character logs in.
+  On WoW Forever it is dropped instead, because it may hold data of several
+  characters. The character's data is collected again as you play.
+- **Enhanced:** A renamed character keeps its stored data.
+- **Enhanced:** The public API returns character GUIDs as keys instead of
+  `Name-Realm`. `GetCharacterInfo(key)` returns the name.
+
 ## 0.9.1
 
 - **Bugfix:** The one-time repair of characters stored with 0 gold also finds
