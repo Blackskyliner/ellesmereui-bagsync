@@ -19,6 +19,8 @@
 #   --swap=<size>         swap file for the simulator's Rust build, 0 for none
 #                         (default: 4G; skipped when swap exists)
 #
+# Running it again updates Rust and restarts the service.
+#
 # Afterwards set the repository variable CI_RUNNER to the labels as JSON:
 #   gh variable set CI_RUNNER --body '["self-hosted","linux","eui-ci"]'
 set -euo pipefail
@@ -35,7 +37,7 @@ for arg in "$@"; do
     --name=*) NAME="${arg#*=}" ;;
     --user=*) RUSER="${arg#*=}" ;;
     --swap=*) SWAP="${arg#*=}" ;;
-    -h|--help) sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "unknown option: $arg" >&2; exit 2 ;;
   esac
 done
@@ -119,6 +121,24 @@ else
 fi
 "$DIR/bin/installdependencies.sh" >/dev/null
 
+# Rust for the runner user: setup-tools.sh sets up the simulator only where
+# cargo exists, also when the binary comes from the cache. rustup-init is
+# checked against the SHA-256 that rustup publishes next to it.
+step "Rust (rustup, stable)"
+if [ ! -x "$HOME_DIR/.cargo/bin/cargo" ]; then
+  target="$(uname -m)-unknown-linux-gnu"
+  rtmp="$(mktemp -d)"
+  curl -fsSL -o "$rtmp/rustup-init" "https://static.rust-lang.org/rustup/dist/$target/rustup-init"
+  expected="$(curl -fsSL "https://static.rust-lang.org/rustup/dist/$target/rustup-init.sha256" | cut -d' ' -f1)"
+  echo "$expected  $rtmp/rustup-init" | sha256sum -c - >/dev/null || die "checksum mismatch for rustup-init"
+  chmod 755 "$rtmp/rustup-init"
+  chmod 711 "$rtmp"
+  su - "$RUSER" -c "'$rtmp/rustup-init' -y -q --profile minimal --default-toolchain stable --no-modify-path"
+  rm -rf "$rtmp"
+else
+  su - "$RUSER" -c "$HOME_DIR/.cargo/bin/rustup update stable" | tail -1
+fi
+
 if [ ! -f "$DIR/.runner" ]; then
   step "Register with $REPO"
   if [ -z "${RUNNER_TOKEN:-}" ]; then
@@ -132,11 +152,18 @@ else
   echo "already registered ($DIR/.runner); remove it with ./config.sh remove as $RUSER to register again"
 fi
 
+# The service reads its PATH from .path (written by config.sh); jobs find
+# cargo there without installing it again.
 step "Service"
 cd "$DIR"
+if ! tr ':' '\n' < .path | grep -qx "$HOME_DIR/.cargo/bin"; then
+  printf '%s:%s\n' "$HOME_DIR/.cargo/bin" "$(cat .path)" > .path.new
+  chown "$RUSER:$RUSER" .path.new && mv .path.new .path
+fi
 if ! ./svc.sh status >/dev/null 2>&1 || ./svc.sh status 2>&1 | grep -q 'not installed'; then
   ./svc.sh install "$RUSER"
 fi
+./svc.sh stop >/dev/null 2>&1 || true
 ./svc.sh start
 ./svc.sh status | sed -n '1,5p'
 

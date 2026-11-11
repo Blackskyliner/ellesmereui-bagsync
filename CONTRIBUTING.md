@@ -355,8 +355,10 @@ RUNNER_TOKEN=<token> ./setup-ci-runner.sh
 
 installs the packages, turns on automatic security updates, adds a 4 GB swap
 file for the simulator's Rust build, creates the user `ghrunner` without a
-password or sudo, installs the newest runner release after checking its
-SHA-256, registers it with the label `eui-ci` and runs it as a service. It
+password or sudo, installs Rust (rustup, stable) and the newest runner
+release for that user after checking their SHA-256, registers the runner with
+the label `eui-ci` and runs it as a service with `~/.cargo/bin` on its PATH.
+Running it again updates Rust and restarts the service. It
 prints the `gh variable set CI_RUNNER` call at the end; `--help` lists the
 options. The runner needs no inbound ports, so the firewall allows only SSH.
 `--ephemeral` with a fresh VM per job would be safer still. Keep "Require
