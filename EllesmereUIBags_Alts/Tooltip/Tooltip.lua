@@ -98,7 +98,7 @@ local function BuildLines(itemID, opts)
                     label = format("|c%s%s|r", ClassColorHex(c.class), label),
                     detail = DescribeLocations(byLoc),
                     count = count,
-                    sortKey = (owner == playerKey and "0" or "1") .. owner,
+                    sortKey = (owner == playerKey and "0" or "1") .. (c.name or "") .. "-" .. owner,
                 }
                 total = total + count
             end

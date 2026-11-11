@@ -71,6 +71,10 @@ function Options:Register()
     Checkbox(category, "ui_headerButton", { "ui", "headerButton" }, L["Button in the EllesmereUI bag header"],
         L["Adds a small button next to the item count that opens the browser."])
     Checkbox(category, "ui_useEUICategories", { "ui", "useEUICategories" }, L["Group browser items by EllesmereUI categories"])
+    -- The choices are examples of the format and need no translation.
+    Dropdown(category, "ui_moneyFormat", { "ui", "moneyFormat" }, L["Money display in the browser"], nil, {
+        { "g", "12g" }, { "gs", "12g 34s" }, { "gsc", "12g 34s 56c" },
+    })
 
     layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(L["Data collection"]))
     Checkbox(category, "collect_bags", { "collect", "bags" }, L["Bags"])
@@ -197,7 +201,7 @@ function Options:HandleSlash(msg)
     elseif cmd == "status" then
         PrintStatus()
     elseif cmd == "delete" then
-        local key = ns.FindKnownCharacter(ns.db.chars, ns.NormalizeCharacterName(rest))
+        local key = ns.FindCharacterByName(ns.db.chars, rest)
         if not key then
             ns.Print(L["Unknown character: %s"], rest)
         elseif key == ns.GetPlayerKey() then
@@ -205,7 +209,7 @@ function Options:HandleSlash(msg)
         else
             Ext:Confirm({
                 title = L["Delete data"],
-                message = string.format(L["Delete all stored data of %s?"], key),
+                message = string.format(L["Delete all stored data of %s?"], ns.CharDisplayName(key)),
                 confirmText = L["Delete"],
                 cancelText = CANCEL or "Cancel",
                 onConfirm = function() ns.DeleteChar(key) end,

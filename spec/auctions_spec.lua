@@ -41,7 +41,7 @@ describe("Auction collector", function()
         assert.truthy(a.items[3].e:find("^82800,1,|c"))         -- caged pet as Pet Cage + link
         assert.are.equal(env.__state.now, a.scannedAt)
         ns.Index:EnsureBuilt()
-        assert.are.equal(200, ns.Index:Get(190396)["Alice-Blackhand"].auctions)
+        assert.are.equal(200, ns.Index:Get(190396)["Player-1-Alice"].auctions)
         assert.are.equal(0, ns.Index:GetTotal(2589))
     end)
 
@@ -92,7 +92,7 @@ describe("Auction collector", function()
         assert.are.equal(2, #c.mailIncoming)
         assert.are.equal("190396,200", c.mailIncoming[1].e)
         ns.Index:EnsureBuilt()
-        local byLoc = ns.Index:Get(190396)["Alice-Blackhand"]
+        local byLoc = ns.Index:Get(190396)["Player-1-Alice"]
         assert.are.equal(200, byLoc.mail)
         assert.is_nil(byLoc.auctions)
         local incremental = wow.deepCopy(ns.Index.data)
@@ -106,12 +106,12 @@ describe("Auction collector", function()
         env.FireEvent("OWNED_AUCTIONS_UPDATED")
         local _ = ns
         local env2, ns2 = wow.relog(env, { name = "Bob" }, { now = 1790000000 + 2 * 3600 })
-        local alice = ns2.db.chars["Alice-Blackhand"]
+        local alice = ns2.db.chars["Player-1-Alice"]
         assert.are.equal(1, #alice.auctions.items)             -- only the 48h one survives 2h
         assert.truthy(alice.auctions.items[1].e:find("^230000,"))
         assert.are.equal(2, #alice.mailIncoming)               -- ore (1h) and the pet (1min) came back
         ns2.Index:EnsureBuilt()
-        local byLoc = ns2.Index:Get(190396)["Alice-Blackhand"]
+        local byLoc = ns2.Index:Get(190396)["Player-1-Alice"]
         assert.are.equal(200, byLoc.mail)
         assert.is_nil(byLoc.auctions)
         assert.are.same({}, env2.__errors)
@@ -158,7 +158,7 @@ describe("Auction collector", function()
         local f = env.EllesmereUIBagsAltsBrowser
         assert.are.equal(3, f.grid.used)
         assert.truthy(f.footer.text:find("Auctions scanned", 1, true))
-        ns.Browser:Select("Alice-Blackhand")
+        ns.Browser:Select("Player-1-Alice")
         env.__state.ownedAuctions = {}
         env.FireEvent("OWNED_AUCTIONS_UPDATED")
         env.RunOnUpdates()
@@ -195,7 +195,7 @@ describe("Auction collector", function()
             assert.are.equal(9001, last.id)
             assert.are.equal(env.__state.now + 24 * 3600, last.x)
             ns.Index:EnsureBuilt()
-            assert.are.equal(2, ns.Index:Get(230000)["Alice-Blackhand"].auctions)   -- listed helm + new one
+            assert.are.equal(2, ns.Index:Get(230000)["Player-1-Alice"].auctions)   -- listed helm + new one
         end)
 
         it("appends a posted commodity with its quantity", function()
@@ -206,7 +206,7 @@ describe("Auction collector", function()
             assert.are.equal("2589,150", last.e)
             assert.are.equal(env.__state.now + 12 * 3600, last.x)
             ns.Index:EnsureBuilt()
-            local byLoc = ns.Index:Get(2589)["Alice-Blackhand"]
+            local byLoc = ns.Index:Get(2589)["Player-1-Alice"]
             assert.are.equal(150, byLoc.auctions)
             assert.are.equal(50, byLoc.bags)                   -- bag scan after BAG_UPDATE
         end)
@@ -498,7 +498,7 @@ describe("Auction collector", function()
             assert.are.equal("190396,80", c.mailSold[1].e)
             assert.are.equal(80 * 10000, c.mailSold[1].money)
             ns.Index:EnsureBuilt()
-            assert.are.equal(120, ns.Index:Get(190396)["Alice-Blackhand"].auctions)
+            assert.are.equal(120, ns.Index:Get(190396)["Player-1-Alice"].auctions)
         end)
 
         it("an expiry notification moves the auction into in-transit mail", function()
@@ -580,6 +580,21 @@ describe("Auction collector", function()
             assert.are.equal("12|cffffd700g|r 34|cffc7c7cfs|r", ns.W.FormatMoney(123456))
             assert.are.equal("34|cffc7c7cfs|r 56|cffeda55fc|r", ns.W.FormatMoney(3456))
             assert.are.equal("0|cffeda55fc|r", ns.W.FormatMoney(0))
+            -- balances: the parts the money display option asks for (retail: gold)
+            local ui = ns.db.settings.ui
+            assert.are.equal("g", ui.moneyFormat)
+            assert.are.equal("1,234|cffffd700g|r", ns.W.FormatGold(12345607))
+            assert.are.equal("0|cffffd700g|r", ns.W.FormatGold(4321))
+            ui.moneyFormat = "gs"
+            assert.are.equal("1,234|cffffd700g|r 56|cffc7c7cfs|r", ns.W.FormatGold(12345607))
+            assert.are.equal("43|cffc7c7cfs|r", ns.W.FormatGold(4321))
+            assert.are.equal("0|cffc7c7cfs|r", ns.W.FormatGold(99))
+            ui.moneyFormat = "gsc"
+            assert.are.equal("1,234|cffffd700g|r 56|cffc7c7cfs|r 7|cffeda55fc|r", ns.W.FormatGold(12345607))
+            assert.are.equal("12|cffffd700g|r 7|cffeda55fc|r", ns.W.FormatGold(120007))
+            assert.are.equal("43|cffc7c7cfs|r 21|cffeda55fc|r", ns.W.FormatGold(4321))
+            assert.are.equal("0|cffeda55fc|r", ns.W.FormatGold(0))
+            assert.are.equal("-", ns.W.FormatGold(nil))
         end)
     end)
 end)

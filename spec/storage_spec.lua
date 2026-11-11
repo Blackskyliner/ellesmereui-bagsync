@@ -40,7 +40,7 @@ end)
 describe("Conversion of stored data (0.7.x and older)", function()
     local function oldSV()
         return { schema = 1, chars = {
-            ["Bob-Blackhand"] = { name = "Bob", realm = "Blackhand",
+            ["Player-1-Bob"] = { name = "Bob", realm = "Blackhand",
                 bags = { [0] = { size = 20, items = { [1] = "6948,1", [4] = "230000,1,!" .. HELM_LINK, [5] = 12, [6] = "junk" } } },
                 bank = { [6] = { size = 98, items = { [10] = "2589,200" } } },
                 equipped = { size = 19, items = { [16] = "19019,1," .. wow.itemLink(19019, "item:19019:6226:::::::80:::::") } },
@@ -53,9 +53,9 @@ describe("Conversion of stored data (0.7.x and older)", function()
 
     it("packs old containers and shortens their links on activation, not at login", function()
         local env, ns = wow.boot(wow.defaultState(), oldSV(), { inactive = true })
-        assert.is_table(ns.db.chars["Bob-Blackhand"].bags[0].items)  -- untouched until first use
+        assert.is_table(ns.db.chars["Player-1-Bob"].bags[0].items)  -- untouched until first use
         env.OpenBags()
-        local bob = ns.db.chars["Bob-Blackhand"]
+        local bob = ns.db.chars["Player-1-Bob"]
         assert.are.equal("1:6948,1;4:230000,1,!" .. HELM_CORE, bob.bags[0].items)   -- junk dropped
         assert.are.equal("10:2589,200", bob.bank[6].items)
         assert.are.equal("16:19019,1,item:19019:6226:::::::80:::::", bob.equipped.items)
@@ -72,10 +72,10 @@ describe("Conversion of stored data (0.7.x and older)", function()
     it("is idempotent and repairs a malformed packed string", function()
         local env = wow.boot(wow.defaultState(), oldSV())
         local sv = wow.logout(env)
-        local before = sv.chars["Bob-Blackhand"].bags[0].items
-        sv.chars["Bob-Blackhand"].bank[6].items = "10:2589,200;x:bad;11:nonsense;12:2592,3"
+        local before = sv.chars["Player-1-Bob"].bags[0].items
+        sv.chars["Player-1-Bob"].bank[6].items = "10:2589,200;x:bad;11:nonsense;12:2592,3"
         local _, ns2 = wow.boot(wow.defaultState(), sv)
-        local bob = ns2.db.chars["Bob-Blackhand"]
+        local bob = ns2.db.chars["Player-1-Bob"]
         assert.are.equal(before, bob.bags[0].items)
         assert.are.equal("10:2589,200;12:2592,3", bob.bank[6].items)
     end)

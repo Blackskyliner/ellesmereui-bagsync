@@ -130,7 +130,7 @@ describe("Self-test", function()
         wow.putItem(s, 0, 1, 2589, 20)
         local env, ns = wow.boot(s)
         ns.Index:EnsureBuilt()
-        ns.Index.data[2589]["Alice-Blackhand"].bags = 999        -- simulate drift
+        ns.Index.data[2589]["Player-1-Alice"].bags = 999        -- simulate drift
         wow.setItem(ns.GetPlayerChar().bags[0], 1, "2589,19")     -- stored differs from game
         local ok, report = ns.RunSelfTest(false)
         assert.is_false(ok)

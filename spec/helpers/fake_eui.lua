@@ -44,6 +44,11 @@ function M.install(env, opts)
         if not EUI.IS_FOREVER then return env.GetRealmName() end
         return env.__state.player.ruleset
     end
+    -- EllesmereUI_UICore.lua: "First Last" on Forever, the name elsewhere.
+    function EUI.WithSurname(name, surname)
+        if not EUI.IS_FOREVER or type(surname) ~= "string" or surname == "" then return name end
+        return name .. " " .. surname
+    end
     function EUI:ShowConfirmPopup(o) table.insert(rec.popups, o) end
     EUI._ModuleNS["EllesmereUIBags"] = {
         SkinItemButton = function(btn, o) rec.skinned[btn] = o; return {} end,
