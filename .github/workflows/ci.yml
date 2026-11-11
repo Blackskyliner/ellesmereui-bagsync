@@ -99,6 +99,10 @@ jobs:
           # cache keys must not contain commas
           echo "features=$(sed -n "s/^ *${prefix}SIM_FEATURES=//p" scripts/setup-tools.sh | tr , +)" >> "$GITHUB_OUTPUT"
           echo "spells=$(sed -n 's/^FOREVER_SPELLS_SHA256=//p' scripts/setup-tools.sh)" >> "$GITHUB_OUTPUT"
+          # the patch set setup-tools.sh applies on top of the pin (patches_id)
+          if ls scripts/patches/"$dir"/*.patch >/dev/null 2>&1; then
+            echo "patches=-patches$(cat scripts/patches/"$dir"/*.patch | sha256sum | cut -c1-12)" >> "$GITHUB_OUTPUT"
+          fi
           # wow-sim links the system's ICU by its versioned soname; a runner
           # image with another ICU cannot load a binary built on the old one.
           echo "icu=$(pkg-config --modversion icu-i18n)" >> "$GITHUB_OUTPUT"
@@ -113,10 +117,10 @@ jobs:
             .tools/rocks
           key: lua-${{ runner.os }}-${{ hashFiles('scripts/setup-tools.sh') }}
 
-      # Only the finished binary (about 80 MB) and the revision and features it
-      # was built from: with both setup-tools.sh skips the Rust build; the sources are
-      # fetched again at the pinned revision. A new pin builds once (about ten
-      # minutes) and is cached from then on.
+      # Only the finished binary (about 80 MB) and the revision, patch set and
+      # features it was built from: with both setup-tools.sh skips the Rust build;
+      # the sources are fetched again at the pinned revision. A new pin or patch
+      # set builds once (about ten minutes) and is cached from then on.
       - name: Cache simulator binary
         if: steps.scope.outputs.run == 'true'
         id: sim-cache
@@ -125,7 +129,7 @@ jobs:
           path: |
             .tools/vendor/${{ steps.pins.outputs.dir }}/target/release/wow-sim
             .tools/vendor/${{ steps.pins.outputs.dir }}/target/release/wow-sim.rev
-          key: wow-sim-${{ runner.os }}-icu${{ steps.pins.outputs.icu }}-${{ steps.pins.outputs.sim }}-${{ steps.pins.outputs.features }}-headless
+          key: wow-sim-${{ runner.os }}-icu${{ steps.pins.outputs.icu }}-${{ steps.pins.outputs.sim }}${{ steps.pins.outputs.patches }}-${{ steps.pins.outputs.features }}-headless
 
       # Forever's simulator reads spell data that wow-cli generates from
       # Blizzard's CDN; setup-tools.sh checks it against its pinned checksum.

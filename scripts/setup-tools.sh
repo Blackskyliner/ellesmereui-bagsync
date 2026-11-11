@@ -44,6 +44,11 @@ WOW_UI_SIM_REV=fcb0b7823d2f70ea61d5b2f2d2b69c94b8920157
 # retail profile only accepts Blizzard UI pinned from Blizzard's CDN, while the
 # suite runs the Gethe live tree the API check reads.
 WOW_UI_SIM_FOREVER_REV=079afe1f0df7fdea03ec83d6a0775685b9d1fcce
+# Fixes the suite needs before upstream has them: scripts/patches/<checkout>/
+# holds them as git patches, each naming its upstream pull request, applied on
+# top of the pin. 0001: a protected-descendant check that scanned every widget
+# per level made insecure frame calls in combat take minutes
+# (https://github.com/Osso/wow-ui-sim/pull/53).
 # The Forever profile reads selected spell data of client build 1.60.1.70685,
 # which wow-cli generates from Blizzard's CDN (wow-ui-sim
 # docs/specs/forever-spell-data.md gives this checksum for it).
@@ -105,7 +110,29 @@ pinned() {
   [ -d "$dir" ] && [ "$(git -C "$dir" rev-parse HEAD 2>/dev/null)" = "$3" ] && return 0
   [ -d "$dir/.git" ] || git init -q "$dir"
   git -C "$dir" fetch -q --depth 1 "$1" "$3"
-  git -C "$dir" -c advice.detachedHead=false checkout -q FETCH_HEAD
+  # -f: patches applied to the old pin (patched below) must not block the move.
+  git -C "$dir" -c advice.detachedHead=false checkout -q -f FETCH_HEAD
+}
+# patches_id <checkout>: identifies the patch set of scripts/patches/<checkout>
+# (empty without patches), for the build stamp and the CI cache key.
+patches_id() {
+  local p="$ROOT/scripts/patches/$1"
+  ls "$p"/*.patch >/dev/null 2>&1 || return 0
+  cat "$p"/*.patch | if command -v sha256sum >/dev/null 2>&1; then sha256sum; else shasum -a 256; fi | cut -c1-12
+}
+# patched <checkout>: applies scripts/patches/<checkout>/*.patch in name order
+# to the pinned commit; a checkout already carrying this set is left as it is,
+# so its sources keep their timestamps.
+patched() {
+  local dir="$T/vendor/$1" id want have
+  id="$(patches_id "$1")"
+  [ -n "$id" ] || return 0
+  want="$(git -C "$dir" rev-parse HEAD) $id"
+  have="$(cat "$dir/.git/eui-patches" 2>/dev/null || true)"
+  [ "$have" = "$want" ] && return 0
+  git -C "$dir" checkout -q -f HEAD
+  git -C "$dir" apply "$ROOT"/scripts/patches/"$1"/*.patch
+  echo "$want" > "$dir/.git/eui-patches"
 }
 follow https://github.com/Gethe/wow-ui-source.git wow-ui-source live
 follow https://github.com/Gethe/wow-ui-source.git wow-ui-source-forever forever
@@ -113,7 +140,10 @@ follow https://github.com/Ketho/vscode-wow-api.git vscode-wow-api
 pinned https://github.com/EllesmereGaming/EllesmereUI.git EllesmereUI "$ELLESMEREUI_REV"
 if [ "$SIM" = 1 ]; then
   if wants retail; then pinned https://github.com/Osso/wow-ui-sim.git wow-ui-sim "$WOW_UI_SIM_REV"; fi
-  if wants forever; then pinned https://github.com/Osso/wow-ui-sim.git wow-ui-sim-forever "$WOW_UI_SIM_FOREVER_REV"; fi
+  if wants forever; then
+    pinned https://github.com/Osso/wow-ui-sim.git wow-ui-sim-forever "$WOW_UI_SIM_FOREVER_REV"
+    patched wow-ui-sim-forever
+  fi
 fi
 
 # Blizzard's own strings per client locale: the reference for game terms in our translations
@@ -130,13 +160,14 @@ if [ "$SIM" = 0 ]; then
 elif command -v cargo >/dev/null 2>&1; then
   # sim_build <checkout> <revision> <target dir> <features> [binary]: builds
   # the binary (default wow-sim) unless the one there was built from that
-  # revision with these features against the ICU installed now (<binary>.rev):
-  # it links ICU's versioned libraries, so an ICU update (Homebrew, a new runner
-  # image) leaves it unable to start. The stamp lets CI restore only the binary
-  # from its cache and skip the Rust build.
+  # revision and patch set with these features against the ICU installed now
+  # (<binary>.rev): it links ICU's versioned libraries, so an ICU update
+  # (Homebrew, a new runner image) leaves it unable to start. The stamp lets CI
+  # restore only the binary from its cache and skip the Rust build.
   sim_build() {
-    local sim="$T/vendor/$1" bin="${5:-wow-sim}" stamp
-    stamp="$2 $4 icu-$(pkg-config --modversion icu-i18n 2>/dev/null)"
+    local sim="$T/vendor/$1" bin="${5:-wow-sim}" stamp patches
+    patches="$(patches_id "$1")"
+    stamp="$2 $4 icu-$(pkg-config --modversion icu-i18n 2>/dev/null)${patches:+ patches-$patches}"
     [ -x "$sim/$3/release/$bin" ] && [ "$(cat "$sim/$3/release/$bin.rev" 2>/dev/null)" = "$stamp" ] && return 0
     (cd "$sim" && CARGO_HOME="$T/cargo" CARGO_TARGET_DIR="$sim/$3" cargo build --release --locked --bin "$bin" \
       --no-default-features --features "$4")

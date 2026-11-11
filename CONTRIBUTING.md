@@ -188,6 +188,10 @@ Blizzard UI pinned from Blizzard's CDN), so a push is judged by its
 own changes; `ELLESMEREUI_REV=latest scripts/setup-tools.sh` (in a fresh `.tools`)
 tests the newest EllesmereUI. Move a pin deliberately: change the revision, rerun
 the script (it moves the checkout) and run the whole suite, visual tests included.
+A simulator fix the suite needs before upstream merges it goes into
+`scripts/patches/<checkout>/` as a git patch naming its upstream pull request;
+the script applies it on top of the pin and rebuilds when the patch set
+changes. Once a pin contains the fix, the patch goes.
 The other sources follow their upstream branch, on every run of the script. As
 Blizzard's UI comes from the live branch, wow-ui-sim is built for the API of the
 live client (`SIM_FEATURES`, e.g. `retail-12-1-5`): when a patch goes live and
