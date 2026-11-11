@@ -10,9 +10,18 @@ describe("Keys", function()
     local ns
     before_each(function() local _; _, ns = bootWith() end)
 
-    it("builds the character key from name and normalized realm", function()
-        assert.are.equal("Alice-Blackhand", ns.GetPlayerKey())
+    it("keys the character by its GUID; the old key is name and normalized realm", function()
+        assert.are.equal("Player-1-Alice", ns.GetPlayerKey())
+        assert.are.equal("Alice-Blackhand", ns.GetLegacyPlayerKey())
+        assert.is_true(ns.IsGUIDKey(ns.GetPlayerKey()))
+        assert.is_false(ns.IsGUIDKey("Alice-Blackhand"))
         assert.are.same({ "Alice", "Blackhand" }, { ns.SplitKey("Alice-Blackhand") })
+        assert.are.same({ "Knights", "Azjol-Nerub" }, { ns.SplitKey("Knights-Azjol-Nerub") })
+    end)
+
+    it("has no key before the client knows the GUID", function()
+        local _, ns2 = bootWith(function(s) s.player.guid = false end)
+        assert.is_nil(ns2.GetPlayerKey())
     end)
 
     it("encodes plain items without their link", function()
@@ -46,18 +55,47 @@ describe("Keys", function()
         assert.is_nil(ns.DecodeItem(12))
     end)
 
-    it("normalizes typed recipient names", function()
-        assert.are.equal("Bob-Blackhand", ns.NormalizeCharacterName("bob"))
-        assert.are.equal("Bob-MalGanis", ns.NormalizeCharacterName(" Bob-Mal'Ganis "))
-        assert.are.equal("Bob-Area52", ns.NormalizeCharacterName("BOB-Area 52"))
-        assert.is_nil(ns.NormalizeCharacterName(""))
-        assert.is_nil(ns.NormalizeCharacterName(nil))
+    it("finds known characters by typed name, realm and case-insensitively", function()
+        local chars = {
+            ["Player-1-Bob"] = { name = "Bob", realm = "Blackhand" },
+            ["Player-2-Bob"] = { name = "Bob", realm = "MalGanis" },
+            ["Player-3-Zed"] = { name = "Zed", realm = "Area52" },
+        }
+        assert.are.equal("Player-1-Bob", ns.FindCharacterByName(chars, "bob"))
+        assert.are.equal("Player-1-Bob", ns.FindCharacterByName(chars, "BOB-Blackhand"))
+        assert.are.equal("Player-2-Bob", ns.FindCharacterByName(chars, " Bob-Mal'Ganis "))
+        assert.are.equal("Player-3-Zed", ns.FindCharacterByName(chars, "zed-Area 52"))
+        assert.is_nil(ns.FindCharacterByName(chars, "Carl"))
+        assert.is_nil(ns.FindCharacterByName(chars, "Zed"))   -- other realm
+        assert.is_nil(ns.FindCharacterByName(chars, ""))
+        assert.is_nil(ns.FindCharacterByName(chars, nil))
     end)
 
-    it("finds known characters case-insensitively", function()
-        local chars = { ["Bob-Blackhand"] = {} }
-        assert.are.equal("Bob-Blackhand", ns.FindKnownCharacter(chars, "bob-blackhand"))
-        assert.is_nil(ns.FindKnownCharacter(chars, "Carl-Blackhand"))
+    it("prefers the GUID-keyed record over one still under its old key", function()
+        local chars = {
+            ["Bob-Blackhand"] = { name = "Bob", realm = "Blackhand" },
+            ["Player-1-Bob"] = { name = "Bob", realm = "Blackhand" },
+        }
+        assert.are.equal("Player-1-Bob", ns.FindCharacterByName(chars, "Bob"))
+    end)
+
+    it("moves a record of an older version to the GUID when its character logs in", function()
+        local sv = { schema = 1, chars = {
+            ["Alice-Blackhand"] = { name = "Alice", realm = "Blackhand", money = 7,
+                                    bank = { [6] = { size = 1, items = "1:2589,20" } } },
+            ["Bob-Blackhand"] = { name = "Bob", realm = "Blackhand", money = 9 },
+        } }
+        local env, ns2 = wow.boot(wow.defaultState(), sv)
+        env.EllesmereUIBagsAlts.GetCharacters()   -- activates
+        assert.is_nil(ns2.db.chars["Alice-Blackhand"])
+        local c = ns2.db.chars["Player-1-Alice"]
+        assert.are.equal("Alice", c.name)
+        assert.are.equal(20, wow.items(c.bank[6]) and (env.EllesmereUIBagsAlts.GetItemCount(2589)))
+        -- Bob has not logged in since: his record keeps its old key and still counts
+        assert.are.equal("Bob", ns2.db.chars["Bob-Blackhand"].name)
+        assert.are.equal("Bob-Blackhand", ns2.CharDisplayName("Bob-Blackhand"))
+        assert.are.equal("Bob-Blackhand", ns2.FindCharacterByName(ns2.db.chars, "bob"))
+        assert.are.same({}, env.__errors)
     end)
 
     it("scopes realms: realm, connected, all", function()

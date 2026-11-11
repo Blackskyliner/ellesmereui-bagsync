@@ -22,6 +22,14 @@ Compat.IS_FOREVER = type(EUI) == "table" and EUI.IS_FOREVER == true
 -- Forever has no warband: no account bank, no warband gold.
 Compat.HAS_WARBAND_BANK = not Compat.IS_FOREVER
 
+-- How the browser shows balances by default (setting ui.moneyFormat): whole
+-- gold on retail; on Forever silver and copper too, because a character there
+-- takes long to reach its first gold.
+Compat.DEFAULT_MONEY_FORMAT = Compat.IS_FOREVER and "gsc" or "g"
+
+-- Forever characters with the same first name differ only by surname.
+Compat.UNIQUE_FIRST_NAMES = not Compat.IS_FOREVER
+
 -- Forever has no pet battles; its BattlePetTooltipTemplate (Camelot variant)
 -- lacks the battle stats and the Owned line the private pet tooltip fills.
 Compat.HAS_PET_BATTLES = not Compat.IS_FOREVER
@@ -42,7 +50,7 @@ end
 
 -- Realm part of a character key: GetNormalizedRealmName() on retail, the
 -- realm group without spaces, hyphens and apostrophes on Forever (the same
--- normalization ns.NormalizeCharacterName applies to typed names).
+-- normalization ns.FindCharacterByName applies to typed names).
 function Compat.RealmKey()
     if not Compat.IS_FOREVER then return GetNormalizedRealmName() end
     local group = Compat.RealmGroupName()
@@ -55,6 +63,21 @@ end
 function Compat.GuildRealmKey(guildRealm)
     if Compat.IS_FOREVER or not guildRealm or guildRealm == "" then return nil end
     return (strgsub(guildRealm, "[%s%-']", ""))
+end
+
+-------------------------------------------------------------------------------
+--  Names
+--  A Forever character carries a surname, which UnitName returns as its
+--  second value (retail: the realm). Its first name alone is not unique, so
+--  the stored name is "First Last", joined like Blizzard's frames and
+--  EllesmereUI's gold ledger do (EllesmereUI.WithSurname).
+-------------------------------------------------------------------------------
+-- The current character's full name, whatever the show-surname preference.
+function Compat.PlayerFullName()
+    if not Compat.IS_FOREVER then return UnitName("player") end
+    local name, surname = (UnitNameUnmodified or UnitName)("player")
+    if type(EUI.WithSurname) == "function" then return EUI.WithSurname(name, surname, true) end
+    return name
 end
 
 -------------------------------------------------------------------------------

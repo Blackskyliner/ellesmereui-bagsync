@@ -285,12 +285,13 @@ end
 local function CreateSidebarRow(parent)
     local b = CreateFrame("Button", nil, parent)
     b:SetHeight(ROW_H)
-    b.left = W.Text(b, 12)
-    b.left:SetPoint("LEFT", 6, 0)
-    b.left:SetPoint("RIGHT", -70, 0)
+    -- The balance keeps its full width; the name ends where it starts.
     b.right = W.Text(b, 11, nil, 0.8, 0.8, 0.8)
     b.right:SetPoint("RIGHT", -6, 0)
     b.right:SetJustifyH("RIGHT")
+    b.left = W.Text(b, 12)
+    b.left:SetPoint("LEFT", 6, 0)
+    b.left:SetPoint("RIGHT", b.right, "LEFT", -6, 0)
     b.sel = b:CreateTexture(nil, "BACKGROUND")
     b.sel:SetAllPoints()
     b.sel:SetColorTexture(1, 1, 1, 0.10)
@@ -1016,7 +1017,7 @@ function Browser:ConfirmDelete()
     local owner = state.owner
     if not owner or owner == ns.GetPlayerKey() or owner == ns.WARBAND_OWNER or AggregateScope(owner) then return end
     local isGuild = owner:sub(1, 1) == "@"
-    local label = isGuild and ((ns.db.guilds[owner:sub(2)] or {}).name or owner:sub(2)) or owner
+    local label = isGuild and ((ns.db.guilds[owner:sub(2)] or {}).name or owner:sub(2)) or ns.CharDisplayName(owner)
     Ext:Confirm({
         title = L["Delete data"],
         message = string.format(L["Delete all stored data of %s?"], label),

@@ -34,7 +34,7 @@ files["EllesmereUIBags_Alts/**/*.lua"] = {
         "C_AddOns", "C_Container", "C_PlayerInteractionManager", "C_Bank", "C_Item", "C_AuctionHouse", "C_EquipmentSet",
         "ItemLocation", "EquipmentManager_GetLocationData", "ITEM_SOULBOUND", "ITEM_ACCOUNTBOUND", "C_CurrencyInfo", "C_AutoComplete", "C_ClassColor",
         -- Character / world
-        "UnitName", "UnitClass", "UnitRace", "UnitFactionGroup", "UnitLevel", "GetRealmName",
+        "UnitName", "UnitGUID", "UnitNameUnmodified", "UnitClass", "UnitRace", "UnitFactionGroup", "UnitLevel", "GetRealmName",
         "GetNormalizedRealmName", "GetMoney", "IsInGuild", "GetGuildInfo",
         "GetInventoryItemLink", "GetInventoryItemID", "INVSLOT_FIRST_EQUIPPED", "INVSLOT_LAST_EQUIPPED",
         -- WoW Forever (only through Core/ClientCompat.lua)

@@ -3,10 +3,15 @@
 --  Identity helpers (character / guild keys, realm scope) and the compact item
 --  encoding used in the saved variables.
 --
---  Character key: "Name-NormalizedRealm" (the same shape the client uses for
---  cross-realm names, e.g. mail recipients), never cached before the client
---  can answer (UnitName/GetNormalizedRealmName may be nil very early). On WoW
---  Forever the realm part is the realm group (ns.Compat.RealmKey).
+--  Character key: the character's GUID ("Player-<server>-<id>"), like
+--  EllesmereUI's gold ledger. A name is no key: on WoW Forever characters
+--  with the same first name differ only by surname, and a GUID survives a
+--  rename. The record carries name and realm (Collect/Character.lua); the
+--  realm part is GetNormalizedRealmName(), on WoW Forever the realm group
+--  (ns.Compat.RealmKey). Records of versions before 0.10.0 are keyed
+--  "FirstName-Realm" until that character logs in (ns.AdoptLegacyChar).
+--  Nothing is cached before the client can answer (UnitGUID/UnitName may be
+--  nil very early).
 --
 --  Item encoding: one string per stack.
 --      "<itemID>,<count>"            plain items (the vast majority)
@@ -34,7 +39,7 @@ local strmatch, strfind, strlower, strgsub, tonumber, tostring =
 -------------------------------------------------------------------------------
 --  Character / realm
 -------------------------------------------------------------------------------
-local playerKey, playerRealm
+local playerKey, playerRealm, playerName
 
 function ns.GetPlayerRealm()
     if playerRealm then return playerRealm end
@@ -43,49 +48,79 @@ function ns.GetPlayerRealm()
     return playerRealm
 end
 
+-- Full name: "First Last" on WoW Forever, the name elsewhere.
+function ns.GetPlayerName()
+    if playerName then return playerName end
+    local name = ns.Compat.PlayerFullName()
+    if type(name) == "string" and not ns.IsSecret(name) and name ~= "" then playerName = name end
+    return playerName
+end
+
+-- nil until GUID, name and realm are known: a record needs all three.
 function ns.GetPlayerKey()
     if playerKey then return playerKey end
-    local name = UnitName("player")
-    local realm = ns.GetPlayerRealm()
-    if not name or name == "" or not realm then return nil end
-    playerKey = name .. "-" .. realm
+    local guid = UnitGUID("player")
+    if type(guid) ~= "string" or ns.IsSecret(guid) or guid == "" then return nil end
+    if not ns.GetPlayerName() or not ns.GetPlayerRealm() then return nil end
+    playerKey = guid
     return playerKey
+end
+
+-- The key versions before 0.10.0 filed this character under.
+function ns.GetLegacyPlayerKey()
+    local first = UnitName("player")
+    local realm = ns.GetPlayerRealm()
+    if type(first) ~= "string" or ns.IsSecret(first) or first == "" or not realm then return nil end
+    return first .. "-" .. realm
+end
+
+function ns.IsGUIDKey(key)
+    return type(key) == "string" and strfind(key, "^Player%-") ~= nil
 end
 
 -- Test hook: forget the cached identity (tests switch characters).
 function ns.ResetIdentityCache()
-    playerKey, playerRealm = nil, nil
+    playerKey, playerRealm, playerName = nil, nil, nil
 end
 
+-- "Name-Realm" -> "Name", "Realm" (guild keys, records of older versions).
+-- Names hold no hyphen, realms can.
 function ns.SplitKey(key)
-    local name, realm = strmatch(key or "", "^(.-)%-(.+)$")
+    local name, realm = strmatch(key or "", "^([^%-]+)%-(.+)$")
     return name or key, realm
 end
 
--- "bob", "Bob-Other Realm" -> "Bob-OtherRealm" (normalized, current realm default)
-function ns.NormalizeCharacterName(input)
-    if type(input) ~= "string" then return nil end
-    input = strgsub(input, "^%s+", "")
-    input = strgsub(input, "%s+$", "")
-    if input == "" then return nil end
-    local name, realm = strmatch(input, "^(.-)%-(.+)$")
-    if not name then name, realm = input, ns.GetPlayerRealm() end
-    if not realm or name == "" then return nil end
-    realm = strgsub(realm, "[%s%-']", "")
-    -- WoW names are stored capitalized; keep the rest as typed (UTF-8 safe for
-    -- ASCII initials, non-ASCII initials are matched case-sensitively).
-    name = name:sub(1, 1):upper() .. name:sub(2):lower()
-    return name .. "-" .. realm
+local function Trim(s)
+    return (strgsub(strgsub(s, "^%s+", ""), "%s+$", ""))
 end
 
--- Case-insensitive lookup of a known character key.
-function ns.FindKnownCharacter(chars, key)
-    if not key or not chars then return nil end
-    if chars[key] then return key end
-    local lk = strlower(key)
-    for k in pairs(chars) do
-        if strlower(k) == lk then return k end
+-- Typed character name -> key of a known character, or nil. Takes "name"
+-- (current realm) and "name-realm", ignoring case and the spaces, hyphens and
+-- apostrophes of the realm. The full name matches (on WoW Forever
+-- "First Last"); a first name alone only when one character on that realm
+-- has it. Of two records with the same name (one not yet moved to its GUID)
+-- the GUID-keyed one wins.
+function ns.FindCharacterByName(chars, input)
+    if type(input) ~= "string" or type(chars) ~= "table" then return nil end
+    input = Trim(input)
+    if input == "" then return nil end
+    local name, realm = strmatch(input, "^([^%-]+)%-(.+)$")
+    if not name then name, realm = input, ns.GetPlayerRealm() end
+    if not realm then return nil end
+    name, realm = strlower(Trim(name)), strlower(strgsub(realm, "[%s%-']", ""))
+    local exact, byFirst, firstCount = nil, nil, 0
+    for key, c in pairs(chars) do
+        if type(c) == "table" and type(c.name) == "string" and type(c.realm) == "string"
+            and strlower(c.realm) == realm then
+            if strlower(c.name) == name then
+                if not exact or ns.IsGUIDKey(key) then exact = key end
+            elseif type(c.firstName) == "string" and strlower(c.firstName) == name then
+                byFirst, firstCount = key, firstCount + 1
+            end
+        end
     end
+    if exact then return exact end
+    if firstCount == 1 then return byFirst end
     return nil
 end
 

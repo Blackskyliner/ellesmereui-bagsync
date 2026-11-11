@@ -8,7 +8,7 @@
 --  Layout
 --    schema   = <number>
 --    settings = { collect = {...}, tooltip = {...}, ui = {...}, firstRunAsked }
---    chars    = { ["Name-Realm"] = CharRecord }
+--    chars    = { [guid] = CharRecord }   (versions before 0.10.0: "FirstName-Realm", see ns.AdoptLegacyChar)
 --    warband  = { money, moneyAt, bank = Container, bankAt }
 --    guilds   = { ["Guild-Realm"] = { name, realm, faction, money, scannedAt, tabs = { [tab] = Container } } }
 --    currencyMeta = { [currencyID] = { t = transferable, w = warbandWide } }
@@ -16,7 +16,7 @@
 --
 --  Container = { size = n, name = str?, icon = fileID?, items = "slot:enc;..." (packed, Keys.lua),
 --                sets = { [slot] = "Set A, Set B" }? }   -- equipment sets (bags, worn)
---  CharRecord = { name, realm, realmName, class, race, faction, level, guild,
+--  CharRecord = { name (full name), firstName, realm (key form), realmName, class, race, faction, level, guild,
 --                 money, lastSeen, bags = {[bagID]=Container}, bank = {[tabID]=Container},
 --                 bankAt, equipped = Container, mail = { items = { {e=enc, x=expires} } },
 --                 mailAt, mailIncoming = { {e=enc, x=expires, from=key} }, currency = {[id]=qty},
@@ -59,6 +59,7 @@ ns.DEFAULTS = {
             headerButton     = false,
             useEUICategories = false,
             browserScale     = 1,
+            moneyFormat      = ns.Compat.DEFAULT_MONEY_FORMAT,   -- "g" | "gs" | "gsc": parts of a balance in the browser
         },
         firstRunAsked = false,
         debug = false,   -- /alts debug: chat diagnostics
@@ -173,7 +174,7 @@ local function SanitizeChar(key, c)
     if type(c.auctions) ~= "table" then c.auctions = {} end
     c.auctions.items = SanitizeMailList(c.auctions.items)
     if type(c.currency) ~= "table" then c.currency = {} end
-    if not c.name then c.name, c.realm = ns.SplitKey(key) end
+    if not c.name and not ns.IsGUIDKey(key) then c.name, c.realm = ns.SplitKey(key) end
     return c
 end
 
@@ -240,8 +241,32 @@ function ns.GetChar(key, create)
     return c
 end
 
+-- Versions before 0.10.0 keyed a character "FirstName-Realm". When that
+-- character is the current one, its record leaves that key: it moves to the
+-- GUID key (unless a record is there already) where first names are unique,
+-- and is dropped where they are not (WoW Forever), because characters sharing
+-- a first name shared the record and its bank, mail and auction data may
+-- belong to another of them. -> true when a record left the old key.
+function ns.AdoptLegacyChar()
+    local chars = ns.db and ns.db.chars
+    local key, legacy = ns.GetPlayerKey(), ns.GetLegacyPlayerKey()
+    if not chars or not key or not legacy or chars[legacy] == nil then return false end
+    local old = chars[legacy]
+    chars[legacy] = nil
+    if ns.Compat.UNIQUE_FIRST_NAMES and chars[key] == nil then chars[key] = old end
+    if ns.Index then ns.Index:Invalidate() end
+    return true
+end
+
 function ns.GetPlayerChar(create)
     return ns.GetChar(ns.GetPlayerKey(), create)
+end
+
+-- "Name-Realm" of a stored character, for messages; the key when it has no name.
+function ns.CharDisplayName(key)
+    local c = ns.db and ns.db.chars[key]
+    if type(c) ~= "table" or not c.name then return key end
+    return c.realm and (c.name .. "-" .. c.realm) or c.name
 end
 
 function ns.GetGuild(key, create)

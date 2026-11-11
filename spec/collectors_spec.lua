@@ -174,7 +174,7 @@ describe("Bank collector", function()
         closeBank()
         local env2, ns2 = wow.relog(env, { name = "Bob", class = "WARRIOR" })
         assert.are.equal("190396,1000", wow.items(ns2.db.warband.bank[12])[5])
-        assert.are.equal("2589,200", wow.items(ns2.db.chars["Alice-Blackhand"].bank[7])[10])
+        assert.are.equal("2589,200", wow.items(ns2.db.chars["Player-1-Alice"].bank[7])[10])
         assert.are.same({}, env2.__errors)
     end)
 end)
@@ -217,10 +217,10 @@ describe("Mail collector", function()
         env3.FireEvent("MAIL_SHOW")
         env3.SendMail("bob", "mats", "")
         env3.FireEvent("MAIL_SEND_SUCCESS")
-        local incoming = ns3.db.chars["Bob-Blackhand"].mailIncoming
+        local incoming = ns3.db.chars["Player-1-Bob"].mailIncoming
         assert.are.equal(2, #incoming)
         assert.are.equal("190396,200", incoming[1].e)
-        assert.are.equal("Alice-Blackhand", incoming[1].from)
+        assert.are.equal("Player-1-Alice", incoming[1].from)
         ns3.Index:EnsureBuilt()
         assert.are.equal(200, ns3.Index:GetTotal(190396))
 
@@ -299,20 +299,20 @@ describe("Character, equipment and currency", function()
         env.__state.money = 7
         env.FireEvent("PLAYER_MONEY")
         local sv = wow.logout(env)                      -- GetMoney() reports 0 during logout
-        assert.are.equal(7, sv.chars["Alice-Blackhand"].money)
-        assert.are.equal(env.__state.now, sv.chars["Alice-Blackhand"].lastSeen)
+        assert.are.equal(7, sv.chars["Player-1-Alice"].money)
+        assert.are.equal(env.__state.now, sv.chars["Player-1-Alice"].lastSeen)
     end)
 
     it("keeps every character's gold across character switches (regression)", function()
         local env = wow.boot(wow.defaultState({ money = 1000000 }))
         local env2 = wow.relog(env, { name = "Bob" }, { money = 2500000 })
         local env3, ns3 = wow.relog(env2, { name = "Carl" }, { money = 42 })
-        assert.are.equal(1000000, ns3.db.chars["Alice-Blackhand"].money)
-        assert.are.equal(2500000, ns3.db.chars["Bob-Blackhand"].money)
-        assert.are.equal(42, ns3.db.chars["Carl-Blackhand"].money)
+        assert.are.equal(1000000, ns3.db.chars["Player-1-Alice"].money)
+        assert.are.equal(2500000, ns3.db.chars["Player-1-Bob"].money)
+        assert.are.equal(42, ns3.db.chars["Player-1-Carl"].money)
         local _, ns4 = wow.relog(env3, { name = "Alice" }, { money = 1000000 })
-        assert.are.equal(2500000, ns4.db.chars["Bob-Blackhand"].money)
-        assert.are.equal(42, ns4.db.chars["Carl-Blackhand"].money)
+        assert.are.equal(2500000, ns4.db.chars["Player-1-Bob"].money)
+        assert.are.equal(42, ns4.db.chars["Player-1-Carl"].money)
     end)
 
     it("ignores a 0g reading before the world is entered, stores real changes to 0", function()
@@ -336,9 +336,9 @@ describe("Character, equipment and currency", function()
         local sv = {
             schema = 1,
             chars = {
-                ["Bob-Blackhand"] = { name = "Bob", realm = "Blackhand", realmName = "Blackhand", money = 0 },
-                ["Carl-Blackhand"] = { name = "Carl", realm = "Blackhand", realmName = "Blackhand", money = 99 },
-                ["Dora-Blackhand"] = { name = "Dora", realm = "Blackhand", realmName = "Blackhand", money = 0 },
+                ["Player-1-Bob"] = { name = "Bob", realm = "Blackhand", realmName = "Blackhand", money = 0 },
+                ["Player-1-Carl"] = { name = "Carl", realm = "Blackhand", realmName = "Blackhand", money = 99 },
+                ["Player-1-Dora"] = { name = "Dora", realm = "Blackhand", realmName = "Blackhand", money = 0 },
             },
         }
         local env, ns = wow.boot(wow.defaultState({ money = 123 }), sv, { beforeLoad = function(e)
@@ -349,16 +349,16 @@ describe("Character, equipment and currency", function()
                 ["Alice-Blackhand"] = { gold = 1, lastUpdated = 1 },
             } }
         end })
-        assert.are.equal(2500000, ns.db.chars["Bob-Blackhand"].money)     -- repaired
-        assert.are.equal(1789990000, ns.db.chars["Bob-Blackhand"].moneyAt)
-        assert.are.equal(99, ns.db.chars["Carl-Blackhand"].money)         -- non-zero untouched
-        assert.are.equal(0, ns.db.chars["Dora-Blackhand"].money)          -- no EUI record
+        assert.are.equal(2500000, ns.db.chars["Player-1-Bob"].money)     -- repaired
+        assert.are.equal(1789990000, ns.db.chars["Player-1-Bob"].moneyAt)
+        assert.are.equal(99, ns.db.chars["Player-1-Carl"].money)         -- non-zero untouched
+        assert.are.equal(0, ns.db.chars["Player-1-Dora"].money)          -- no EUI record
         assert.are.equal(123, ns.GetPlayerChar().money)                   -- live value wins
         assert.is_true(ns.db.moneyRepaired)
         -- once per database: a later activation leaves a 0g character alone
-        ns.db.chars["Bob-Blackhand"].money = 0
+        ns.db.chars["Player-1-Bob"].money = 0
         assert.are.equal(0, ns.RepairMoneyFromEUI())
-        assert.are.equal(0, ns.db.chars["Bob-Blackhand"].money)
+        assert.are.equal(0, ns.db.chars["Player-1-Bob"].money)
         assert.are.same({}, env.__errors)
     end)
 
@@ -366,7 +366,7 @@ describe("Character, equipment and currency", function()
         local sv = {
             schema = 1,
             chars = {
-                ["Bob-Blackhand"] = { name = "Bob", realm = "Blackhand", realmName = "Blackhand", money = 0 },
+                ["Player-1-Bob"] = { name = "Bob", realm = "Blackhand", realmName = "Blackhand", money = 0 },
                 ["Eve-Azjol-Nerub"] = { name = "Eve", realm = "AzjolNerub", realmName = "Azjol-Nerub", money = 0 },
             },
         }
@@ -374,14 +374,14 @@ describe("Character, equipment and currency", function()
             fakeEUI.install(e)
             e.EllesmereUIDB = {
                 goldLedger = { chars = {
-                    ["Bob-Blackhand"] = { money = 2500000, updated = 1789990000, name = "Bob", realm = "Blackhand" },
+                    ["Player-1-Bob"] = { money = 2500000, updated = 1789990000, name = "Bob", realm = "Blackhand" },
                     ["Eve-Azjol-Nerub"] = { money = 40000, name = "Eve", realm = "Azjol-Nerub" },
                 } },
-                characterGold = { ["Bob-Blackhand"] = { gold = 7, lastUpdated = 1 } },
+                characterGold = { ["Player-1-Bob"] = { gold = 7, lastUpdated = 1 } },
             }
         end })
-        assert.are.equal(2500000, ns.db.chars["Bob-Blackhand"].money)
-        assert.are.equal(1789990000, ns.db.chars["Bob-Blackhand"].moneyAt)
+        assert.are.equal(2500000, ns.db.chars["Player-1-Bob"].money)
+        assert.are.equal(1789990000, ns.db.chars["Player-1-Bob"].moneyAt)
         -- a ledger entry absorbed from DataBars carries no age
         assert.are.equal(40000, ns.db.chars["Eve-Azjol-Nerub"].money)
         assert.is_nil(ns.db.chars["Eve-Azjol-Nerub"].moneyAt)
@@ -392,8 +392,8 @@ describe("Character, equipment and currency", function()
         local sv = {
             schema = 1,
             chars = {
-                ["Bob-Blackhand"] = { name = "Bob", realm = "Blackhand", realmName = "Blackhand", money = 0 },
-                ["Eve-Blackhand"] = { name = "Eve", realm = "Blackhand", realmName = "Blackhand", money = 0 },
+                ["Player-1-Bob"] = { name = "Bob", realm = "Blackhand", realmName = "Blackhand", money = 0 },
+                ["Player-1-Eve"] = { name = "Eve", realm = "Blackhand", realmName = "Blackhand", money = 0 },
             },
         }
         local env, ns = wow.boot(wow.defaultState({ money = 123 }), sv, { beforeLoad = function(e)
@@ -403,9 +403,9 @@ describe("Character, equipment and currency", function()
                 ["Player-2-0000000E"] = { money = 40000, name = "Eve", realm = "Azjol-Nerub" },  -- other realm
             } } }
         end })
-        assert.are.equal(2500000, ns.db.chars["Bob-Blackhand"].money)
-        assert.are.equal(1789990000, ns.db.chars["Bob-Blackhand"].moneyAt)
-        assert.are.equal(0, ns.db.chars["Eve-Blackhand"].money)
+        assert.are.equal(2500000, ns.db.chars["Player-1-Bob"].money)
+        assert.are.equal(1789990000, ns.db.chars["Player-1-Bob"].moneyAt)
+        assert.are.equal(0, ns.db.chars["Player-1-Eve"].money)
         assert.are.same({}, env.__errors)
     end)
 

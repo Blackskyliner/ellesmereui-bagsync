@@ -23,17 +23,19 @@ describe("Client compatibility", function()
     it("keys Forever characters and guilds by realm group, retail ones by realm", function()
         local guild = { name = "Knights", realm = "Other Realm", money = 0, tabs = {} }
         local _, retail = wow.boot(wow.defaultState({ guild = guild }))
-        assert.are.equal("Alice-Blackhand", retail.GetPlayerKey())
+        assert.are.equal("Player-1-Alice", retail.GetPlayerKey())
+        assert.are.equal("Blackhand", retail.GetPlayerChar().realm)
         assert.are.equal("Knights-OtherRealm", (retail.GetPlayerGuildKey()))
 
         local state = forever({ guild = guild })
         state.player.ruleset = "RP-PvP"
         local env, fv = wow.boot(state)
-        assert.are.equal("Alice-RPPvP", fv.GetPlayerKey())
+        assert.are.equal("RPPvP", fv.GetPlayerChar().realm)
         assert.are.equal("Knights-RPPvP", (fv.GetPlayerGuildKey()))
         -- the realm part of EllesmereUI's gold ledger key, spaces and dashes kept
         assert.are.equal("RP-PvP", fv.GetPlayerChar().realmName)
-        assert.are.equal("Bob-RPPvP", fv.NormalizeCharacterName("bob"))
+        fv.db.chars["Player-1-Bob"] = { name = "Bob", realm = "RPPvP" }
+        assert.are.equal("Player-1-Bob", fv.FindCharacterByName(fv.db.chars, "bob"))
         assert.are.same({}, env.__errors)
     end)
 
@@ -68,6 +70,75 @@ describe("Client compatibility", function()
         assert.are.equal(2500000, ns.db.chars["Bob-PvP"].money)
         assert.are.equal(0, ns.db.chars["Ann-PvP"].money)
         assert.are.same({}, env.__errors)
+    end)
+end)
+
+describe("Character keys (Forever)", function()
+    -- Logs the next character in on Forever, with the saved variables of env.
+    local function relogForever(env, player)
+        local sv = wow.logout(env)
+        local state = forever()
+        for k, v in pairs(player) do state.player[k] = v end
+        return wow.boot(state, sv)
+    end
+
+    it("keeps characters with the same first name apart, with their full names", function()
+        local state = forever()
+        state.player.name, state.player.surname, state.player.guid = "Brånn", "Ashford", "Player-1-0000000A"
+        local env = wow.boot(state)
+        local env2 = relogForever(env, { name = "Brånn", surname = "Ashfôrd", guid = "Player-1-0000000B" })
+        local env3, ns = relogForever(env2, { name = "Brann", surname = "Ashford", guid = "Player-1-0000000C" })
+        local keys = env3.EllesmereUIBagsAlts.GetCharacters()
+        assert.are.equal(3, #keys)
+        assert.are.equal("Brånn Ashford", ns.db.chars["Player-1-0000000A"].name)
+        assert.are.equal("Brånn", ns.db.chars["Player-1-0000000A"].firstName)
+        assert.are.equal("Brånn Ashfôrd", ns.db.chars["Player-1-0000000B"].name)
+        assert.are.equal("Brann Ashford", ns.db.chars["Player-1-0000000C"].name)
+        -- a typed full name finds its character; the shared first name finds none
+        assert.are.equal("Player-1-0000000B", ns.FindCharacterByName(ns.db.chars, "brånn ashfôrd"))
+        assert.is_nil(ns.FindCharacterByName(ns.db.chars, "Brånn"))
+        assert.are.equal("Player-1-0000000C", ns.FindCharacterByName(ns.db.chars, "Brann"))
+        assert.are.same({}, env3.__errors)
+    end)
+
+    it("drops a record an older version filed under the first name", function()
+        local sv = { schema = 1, chars = {
+            ["Brånn-PvP"] = { name = "Brånn", realm = "PvP", money = 5,
+                             bank = { [6] = { size = 1, items = "1:2589,20" } } },
+        } }
+        local state = forever()
+        state.player.name, state.player.surname = "Brånn", "Ashford"
+        local env, ns = wow.boot(state, sv)
+        env.EllesmereUIBagsAlts.GetCharacters()   -- activates
+        assert.is_nil(ns.db.chars["Brånn-PvP"])
+        local c = ns.GetPlayerChar()
+        assert.are.equal("Brånn Ashford", c.name)
+        assert.is_nil(c.bank[6])   -- the bank of the old record may be another character's
+        assert.are.equal(0, (env.EllesmereUIBagsAlts.GetItemCount(2589)))
+        assert.are.same({}, env.__errors)
+    end)
+
+    it("sends mail to a character by its full name", function()
+        local state = forever()
+        state.player.name, state.player.surname, state.player.guid = "Bob", "Miller", "Player-1-0000000B"
+        local env = wow.boot(state)
+        local env2, ns = relogForever(env, { name = "Ann", surname = "Smith", guid = "Player-1-0000000A" })
+        env2.__state.sendItems = { { id = 2589, count = 3 } }
+        env2.FireEvent("MAIL_SHOW")
+        env2.SendMail("Bob Miller", "mats", "")
+        env2.FireEvent("MAIL_SEND_SUCCESS")
+        assert.are.equal(1, #ns.db.chars["Player-1-0000000B"].mailIncoming)
+        assert.are.same({}, env2.__errors)
+    end)
+end)
+
+describe("Money display (Forever)", function()
+    it("shows silver and copper by default, retail whole gold", function()
+        local _, fv = wow.boot(forever())
+        assert.are.equal("gsc", fv.db.settings.ui.moneyFormat)
+        assert.are.equal("43|cffc7c7cfs|r 21|cffeda55fc|r", fv.W.FormatGold(4321))
+        local _, retail = wow.boot(wow.defaultState())
+        assert.are.equal("g", retail.db.settings.ui.moneyFormat)
     end)
 end)
 
@@ -163,7 +234,7 @@ describe("Interface (Forever)", function()
         local f = env.EllesmereUIBagsAltsBrowser
         local rows = {}
         for i = 1, f.sideRows.used do rows[#rows + 1] = f.sideRows.items[i].ownerKey end
-        assert.are.same({ "*all", "*realm:PvP", "Alice-PvP" }, rows)
+        assert.are.same({ "*all", "*realm:PvP", ns.GetPlayerKey() }, rows)
         assert.are.equal(ns.GetPlayerKey(), ns.Browser:GetState().owner)
         assert.are.same({}, env.__errors)
     end)

@@ -26,7 +26,7 @@ window across all characters, similar to Baganator, in EllesmereUI's look.
 > reviewed by native speakers. **Corrections are very welcome**, see
 > [Languages](#languages).
 
-Version 0.9.1, by Blackskyliner.
+Version 0.10.0, by Blackskyliner.
 
 ## What it does
 
@@ -135,14 +135,16 @@ installs EllesmereUI as the dependency. By hand:
 | `/alts status` | Version, stored characters, whether and by what the addon was activated, active features, registered events |
 | `/alts debug` | Diagnostic chat output on/off (e.g. auction events with IDs, the guild bank walk). Useful for bug reports. |
 | `/alts selftest` | Compares this character's stored data with the game (see the test plan) |
-| `/alts delete Name-Realm` | Delete another character's data (asks first) |
+| `/alts delete Name-Realm` | Delete another character's data (asks first). On WoW Forever use the full name, e.g. `Brånn Ashford-Normal`. |
 
 **Browser.** On the left the characters grouped by realm, then the warband bank
 and the guild banks. At the top the tabs Everything, Bags, Bank, Equipped, Mail,
 Auctions and Currency. Hover shows the item tooltip, shift-click links an item
 in chat, ctrl-click opens the dressing room. "Delete data" at the bottom removes
 another character or a guild bank (asks first); the current character and the
-warband bank cannot be deleted.
+warband bank cannot be deleted. The option "Money display in the browser" picks
+the parts of a balance: whole gold (retail default), gold and silver, or gold,
+silver and copper (WoW Forever default).
 
 **Overviews.** "All characters" at the top of the sidebar and every realm header
 show all stored items merged: equal items share one slot with the total amount,
@@ -304,15 +306,20 @@ them is described in [CONTRIBUTING.md](CONTRIBUTING.md#translations).
 
 ```lua
 local total, byOwner = EllesmereUIBagsAlts.GetItemCount(itemID)
--- byOwner["Name-Realm"].bags / .bank / .equipped / .mail / .auctions,
+-- byOwner[charKey].bags / .bank / .equipped / .mail / .auctions,
 -- byOwner["#warband"].warband, byOwner["@Guild-Realm"].guild
-EllesmereUIBagsAlts.GetCharacters()          -- { "Name-Realm", ... }
+EllesmereUIBagsAlts.GetCharacters()          -- { charKey, ... } sorted by realm, name
 EllesmereUIBagsAlts.GetCharacterInfo(key)    -- { name, realm, class, level, money, lastSeen } or nil
-EllesmereUIBagsAlts.OpenBrowser(owner)       -- "Name-Realm", "#warband" or "@Guild-Realm"
+EllesmereUIBagsAlts.OpenBrowser(owner)       -- charKey, "#warband" or "@Guild-Realm"
 EllesmereUIBagsAlts.ToggleBrowser() / .Search(text)
 EllesmereUIBagsAlts.RunSelfTest()            -- ok, report
 EllesmereUIBagsAlts.VERSION
 ```
+
+A character key (`charKey`) is the character's GUID, like in EllesmereUI's gold
+ledger. A character not logged in since 0.10.0 keeps its old `Name-Realm` key
+until it logs in. `GetCharacterInfo` gives the name; on WoW Forever it is the
+full name with the surname.
 
 Calling the API counts as using the addon and activates it.
 
