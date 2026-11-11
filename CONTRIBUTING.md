@@ -366,8 +366,10 @@ approval for all external contributors" under Settings -> Actions -> General.
 
 The caches are shared with GitHub's runners; their keys carry the system
 (`/etc/os-release`) and the architecture, so a binary built on one system is
-never restored on another. The Lua toolchain's key also carries the work
-directory, because LuaRocks' scripts start with the absolute path of `lua`.
+never restored on another. They also carry the work directory: LuaRocks'
+scripts start with the absolute path of `lua`, and wow-sim looks for its
+bundled addons in the source directory it was built in. A self-hosted runner
+therefore builds the simulator once per pin itself.
 
 The visual regression tests need a display and stay local. Blizzard's sources,
 the annotations and the GlobalStrings are fetched fresh on every run, so the API

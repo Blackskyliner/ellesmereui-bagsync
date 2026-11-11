@@ -128,8 +128,10 @@ jobs:
           # Self-hosted and GitHub's runners share the caches; a binary built
           # against a newer glibc does not start on an older system.
           echo "system=$(. /etc/os-release && echo "$ID$VERSION_ID")-$RUNNER_ARCH" >> "$GITHUB_OUTPUT"
-          # LuaRocks and the rocks' scripts start with the absolute path of the
-          # Lua binary, and a self-hosted runner works in another directory.
+          # Both cached toolchains hold absolute paths of the directory they
+          # were built in: LuaRocks' scripts start with the path of the Lua
+          # binary, and wow-sim looks for its bundled addons (TestFramework)
+          # in its source directory. A self-hosted runner works elsewhere.
           echo "workspace=$(printf %s "$GITHUB_WORKSPACE" | sha256sum | cut -c1-8)" >> "$GITHUB_OUTPUT"
           # setup-tools.sh sets up the simulator only where cargo exists, also
           # when the binary comes from the cache. GitHub's runners have it; on
@@ -163,7 +165,7 @@ jobs:
           path: |
             .tools/vendor/${{ steps.pins.outputs.dir }}/target/release/wow-sim
             .tools/vendor/${{ steps.pins.outputs.dir }}/target/release/wow-sim.rev
-          key: wow-sim-${{ runner.os }}-${{ steps.pins.outputs.system }}-icu${{ steps.pins.outputs.icu }}-${{ steps.pins.outputs.sim }}${{ steps.pins.outputs.patches }}-${{ steps.pins.outputs.features }}-headless
+          key: wow-sim-${{ runner.os }}-${{ steps.pins.outputs.system }}-ws${{ steps.pins.outputs.workspace }}-icu${{ steps.pins.outputs.icu }}-${{ steps.pins.outputs.sim }}${{ steps.pins.outputs.patches }}-${{ steps.pins.outputs.features }}-headless
 
       # Forever's simulator reads spell data that wow-cli generates from
       # Blizzard's CDN; setup-tools.sh checks it against its pinned checksum.
