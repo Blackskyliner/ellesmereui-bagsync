@@ -12,7 +12,7 @@ better, faster or reads better), **Bugfix** (something did not work as intended)
 0.8.5 is the first public release. The versions before it were development
 builds, each tested in the game by the maintainer.
 
-## 0.10.0
+## 0.10.1
 
 - **New:** A "Money display in the browser" option shows balances as whole
   gold, gold and silver, or gold, silver and copper. Retail keeps whole gold.
