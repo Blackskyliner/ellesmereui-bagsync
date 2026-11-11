@@ -14,12 +14,6 @@ builds, each tested in the game by the maintainer.
 
 ## 0.10.0
 
-- **Bugfix:** On WoW Forever, characters with the same first name, e.g.
-  "Brånn Ashford" and "Brånn Ashfôrd", no longer share one entry: every character is
-  stored under its GUID, like in EllesmereUI's gold ledger, with its full name.
-  An entry from an older version moves to the GUID when that character logs in.
-  On WoW Forever it is dropped instead, because it may hold data of several
-  characters. The character's data is collected again as you play.
 - **New:** A "Money display in the browser" option shows balances as whole
   gold, gold and silver, or gold, silver and copper. Retail keeps whole gold.
   WoW Forever shows silver and copper by default, so a low-level character no
@@ -27,6 +21,12 @@ builds, each tested in the game by the maintainer.
 - **Enhanced:** A renamed character keeps its stored data.
 - **Enhanced:** The public API returns character GUIDs as keys instead of
   `Name-Realm`. `GetCharacterInfo(key)` returns the name.
+- **Bugfix:** On WoW Forever, characters with the same first name, e.g.
+  "Brånn Ashford" and "Brånn Ashfôrd", no longer share one entry: every character is
+  stored under its GUID, like in EllesmereUI's gold ledger, with its full name.
+  An entry from an older version moves to the GUID when that character logs in.
+  On WoW Forever it is dropped instead, because it may hold data of several
+  characters. The character's data is collected again as you play.
 
 ## 0.9.1
 
