@@ -339,20 +339,28 @@ jobs wait for it. Two kinds of jobs never use it:
   (the CI jobs it waits for do use the runner).
 
 The jobs check out without leaving the token in `.git/config` and use `sudo`
-only for packages that are missing. Set up the runner like this:
+only for packages that are missing. `scripts/setup-ci-runner.sh` sets up a
+fresh Debian or Ubuntu machine (a VM that runs nothing else, as root):
 
-1. A Debian or Ubuntu VM or container that runs nothing else, with an
-   unprivileged user for the runner and no sudo rights for it.
-2. The packages the job needs, installed once:
-   `apt-get install git curl unzip libreadline-dev clang mold pkg-config
-   libicu-dev fonts-dejavu-core libssl-dev`. The job installs Rust itself
-   when it has to build the simulator.
-3. Register it for this repository only (Settings -> Actions -> Runners ->
-   New self-hosted runner) with an extra label such as `eui-ci`, and run it as
-   a service (`./svc.sh install <user>`). `--ephemeral` with a fresh VM or
-   container per job is safer still, if the host can provide one.
-4. Keep "Require approval for all external contributors" under Settings ->
-   Actions -> General (the current setting).
+```bash
+gh api -X POST repos/Blackskyliner/ellesmereui-bagsync/actions/runners/registration-token -q .token
+```
+
+prints a registration token on your own machine (valid for one hour); on the
+runner machine
+
+```bash
+RUNNER_TOKEN=<token> ./setup-ci-runner.sh
+```
+
+installs the packages, turns on automatic security updates, adds a 4 GB swap
+file for the simulator's Rust build, creates the user `ghrunner` without a
+password or sudo, installs the newest runner release after checking its
+SHA-256, registers it with the label `eui-ci` and runs it as a service. It
+prints the `gh variable set CI_RUNNER` call at the end; `--help` lists the
+options. The runner needs no inbound ports, so the firewall allows only SSH.
+`--ephemeral` with a fresh VM per job would be safer still. Keep "Require
+approval for all external contributors" under Settings -> Actions -> General.
 
 The caches are shared with GitHub's runners; their keys carry the system
 (`/etc/os-release`) and the architecture, so a binary built on one system is
