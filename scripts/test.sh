@@ -28,6 +28,11 @@ step "luacheck"
 step "API surface (Blizzard sources of every client, EllesmereUI contract, ASCII)"
 python3 scripts/check-api.py || fail=1
 
+step "CHANGELOG section of the TOC version"
+notes="$(mktemp)"
+bash scripts/release-check.sh "$(sed -n 's/^## Version: *//p' EllesmereUIBags_Alts/EllesmereUIBags_Alts.toc | tr -d '\r')" "$notes" || fail=1
+rm -f "$notes"
+
 step "busted"
 "$T/rocks/bin/busted" -o utfTerminal || fail=1
 

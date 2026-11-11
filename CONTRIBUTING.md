@@ -339,6 +339,8 @@ from `.pkgmeta`, which produces the same zip. To publish a version:
    `CHANGELOG.md` (its text becomes the changelog on CurseForge and GitHub).
    Each entry starts with **New:**, **Enhanced:**, **Bugfix:** or **Removed:**,
    in that order, written for players rather than as a commit list.
+   `scripts/test.sh` and the Changelog workflow on every pull request check
+   the section of the TOC version with `scripts/release-check.sh`.
 2. `scripts/release-dry-run.sh`: runs the packager locally without uploading,
    checks tag, TOC and changelog (`scripts/release-check.sh`) and compares the
    package with `scripts/package.sh`.
