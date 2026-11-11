@@ -128,6 +128,9 @@ jobs:
           # Self-hosted and GitHub's runners share the caches; a binary built
           # against a newer glibc does not start on an older system.
           echo "system=$(. /etc/os-release && echo "$ID$VERSION_ID")-$RUNNER_ARCH" >> "$GITHUB_OUTPUT"
+          # LuaRocks and the rocks' scripts start with the absolute path of the
+          # Lua binary, and a self-hosted runner works in another directory.
+          echo "workspace=$(printf %s "$GITHUB_WORKSPACE" | sha256sum | cut -c1-8)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Lua toolchain
         if: steps.scope.outputs.run == 'true'
@@ -137,7 +140,7 @@ jobs:
             .tools/lua
             .tools/luarocks
             .tools/rocks
-          key: lua-${{ runner.os }}-${{ steps.pins.outputs.system }}-${{ hashFiles('scripts/setup-tools.sh') }}
+          key: lua-${{ runner.os }}-${{ steps.pins.outputs.system }}-ws${{ steps.pins.outputs.workspace }}-${{ hashFiles('scripts/setup-tools.sh') }}
 
       # Only the finished binary (about 80 MB) and the revision, patch set and
       # features it was built from: with both setup-tools.sh skips the Rust build;
