@@ -39,13 +39,14 @@ local function check(where)
         local win = Lay.Rect(f)
         local header = { l = win.l, r = win.r, t = win.t, b = win.t - TITLE_BAR_H }
         local title, search, close = Lay.TextRect(f.title), Lay.Rect(f.search), Lay.Rect(f.close)
+        local help = Lay.Rect(f.searchHelp)
         local subtitle = f.subtitle and Lay.TextRect(f.subtitle)
-        for _, item in ipairs({ { "title", title }, { "subtitle", subtitle }, { "search", search }, { "close", close } }) do
+        for _, item in ipairs({ { "title", title }, { "subtitle", subtitle }, { "search", search }, { "help", help }, { "close", close } }) do
             if item[2] then
             if not Lay.Inside(item[2], header) then error(Lay.Describe(item[1], item[2]) .. " outside " .. Lay.Describe("header", header)) end
             end
         end
-        Lay.AssertNone(Lay.Overlaps({ { "title", title }, { "subtitle", subtitle }, { "search", search }, { "close", close } }), "title row overlap")
+        Lay.AssertNone(Lay.Overlaps({ { "title", title }, { "subtitle", subtitle }, { "search", search }, { "help", help }, { "close", close } }), "title row overlap")
         -- 3. tabs: side by side inside the content column, below the title bar
         local tabs, content = {}, Lay.Rect(f.content)
         for _, tab in ipairs(f.tabs) do

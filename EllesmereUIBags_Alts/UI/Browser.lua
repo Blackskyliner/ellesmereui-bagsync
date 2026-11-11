@@ -491,6 +491,21 @@ function Browser:Build()
     end)
     f.search:HookScript("OnEnterPressed", function(box) box:ClearFocus() end)
 
+    -- The search syntax is not visible anywhere else in the game.
+    f.searchHelp = W.HelpButton(f.header, function(button)
+        local help = ns.Search.HelpLines()
+        local tooltip = W.GetTooltip()
+        tooltip:SetOwner(button, "ANCHOR_BOTTOMLEFT")
+        tooltip:AddLine(help.title, 1, 1, 1)
+        for _, row in ipairs(help.rows) do
+            tooltip:AddDoubleLine(row[1], row[2], 1, 0.82, 0, 1, 1, 1)
+        end
+        tooltip:AddLine(" ")
+        for _, note in ipairs(help.notes) do tooltip:AddLine(note, 0.6, 0.6, 0.6) end
+        tooltip:Show()
+    end)
+    f.searchHelp:SetPoint("RIGHT", f.search, "LEFT", -6, 0)
+
     -- Sidebar
     f.sidebar = W.Panel(f, true)
     f.sidebar:SetPoint("TOPLEFT", PAD, -(W.HEADER_H + PAD))

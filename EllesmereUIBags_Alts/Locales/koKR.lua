@@ -144,3 +144,13 @@ L["FAILED"] = "실패"
 L["missing"] = "누락"
 L["inconsistent (rebuilt)"] = "불일치 (다시 생성함)"
 L["Index"] = "색인"
+
+-- Search syntax help
+L["Search syntax"] = "검색 문법"
+L["words"] = "단어"
+L["Name contains every word"] = "이름에 모든 단어 포함"
+L["Item ID"] = "아이템 ID"
+L["Quality (name or number)"] = "품질 (이름 또는 숫자)"
+L["Item type or subtype"] = "아이템 종류 또는 하위 종류"
+L["All terms must match"] = "모든 조건이 일치해야 함"
+L["Currencies match words and numbers only."] = "화폐는 단어와 숫자로만 검색됩니다."

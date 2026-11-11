@@ -118,6 +118,34 @@ function Search.Run(q, limit)
     return results, pending
 end
 
+-- Lower-cased first word of a client string, or the fallback. The examples
+-- come from the client so they match in its language: a "t:" or "q:" value
+-- is one word.
+local function ExampleWord(text, fallback)
+    local word = type(text) == "string" and strmatch(text, "%S+")
+    return word and strlower(word) or fallback
+end
+
+-- The syntax help of the search box -> { title, rows = { { left, right } }, notes = { text } }
+function Search.HelpLines()
+    local L = ns.L
+    local quality = ExampleWord(_G.ITEM_QUALITY4_DESC, "epic")
+    local itemType = ExampleWord(C_Item.GetItemClassInfo(Enum.ItemClass.Armor), "armor")
+    return {
+        title = L["Search syntax"],
+        rows = {
+            { L["words"], L["Name contains every word"] },
+            { "12345  id:12345", L["Item ID"] },
+            { "q:" .. quality .. "  q:4", L["Quality (name or number)"] },
+            { "t:" .. itemType, L["Item type or subtype"] },
+            { "q:" .. quality .. " t:" .. itemType, L["All terms must match"] },
+        },
+        notes = {
+            L["Currencies match words and numbers only."],
+        },
+    }
+end
+
 -- -> { { currencyID, name, info }, ... } sorted by name
 function Search.RunCurrencies(q)
     local out = {}

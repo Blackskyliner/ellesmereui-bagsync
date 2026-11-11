@@ -1,15 +1,21 @@
 #!/usr/bin/env bash
 # Checks that a release tag can be published and writes its release notes.
-#   scripts/release-check.sh <tag> [notes-file]
+#   scripts/release-check.sh [--allow-unreleased] <tag> [notes-file]
 # The tag must equal the TOC's ## Version (the version in the TOC is the one
 # the addon reports in game, so a tag must never disagree with it), and
 # CHANGELOG.md must have a "## <version>" section: its text becomes the
 # changelog on CurseForge and GitHub (default notes file: .release-notes.md).
 # Its entries start with **New:**, **Enhanced:**, **Bugfix:** or **Removed:**,
 # in that order.
+# Until the release, the section is headed "## <version> (UNRELEASED)" and
+# collects the changes merged since the last release. A tag is never released
+# from it: the release pull request removes the marker. --allow-unreleased
+# accepts the marked heading (tests and pull request checks).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-TAG="${1:?usage: release-check.sh <tag> [notes-file]}"
+ALLOW_UNRELEASED=0
+if [ "${1:-}" = "--allow-unreleased" ]; then ALLOW_UNRELEASED=1; shift; fi
+TAG="${1:?usage: release-check.sh [--allow-unreleased] <tag> [notes-file]}"
 NOTES="${2:-$ROOT/.release-notes.md}"
 VERSION="$(sed -n 's/^## Version: *//p' "$ROOT/EllesmereUIBags_Alts/EllesmereUIBags_Alts.toc" | tr -d '\r')"
 
@@ -18,8 +24,13 @@ if [ "$TAG" != "$VERSION" ]; then
   exit 1
 fi
 
+if grep -qxF "## $VERSION (UNRELEASED)" "$ROOT/CHANGELOG.md" && [ "$ALLOW_UNRELEASED" = 0 ]; then
+  echo "CHANGELOG.md: \"## $VERSION\" is still marked (UNRELEASED); the release pull request removes the marker" >&2
+  exit 1
+fi
+
 awk -v v="$VERSION" '
-  $0 == "## " v { found = 1; next }
+  $0 == "## " v || $0 == "## " v " (UNRELEASED)" { found = 1; next }
   found && /^## / { exit }
   found { print }
 ' "$ROOT/CHANGELOG.md" | sed -e '/./,$!d' > "$NOTES.tmp"

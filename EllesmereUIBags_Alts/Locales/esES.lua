@@ -142,3 +142,13 @@ L["FAILED"] = "ERROR"
 L["missing"] = "faltan"
 L["inconsistent (rebuilt)"] = "incoherente (reconstruido)"
 L["Index"] = "Índice"
+
+-- Search syntax help
+L["Search syntax"] = "Sintaxis de búsqueda"
+L["words"] = "palabras"
+L["Name contains every word"] = "El nombre contiene todas las palabras"
+L["Item ID"] = "ID de objeto"
+L["Quality (name or number)"] = "Calidad (nombre o número)"
+L["Item type or subtype"] = "Tipo o subtipo de objeto"
+L["All terms must match"] = "Todos los términos deben coincidir"
+L["Currencies match words and numbers only."] = "Las monedas solo coinciden con palabras y números."

@@ -126,6 +126,26 @@ function W.CloseButton(parent)
     return b
 end
 
+-- A "?" glyph that shows help on hover, dimmed like the close glyph.
+-- onEnter(self) fills and shows the tooltip.
+function W.HelpButton(parent, onEnter)
+    local b = CreateFrame("Button", nil, parent)
+    b:SetSize(14, 18)
+    b.label = W.Text(b, 14)
+    b.label:SetPoint("CENTER")
+    b.label:SetText("?")
+    b:SetAlpha(0.7)
+    b:SetScript("OnEnter", function(self)
+        self:SetAlpha(1)
+        onEnter(self)
+    end)
+    b:SetScript("OnLeave", function(self)
+        self:SetAlpha(0.7)
+        W.GetTooltip():Hide()
+    end)
+    return b
+end
+
 -- Search box; without EUI's skin module styled like the bag header's search
 -- (dark fill, 1 px grey EUI border) instead of Blizzard's search art.
 function W.EditBox(parent, width, height)

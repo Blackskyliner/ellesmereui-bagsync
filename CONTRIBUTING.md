@@ -151,9 +151,11 @@ Rules for translation files:
 - Commit in functional groups: one commit per logical change, tests with the
   change they cover or as their own commit, fixes separate from features. The
   subject says what the change does; the body says why, in a few lines.
-- Version: the TOC `## Version` changes whenever a built package would differ
-  from one already handed out. A package version is never rebuilt with different
-  content.
+- Version: a change that players notice adds its entry to the
+  `## <version> (UNRELEASED)` section at the top of `CHANGELOG.md`. If there is
+  none, the change opens it with the next version and sets that version in the
+  TOC, so a test package never carries the number of a released one. A package
+  version is never rebuilt with different content.
 
 ## Toolchain
 
@@ -390,17 +392,21 @@ the images.
 Releases are built by [BigWigsMods/packager](https://github.com/BigWigsMods/packager)
 from `.pkgmeta`, which produces the same zip. To publish a version:
 
-1. Set `## Version` in the TOC and add a `## <version>` section to
-   `CHANGELOG.md` (its text becomes the changelog on CurseForge and GitHub).
-   Each entry starts with **New:**, **Enhanced:**, **Bugfix:** or **Removed:**,
-   in that order, written for players rather than as a commit list.
-   `scripts/test.sh` and the Changelog workflow on every pull request check
-   the section of the TOC version with `scripts/release-check.sh`.
-2. `scripts/release-dry-run.sh`: runs the packager locally without uploading,
-   checks tag, TOC and changelog (`scripts/release-check.sh`) and compares the
-   package with `scripts/package.sh`.
-3. Merge to `main`, then tag that commit with the plain version and push the
-   tag: `git tag 0.10.1 && git push origin 0.10.1`.
+1. Collect: every change adds its entry to the `## <version> (UNRELEASED)`
+   section of `CHANGELOG.md` (its text becomes the changelog on CurseForge and
+   GitHub); the TOC already carries that version. Each entry starts with
+   **New:**, **Enhanced:**, **Bugfix:** or **Removed:**, in that order, written
+   for players rather than as a commit list. `scripts/test.sh` and the
+   Changelog workflow on every pull request check that section with
+   `scripts/release-check.sh --allow-unreleased`.
+2. Release pull request: removes ` (UNRELEASED)` from the heading (and moves
+   the version in heading and TOC if the collected changes call for a
+   different one). `scripts/release-dry-run.sh` runs the packager locally
+   without uploading, checks tag, TOC and changelog (`scripts/release-check.sh`,
+   which rejects a marked section) and compares the package with
+   `scripts/package.sh`.
+3. Merge it, then tag the commit the merge put on `main` with the plain
+   version and push the tag: `git tag <version> && git push origin <version>`.
 4. `.github/workflows/release.yml` runs the CI jobs, packages, uploads to
    CurseForge (secret `CF_API_KEY` and variable `CURSEFORGE_PROJECT_ID` of the
    GitHub environment `curseforge`)
@@ -419,5 +425,5 @@ a beta or alpha file; its TOC version carries the same suffix.
 - [ ] Tests added or updated; a regression test fails without the fix
 - [ ] `scripts/test.sh` passes; changed visual baselines reviewed and committed
 - [ ] README updated where behavior or options changed
-- [ ] For a release: TOC version bumped and a `CHANGELOG.md` section written
+- [ ] Entry in the `(UNRELEASED)` section of `CHANGELOG.md` for a change players notice
 - [ ] Checked in the game

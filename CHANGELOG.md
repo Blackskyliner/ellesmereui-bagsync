@@ -4,6 +4,11 @@ Each release has a `## <version>` section; the release workflow publishes that
 section as the changelog on CurseForge and GitHub (`scripts/release-check.sh`).
 The version must match `## Version` in the TOC.
 
+Changes collect in a section headed `## <version> (UNRELEASED)` until the next
+release. The first change after a release opens it with the next version and
+sets that version in the TOC. The release pull request removes the marker, and
+the release tag goes on the commit its merge puts on `main`.
+
 Every entry starts with one of these prefixes, in this order within a version:
 **New** (a feature that did not exist), **Enhanced** (an existing feature works
 better, faster or reads better), **Bugfix** (something did not work as intended),
@@ -11,6 +16,12 @@ better, faster or reads better), **Bugfix** (something did not work as intended)
 
 0.8.5 is the first public release. The versions before it were development
 builds, each tested in the game by the maintainer.
+
+## 0.10.2 (UNRELEASED)
+
+- **New:** A "?" beside the browser's search box explains the search syntax on
+  hover: words, item ID, `q:` quality and `t:` item type, with examples in the
+  client's language.
 
 ## 0.10.1
 
