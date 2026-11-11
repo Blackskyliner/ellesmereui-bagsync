@@ -32,6 +32,8 @@ jobs:
     # environment admits can reach it. The manual dry run uploads nothing and
     # runs without it, so a tag-only environment rule does not block it.
     environment: ${{ github.ref_type == 'tag' && 'curseforge' || '' }}
+    # Always GitHub's runner, also with CI_RUNNER set: the CurseForge key and
+    # the token that publishes the release stay off the self-hosted machine.
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

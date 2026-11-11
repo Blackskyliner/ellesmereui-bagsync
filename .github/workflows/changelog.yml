@@ -24,13 +24,20 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: changelog-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   changelog:
     name: Changelog section of the TOC version
-    runs-on: ubuntu-latest
+    # Same runner choice as ci.yml: CI_RUNNER, never for pull requests from forks.
+    runs-on: ${{ vars.CI_RUNNER && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON(vars.CI_RUNNER) || 'ubuntu-latest' }}
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Check the section
         run: |

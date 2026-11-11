@@ -324,6 +324,40 @@ a pin builds once (about ten minutes on a runner) and caches the result. The CI 
 (`target-cpu=native`) and a cached binary could then fail on the next runner.
 The sources and references are fetched on every run (a minute or so).
 
+### Self-hosted runner
+
+The CI and Changelog jobs run on a self-hosted runner when the repository
+variable `CI_RUNNER` (Settings -> Secrets and variables -> Actions ->
+Variables) holds the runner's labels as JSON, for example
+`["self-hosted","linux","eui-ci"]`. Unset or empty, they run on
+`ubuntu-latest`; clear the variable when the runner is offline, otherwise the
+jobs wait for it. Two kinds of jobs never use it:
+
+- the jobs of pull requests from forks: the repository is public, and such a
+  pull request runs code nobody with write access has reviewed;
+- the release job, which holds the CurseForge key and publishes the release
+  (the CI jobs it waits for do use the runner).
+
+The jobs check out without leaving the token in `.git/config` and use `sudo`
+only for packages that are missing. Set up the runner like this:
+
+1. A Debian or Ubuntu VM or container that runs nothing else, with an
+   unprivileged user for the runner and no sudo rights for it.
+2. The packages the job needs, installed once:
+   `apt-get install git curl unzip libreadline-dev clang mold pkg-config
+   libicu-dev fonts-dejavu-core libssl-dev`. The job installs Rust itself
+   when it has to build the simulator.
+3. Register it for this repository only (Settings -> Actions -> Runners ->
+   New self-hosted runner) with an extra label such as `eui-ci`, and run it as
+   a service (`./svc.sh install <user>`). `--ephemeral` with a fresh VM or
+   container per job is safer still, if the host can provide one.
+4. Keep "Require approval for all external contributors" under Settings ->
+   Actions -> General (the current setting).
+
+The caches are shared with GitHub's runners; their keys carry the system
+(`/etc/os-release`) and the architecture, so a binary built on one system is
+never restored on another.
+
 The visual regression tests need a display and stay local. Blizzard's sources,
 the annotations and the GlobalStrings are fetched fresh on every run, so the API
 check reports Blizzard changes there first. `.github/workflows/upstream.yml`
