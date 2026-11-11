@@ -135,7 +135,7 @@ installs EllesmereUI as the dependency. By hand:
 | `/alts status` | Version, stored characters, whether and by what the addon was activated, active features, registered events |
 | `/alts debug` | Diagnostic chat output on/off (e.g. auction events with IDs, the guild bank walk). Useful for bug reports. |
 | `/alts selftest` | Compares this character's stored data with the game (see the test plan) |
-| `/alts delete Name-Realm` | Delete another character's data (asks first). On WoW Forever use the full name, e.g. `Tåsk Force-Normal`. |
+| `/alts delete Name-Realm` | Delete another character's data (asks first). On WoW Forever use the full name, e.g. `Brånn Ashford-Normal`. |
 
 **Browser.** On the left the characters grouped by realm, then the warband bank
 and the guild banks. At the top the tabs Everything, Bags, Bank, Equipped, Mail,

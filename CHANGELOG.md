@@ -22,7 +22,7 @@ builds, each tested in the game by the maintainer.
 - **Enhanced:** The public API returns character GUIDs as keys instead of
   `Name-Realm`. `GetCharacterInfo(key)` returns the name.
 - **Bugfix:** On WoW Forever, characters with the same first name, e.g.
-  "Tåsk Force" and "Tåsk Fôrce", no longer share one entry: every character is
+  "Brånn Ashford" and "Brånn Ashfôrd", no longer share one entry: every character is
   stored under its GUID, like in EllesmereUI's gold ledger, with its full name.
   An entry from an older version moves to the GUID when that character logs in.
   On WoW Forever it is dropped instead, because it may hold data of several

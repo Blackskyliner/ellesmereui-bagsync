@@ -84,35 +84,35 @@ describe("Character keys (Forever)", function()
 
     it("keeps characters with the same first name apart, with their full names", function()
         local state = forever()
-        state.player.name, state.player.surname, state.player.guid = "Tåsk", "Force", "Player-1-0000000A"
+        state.player.name, state.player.surname, state.player.guid = "Brånn", "Ashford", "Player-1-0000000A"
         local env = wow.boot(state)
-        local env2 = relogForever(env, { name = "Tåsk", surname = "Fôrce", guid = "Player-1-0000000B" })
-        local env3, ns = relogForever(env2, { name = "Task", surname = "Force", guid = "Player-1-0000000C" })
+        local env2 = relogForever(env, { name = "Brånn", surname = "Ashfôrd", guid = "Player-1-0000000B" })
+        local env3, ns = relogForever(env2, { name = "Brann", surname = "Ashford", guid = "Player-1-0000000C" })
         local keys = env3.EllesmereUIBagsAlts.GetCharacters()
         assert.are.equal(3, #keys)
-        assert.are.equal("Tåsk Force", ns.db.chars["Player-1-0000000A"].name)
-        assert.are.equal("Tåsk", ns.db.chars["Player-1-0000000A"].firstName)
-        assert.are.equal("Tåsk Fôrce", ns.db.chars["Player-1-0000000B"].name)
-        assert.are.equal("Task Force", ns.db.chars["Player-1-0000000C"].name)
+        assert.are.equal("Brånn Ashford", ns.db.chars["Player-1-0000000A"].name)
+        assert.are.equal("Brånn", ns.db.chars["Player-1-0000000A"].firstName)
+        assert.are.equal("Brånn Ashfôrd", ns.db.chars["Player-1-0000000B"].name)
+        assert.are.equal("Brann Ashford", ns.db.chars["Player-1-0000000C"].name)
         -- a typed full name finds its character; the shared first name finds none
-        assert.are.equal("Player-1-0000000B", ns.FindCharacterByName(ns.db.chars, "tåsk fôrce"))
-        assert.is_nil(ns.FindCharacterByName(ns.db.chars, "Tåsk"))
-        assert.are.equal("Player-1-0000000C", ns.FindCharacterByName(ns.db.chars, "Task"))
+        assert.are.equal("Player-1-0000000B", ns.FindCharacterByName(ns.db.chars, "brånn ashfôrd"))
+        assert.is_nil(ns.FindCharacterByName(ns.db.chars, "Brånn"))
+        assert.are.equal("Player-1-0000000C", ns.FindCharacterByName(ns.db.chars, "Brann"))
         assert.are.same({}, env3.__errors)
     end)
 
     it("drops a record an older version filed under the first name", function()
         local sv = { schema = 1, chars = {
-            ["Tåsk-PvP"] = { name = "Tåsk", realm = "PvP", money = 5,
+            ["Brånn-PvP"] = { name = "Brånn", realm = "PvP", money = 5,
                              bank = { [6] = { size = 1, items = "1:2589,20" } } },
         } }
         local state = forever()
-        state.player.name, state.player.surname = "Tåsk", "Force"
+        state.player.name, state.player.surname = "Brånn", "Ashford"
         local env, ns = wow.boot(state, sv)
         env.EllesmereUIBagsAlts.GetCharacters()   -- activates
-        assert.is_nil(ns.db.chars["Tåsk-PvP"])
+        assert.is_nil(ns.db.chars["Brånn-PvP"])
         local c = ns.GetPlayerChar()
-        assert.are.equal("Tåsk Force", c.name)
+        assert.are.equal("Brånn Ashford", c.name)
         assert.is_nil(c.bank[6])   -- the bank of the old record may be another character's
         assert.are.equal(0, (env.EllesmereUIBagsAlts.GetItemCount(2589)))
         assert.are.same({}, env.__errors)
