@@ -6,7 +6,7 @@
 --  feed it incrementally through ns.Index:Replace(), so a rescan of one bag
 --  only touches the items that were or are in that bag.
 --
---  Owners:    "<Name-Realm>" (characters), "#warband", "@<Guild-Realm>"
+--  Owners:    character keys (Core/Keys.lua), "#warband", "@<Guild-Realm>"
 --  Locations: bags, bank, equipped, mail, auctions, warband, guild
 -------------------------------------------------------------------------------
 local _, ns = ...

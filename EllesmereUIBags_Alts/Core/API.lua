@@ -3,10 +3,12 @@
 --  Public, read-mostly API for other addons, macros and tests:
 --
 --    EllesmereUIBagsAlts.GetItemCount(itemID)  -> total, { [owner] = { [location] = n } }
---        owner: "Name-Realm", "#warband" or "@Guild-Realm";
+--        owner: a character key (its GUID; "Name-Realm" for a character not
+--        seen since 0.10.0), "#warband" or "@Guild-Realm";
 --        location: bags, bank, equipped, mail, auctions, warband, guild. Copy, safe to keep.
---    EllesmereUIBagsAlts.GetCharacters()        -> sorted { "Name-Realm", ... }
+--    EllesmereUIBagsAlts.GetCharacters()        -> character keys sorted by realm, name
 --    EllesmereUIBagsAlts.GetCharacterInfo(key)  -> { name, realm, class, level, money, lastSeen } or nil
+--        name is the full name (WoW Forever: "First Last")
 --    EllesmereUIBagsAlts.ToggleBrowser() / OpenBrowser([owner]) / Search(text)
 --    EllesmereUIBagsAlts.RunSelfTest()          -> ok, report
 --

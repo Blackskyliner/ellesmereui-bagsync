@@ -45,6 +45,7 @@ function ns.Activate(reason)
     ns.UnregisterEvent(trigger, "PLAYER_INTERACTION_MANAGER_FRAME_SHOW")
     ns.Debug("activation", "activated by %s", tostring(reason))
     ns.SafeCall(ns.SanitizeData)
+    ns.SafeCall(ns.AdoptLegacyChar)   -- before any collector writes the current record
     ns.RefreshFeatures()
     ns.Fire("ACTIVATED", reason)
     return true

@@ -53,8 +53,7 @@ end
 
 local function CaptureOutgoing(recipient)
     if not feature.active or not recipient then return end
-    local key = ns.NormalizeCharacterName(recipient)
-    local known = key and ns.FindKnownCharacter(ns.db.chars, key)
+    local known = ns.FindCharacterByName(ns.db.chars, recipient)
     if not known or known == ns.GetPlayerKey() then
         pendingSend = nil
         return
