@@ -20,6 +20,10 @@ builds, each tested in the game by the maintainer.
   An entry from an older version moves to the GUID when that character logs in.
   On WoW Forever it is dropped instead, because it may hold data of several
   characters. The character's data is collected again as you play.
+- **New:** A "Money display in the browser" option shows balances as whole
+  gold, gold and silver, or gold, silver and copper. Retail keeps whole gold.
+  WoW Forever shows silver and copper by default, so a low-level character no
+  longer reads 0g.
 - **Enhanced:** A renamed character keeps its stored data.
 - **Enhanced:** The public API returns character GUIDs as keys instead of
   `Name-Realm`. `GetCharacterInfo(key)` returns the name.
