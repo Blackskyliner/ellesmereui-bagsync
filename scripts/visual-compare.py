@@ -22,7 +22,10 @@ import sys
 
 from PIL import Image, ImageChops
 
-CHANNEL_TOL = 24        # per channel, 0..255
+# per channel, 0..255: covers the lossy WebP render and the glyph edges, which
+# the GPU on macOS and Mesa's CPU renderer on Linux anti-alias slightly apart
+# (up to 0.04% of the pixels differ by more than 48 between them)
+CHANNEL_TOL = 48
 PIXEL_TOL = 0.001       # share of pixels allowed to differ
 MODES = ("bags",)
 
