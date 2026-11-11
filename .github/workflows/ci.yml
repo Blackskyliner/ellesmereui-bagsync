@@ -131,6 +131,15 @@ jobs:
           # LuaRocks and the rocks' scripts start with the absolute path of the
           # Lua binary, and a self-hosted runner works in another directory.
           echo "workspace=$(printf %s "$GITHUB_WORKSPACE" | sha256sum | cut -c1-8)" >> "$GITHUB_OUTPUT"
+          # setup-tools.sh sets up the simulator only where cargo exists, also
+          # when the binary comes from the cache. GitHub's runners have it; on
+          # a self-hosted runner the Rust step below installs it into ~/.cargo,
+          # which the runner service's PATH does not contain.
+          if ! command -v cargo >/dev/null && [ -x "$HOME/.cargo/bin/cargo" ]; then
+            echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+            PATH="$HOME/.cargo/bin:$PATH"
+          fi
+          echo "cargo=$(command -v cargo >/dev/null && echo yes || echo no)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Lua toolchain
         if: steps.scope.outputs.run == 'true'
@@ -166,8 +175,8 @@ jobs:
           path: .tools/simhome/Library/Caches/wow-ui-sim/spells/wowforever/spells.json
           key: forever-spells-${{ steps.pins.outputs.spells }}
 
-      - name: Rust toolchain (only to build the simulator)
-        if: steps.scope.outputs.run == 'true' && (steps.sim-cache.outputs.cache-hit != 'true' || (matrix.client == 'forever' && steps.spells-cache.outputs.cache-hit != 'true'))
+      - name: Rust toolchain (to build the simulator, or where cargo is missing)
+        if: steps.scope.outputs.run == 'true' && (steps.pins.outputs.cargo != 'yes' || steps.sim-cache.outputs.cache-hit != 'true' || (matrix.client == 'forever' && steps.spells-cache.outputs.cache-hit != 'true'))
         uses: dtolnay/rust-toolchain@stable
 
       # Blizzard's sources, the annotations and the GlobalStrings are fetched
