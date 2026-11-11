@@ -1016,7 +1016,7 @@ function Browser:ConfirmDelete()
     local owner = state.owner
     if not owner or owner == ns.GetPlayerKey() or owner == ns.WARBAND_OWNER or AggregateScope(owner) then return end
     local isGuild = owner:sub(1, 1) == "@"
-    local label = isGuild and ((ns.db.guilds[owner:sub(2)] or {}).name or owner:sub(2)) or owner
+    local label = isGuild and ((ns.db.guilds[owner:sub(2)] or {}).name or owner:sub(2)) or ns.CharDisplayName(owner)
     Ext:Confirm({
         title = L["Delete data"],
         message = string.format(L["Delete all stored data of %s?"], label),
