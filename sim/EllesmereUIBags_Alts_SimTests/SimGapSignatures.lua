@@ -9,10 +9,7 @@ SimGapSignatures = {
         ["C_AuctionHouse.GetOwnedAuctions"] = { "table" },
         ["C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItemByID"] = { "boolean" },
         ["C_Bank.CanViewBank"] = { "boolean" },
-        ["C_CVar.GetCVarInfo"] = { "string", "string", "boolean", "boolean", "boolean", "boolean", "boolean" },
         ["C_CurrencyInfo.GetCurrencyIDFromLink"] = { "number" },
-        ["C_CurrencyInfo.GetCurrencyListLink"] = { "string" },
-        ["C_Item.GetItemSpell"] = { "string", "number" },
         ["C_Item.IsCorruptedItem"] = { "boolean?" },
         ["C_Item.IsCosmeticItem"] = { "boolean?" },
         ["C_Item.IsCurioItem"] = { "boolean?" },
@@ -20,6 +17,5 @@ SimGapSignatures = {
         ["C_Item.IsRelicItem"] = { "boolean?" },
         ["C_PlayerInteractionManager.IsInteractingWithNpcOfType"] = { "boolean" },
         ["C_Soulbinds.IsItemConduitByItemInfo"] = { "boolean" },
-        ["C_TradeSkillUI.GetItemCraftedQualityInfo"] = { "table?" },
     },
 }

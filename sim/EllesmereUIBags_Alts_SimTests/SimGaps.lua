@@ -70,23 +70,10 @@ end
 -- Retail: EllesmereUI's gamepad support asks it whenever its bag window opens.
 Gap("IsUsingGamepad", "retail", function() return false end)
 
--- Forever: CVarDocumentation.lua. EllesmereUI's uninstall record asks it on
--- login; the stand-in reports the current value and no storage flags.
-Gap("C_CVar.GetCVarInfo", "forever", function(name)
-    local value = C_CVar.GetCVar(name) or ""
-    return value, value, false, false, false, false, false
-end)
--- PlayerInteractionManagerDocumentation.lua: no NPC window is open.
+-- Forever: PlayerInteractionManagerDocumentation.lua: no NPC window is open.
 Gap("C_PlayerInteractionManager.IsInteractingWithNpcOfType", "forever", function() return false end)
 -- AuctionHouseDocumentation.lua: the character has no auctions.
 Gap("C_AuctionHouse.GetOwnedAuctions", "forever", function() return {} end)
--- CurrencyInfoDocumentation.lua: a currency link in the client's shape (the
--- one Blizzard_PTRFeedback parses with "currency:(%d+)").
-Gap("C_CurrencyInfo.GetCurrencyListLink", "forever", function(index)
-    local info = C_CurrencyInfo.GetCurrencyListInfo(index)
-    local id, name = info and info.currencyID or 0, info and info.name or ""
-    return ("|cffffffff|Hcurrency:%d:0|h[%s]|h|r"):format(id, name)
-end, { rarely = true })
 -- AzeriteEmpoweredItemDocumentation.lua: Blizzard's item buttons ask it; no
 -- Forever item is Azerite empowered.
 Gap("C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItemByID", "forever", function() return false end)
@@ -108,12 +95,3 @@ Gap("C_Item.IsDecorItem", "forever", function() return false end)
 -- SoulbindsDocumentation.lua: asked by the same overlay code; Forever has no
 -- conduits.
 Gap("C_Soulbinds.IsItemConduitByItemInfo", "forever", function() return false end)
--- TradeSkillUIDocumentation.lua: the crafting quality overlay of the same
--- buttons; nil (documented as nilable) is an item without crafted quality.
-Gap("C_TradeSkillUI.GetItemCraftedQualityInfo", "forever", function() return nil end)
--- ItemDocumentation.lua: EllesmereUI Bags sorts usable items by it. The docs
--- call its returns non-nilable, but an item without a spell has none:
--- Forever's own chat code tests the call itself.
-Gap("C_Item.GetItemSpell", "forever", function() return nil end, {
-    nilable = "Blizzard_ChatFrameBase/Mainline/ChatFrameUtilOverrides.lua: if ( C_Item.GetItemSpell(text) ) then",
-})
