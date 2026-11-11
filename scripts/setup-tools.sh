@@ -49,6 +49,10 @@ WOW_UI_SIM_FOREVER_REV=079afe1f0df7fdea03ec83d6a0775685b9d1fcce
 # top of the pin. 0001: a protected-descendant check that scanned every widget
 # per level made insecure frame calls in combat take minutes
 # (https://github.com/Osso/wow-ui-sim/pull/53).
+# wow-ui-sim 0001: FontString:SetFont with an addon's font file falls back to
+# the default font, and that default is the first system font when no WoW
+# install provides Blizzard's; this loads addon fonts and takes the fallback
+# from WOW_SIM_FALLBACK_FONT, so text renders alike on macOS and Linux.
 # The Forever profile reads selected spell data of client build 1.60.1.70685,
 # which wow-cli generates from Blizzard's CDN (wow-ui-sim
 # docs/specs/forever-spell-data.md gives this checksum for it).
@@ -139,7 +143,10 @@ follow https://github.com/Gethe/wow-ui-source.git wow-ui-source-forever forever
 follow https://github.com/Ketho/vscode-wow-api.git vscode-wow-api
 pinned https://github.com/EllesmereGaming/EllesmereUI.git EllesmereUI "$ELLESMEREUI_REV"
 if [ "$SIM" = 1 ]; then
-  if wants retail; then pinned https://github.com/Osso/wow-ui-sim.git wow-ui-sim "$WOW_UI_SIM_REV"; fi
+  if wants retail; then
+    pinned https://github.com/Osso/wow-ui-sim.git wow-ui-sim "$WOW_UI_SIM_REV"
+    patched wow-ui-sim
+  fi
   if wants forever; then
     pinned https://github.com/Osso/wow-ui-sim.git wow-ui-sim-forever "$WOW_UI_SIM_FOREVER_REV"
     patched wow-ui-sim-forever
