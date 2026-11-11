@@ -2,7 +2,8 @@
 # release workflow runs on a tag (scripts/release-check.sh): the section exists
 # and its entries carry a New/Enhanced/Bugfix/Removed prefix, in that order.
 # CI skips Markdown changes, so without this job a broken section would only
-# show when the release fails on the tag.
+# show when the release fails on the tag. The section may still be marked
+# (UNRELEASED); only the release workflow rejects that.
 name: Changelog
 
 on:
@@ -42,4 +43,4 @@ jobs:
       - name: Check the section
         run: |
           version="$(sed -n 's/^## Version: *//p' EllesmereUIBags_Alts/EllesmereUIBags_Alts.toc | tr -d '\r')"
-          scripts/release-check.sh "$version" "$RUNNER_TEMP/release-notes.md"
+          scripts/release-check.sh --allow-unreleased "$version" "$RUNNER_TEMP/release-notes.md"
