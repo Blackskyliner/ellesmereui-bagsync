@@ -1,6 +1,8 @@
 # Checks on every push to main and every pull request; the release workflow
-# runs the same job before it packages anything. Changes to documentation only
-# skip it.
+# runs the same job before it packages anything. Pushes to main that change
+# documentation only skip it. Pull requests always run it: its jobs are
+# required checks of main (ruleset "Protect main"), and a required check that
+# never starts would keep a documentation pull request from being merged.
 name: CI
 
 on:
@@ -8,7 +10,6 @@ on:
     branches: [main]
     paths-ignore: ["**.md", "docs/**"]
   pull_request:
-    paths-ignore: ["**.md", "docs/**"]
   workflow_dispatch:
   workflow_call:
     inputs:
