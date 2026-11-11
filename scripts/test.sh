@@ -39,9 +39,9 @@ step "busted"
 # One simulator run: prints the test lines; returns 1 on a failed test or a Lua
 # error raised by the addon.
 sim_run() {
-  local client="$1" mode="$2" log rc=0
+  local client="$1" mode="$2" log rc=0 code=0
   log="$(mktemp)"
-  bash scripts/sim-test.sh --client="$client" "$mode" >"$log" 2>&1 || rc=1
+  bash scripts/sim-test.sh --client="$client" "$mode" >"$log" 2>&1 || { code=$?; rc=1; }
   python3 - "$log" <<'PY'
 import sys
 s = open(sys.argv[1], encoding="utf-8", errors="ignore").read()
@@ -55,7 +55,8 @@ PY
   # No summary means the run never got to the tests (crash, missing library):
   # the filter above would print nothing, so show the end of the raw output.
   if ! grep -a -q "tests," "$log"; then
-    echo "no test summary; last lines of the run:"; tail -n 15 "$log"
+    # 128 + n: the simulator died from signal n (137 SIGKILL, 139 SIGSEGV).
+    echo "no test summary (exit code $code); last lines of the run:"; tail -n 15 "$log"
     rc=1
   fi
   if grep -a "Lua error" "$log" | grep -a -q "EllesmereUIBags_Alts/\|EUIBagsExt"; then
