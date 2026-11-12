@@ -174,7 +174,9 @@ Forever spell data OpenSSL (Linux: `libssl-dev`; macOS has what it needs). It ru
 and Linux (there Lua's `linux` target needs the readline headers, e.g.
 `libreadline-dev`). `--no-sim` skips the simulator and
 the venv; `--client=retail` or `--client=forever` builds the simulator of one
-client only (CI uses one client per job). It builds or fetches:
+client only (CI uses one client per job). `SIM_CARGO_DIR=<dir>` keeps cargo's
+registry and build directory there instead of in `.tools`, for a machine that
+wipes `.tools` per run (the self-hosted CI runner). It builds or fetches:
 
 - Lua 5.1, LuaRocks, busted and luacheck;
 - reference sources: Blizzard's UI source per client (Gethe/wow-ui-source: the
@@ -413,7 +415,10 @@ The caches are shared with GitHub's runners; their keys carry the system
 never restored on another. They also carry the work directory: LuaRocks'
 scripts start with the absolute path of `lua`, and wow-sim looks for its
 bundled addons in the source directory it was built in. A self-hosted runner
-therefore builds the simulator once per pin itself.
+therefore builds the simulator once per pin itself. It keeps cargo's registry
+and build directory in `~/.cache/eui-sim-cargo` (`SIM_CARGO_DIR`), so a new pin
+recompiles only what changed, and the jobs share the dependencies they have in
+common. Past 30 GB `setup-tools.sh` empties the build directory.
 
 Blizzard's sources,
 the annotations and the GlobalStrings are fetched fresh on every run, so the API

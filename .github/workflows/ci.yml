@@ -189,9 +189,16 @@ jobs:
 
       # Blizzard's sources, the annotations and the GlobalStrings are fetched
       # fresh, so the API check reports Blizzard changes on the next run.
+      # A self-hosted runner keeps cargo's registry and build directory in
+      # SIM_CARGO_DIR: the workspace is wiped per job, and without it a cache
+      # miss would compile every dependency again in each job.
       - name: Set up toolchain, reference sources and simulator
         if: steps.scope.outputs.run == 'true'
-        run: scripts/setup-tools.sh --client=${{ matrix.client }}
+        env:
+          CLIENT: ${{ matrix.client }}
+        run: |
+          if [ "$RUNNER_ENVIRONMENT" = self-hosted ]; then export SIM_CARGO_DIR="$HOME/.cache/eui-sim-cargo"; fi
+          scripts/setup-tools.sh --client="$CLIENT"
 
       - name: Run checks
         if: steps.scope.outputs.run == 'true'
@@ -314,9 +321,12 @@ jobs:
         if: steps.scope.outputs.run == 'true' && (steps.pins.outputs.cargo != 'yes' || steps.sim-cache.outputs.cache-hit != 'true')
         uses: dtolnay/rust-toolchain@stable
 
+      # SIM_CARGO_DIR as in the checks job.
       - name: Set up toolchain and simulator
         if: steps.scope.outputs.run == 'true'
-        run: scripts/setup-tools.sh --client=retail
+        run: |
+          if [ "$RUNNER_ENVIRONMENT" = self-hosted ]; then export SIM_CARGO_DIR="$HOME/.cache/eui-sim-cargo"; fi
+          scripts/setup-tools.sh --client=retail
 
       - name: Run visual tests
         if: steps.scope.outputs.run == 'true'

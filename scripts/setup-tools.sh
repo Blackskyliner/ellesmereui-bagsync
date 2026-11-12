@@ -14,6 +14,10 @@
 #   --no-sim          skip wow-ui-sim and the Python venv (lint, API check, busted only)
 #   --client=<name>   build the simulator for one client only: retail or forever
 #                     (default: both)
+# Environment:
+#   SIM_CARGO_DIR     keeps cargo's registry and build directory there instead
+#                     of in .tools, so a machine whose .tools is wiped per run
+#                     (a self-hosted CI runner) recompiles only what changed
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 T="$ROOT/.tools"
@@ -169,15 +173,31 @@ elif command -v cargo >/dev/null 2>&1; then
   # (<binary>.rev): it links ICU's versioned libraries, so an ICU update
   # (Homebrew, a new runner image) leaves it unable to start. The stamp lets CI
   # restore only the binary from its cache and skip the Rust build.
+  # With SIM_CARGO_DIR every checkout and feature set builds in one directory
+  # there: cargo keeps each crate per feature set side by side, so the two
+  # clients share the dependencies they have in common, and only the binary
+  # is copied to <checkout>/<target dir>, where the scripts look for it.
   sim_build() {
-    local sim="$T/vendor/$1" bin="${5:-wow-sim}" stamp patches
+    local sim="$T/vendor/$1" bin="${5:-wow-sim}" stamp patches home="$T/cargo" target
+    target="$sim/$3"
     patches="$(patches_id "$1")"
     stamp="$2 $4 icu-$(pkg-config --modversion icu-i18n 2>/dev/null)${patches:+ patches-$patches}"
-    [ -x "$sim/$3/release/$bin" ] && [ "$(cat "$sim/$3/release/$bin.rev" 2>/dev/null)" = "$stamp" ] && return 0
-    (cd "$sim" && CARGO_HOME="$T/cargo" CARGO_TARGET_DIR="$sim/$3" cargo build --release --locked --bin "$bin" \
+    [ -x "$target/release/$bin" ] && [ "$(cat "$target/release/$bin.rev" 2>/dev/null)" = "$stamp" ] && return 0
+    if [ -n "${SIM_CARGO_DIR:-}" ]; then home="$SIM_CARGO_DIR/home" target="$SIM_CARGO_DIR/target"; fi
+    (cd "$sim" && CARGO_HOME="$home" CARGO_TARGET_DIR="$target" cargo build --release --locked --bin "$bin" \
       --no-default-features --features "$4")
+    if [ "$target" != "$sim/$3" ]; then
+      mkdir -p "$sim/$3/release" && cp "$target/release/$bin" "$sim/$3/release/$bin"
+    fi
     echo "$stamp" > "$sim/$3/release/$bin.rev"
   }
+  # Each pin and feature set adds its own build to SIM_CARGO_DIR; past this
+  # size the build directory starts over, the registry stays.
+  if [ -n "${SIM_CARGO_DIR:-}" ] && [ -d "$SIM_CARGO_DIR/target" ] \
+      && [ "$(du -sk "$SIM_CARGO_DIR/target" | cut -f1)" -gt $((30 * 1024 * 1024)) ]; then
+    echo "SIM_CARGO_DIR: build directory over 30 GB, starting over" >&2
+    rm -rf "${SIM_CARGO_DIR:?}/target"
+  fi
   # ui_cache <source checkout> <profile>: wow-sim reads Blizzard UI from
   # $HOME/Library/Caches (macOS) or ~/.cache; HOME points at .tools/simhome.
   # The copy is redone whenever the source moved (.wow-ui-source-rev), so the
