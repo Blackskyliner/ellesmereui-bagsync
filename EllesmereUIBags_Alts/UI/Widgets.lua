@@ -162,6 +162,19 @@ function W.EditBox(parent, width, height)
         e.fill:SetAllPoints()
         e.fill:SetColorTexture(0.02, 0.02, 0.02, 1)
         Ext:CreateBorder(e, 0.25, 0.25, 0.25, 1)
+        -- Blizzard's border art reaches 5 px left of the box and the
+        -- template places icon and text against that; our border sits on
+        -- the box's edge, so all three move in by those 5 px.
+        if e.searchIcon then
+            e.searchIcon:ClearAllPoints()
+            e.searchIcon:SetPoint("LEFT", 6, -1)
+        end
+        e:SetTextInsets(21, 20, 0, 0)
+        if e.Instructions then
+            e.Instructions:ClearAllPoints()
+            e.Instructions:SetPoint("TOPLEFT", 21, 0)
+            e.Instructions:SetPoint("BOTTOMRIGHT", -20, 0)
+        end
     end
     return e
 end

@@ -22,6 +22,8 @@ builds, each tested in the game by the maintainer.
 - **New:** A "?" beside the browser's search box explains the search syntax on
   hover: words, item ID, `q:` quality and `t:` item type, with examples in the
   client's language.
+- **Bugfix:** Without EllesmereUI's skin module, the magnifier and the text of
+  the browser's search box no longer touch its left border.
 
 ## 0.10.1
 
