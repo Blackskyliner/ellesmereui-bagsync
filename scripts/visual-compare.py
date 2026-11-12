@@ -3,12 +3,12 @@
 
   visual-compare.py [--update] OUT_DIR BASELINE_DIR scenario...
 
-For every mode directory in OUT_DIR (bags) and scenario:
+For every mode directory in OUT_DIR (bags, skin) and scenario:
   * the target frame's screen rect is read from the --dump-tree log of the
     same run and the full-screen render is cropped to it;
   * the crop is compared with BASELINE_DIR/<mode>/<scenario>.webp (lossless): a pixel
-    counts as different when a channel differs by more than CHANNEL_TOL
-    (WebP is lossy); the scenario fails when more than EDGE_TOL * sqrt(w * h)
+    counts as different when a channel differs by more than CHANNEL_TOL;
+    the scenario fails when more than EDGE_TOL * sqrt(w * h)
     pixels differ, or on a size change;
   * --update writes the crop as the new baseline instead.
 Writes <scenario>.png, <scenario>-diff.png and report.html into OUT_DIR.
@@ -24,9 +24,8 @@ import sys
 
 from PIL import Image, ImageChops
 
-# per channel, 0..255: covers the lossy WebP render and the glyph edges, which
-# the GPU on macOS and Mesa's CPU renderer on Linux anti-alias slightly apart
-# (up to 0.04% of the pixels differ by more than 48 between them)
+# per channel, 0..255: covers the glyph edges, which the GPU on macOS and
+# Mesa's CPU renderer on Linux anti-alias slightly apart
 CHANNEL_TOL = 48
 # Differing pixels allowed per pixel of the crop's linear size, sqrt(w * h).
 # The anti-aliasing differences sit on glyph and texture edges, whose length
@@ -34,7 +33,7 @@ CHANNEL_TOL = 48
 # full bag window hide a broken icon and fail a small tooltip, whose dense
 # small text has more edge per pixel, on aliasing alone.
 EDGE_TOL = 0.5
-MODES = ("bags",)
+MODES = ("bags", "skin")
 
 
 def frame_rect(log_path, frame):
@@ -76,7 +75,7 @@ def main(argv):
     for mode in MODES:
         for name in scenarios:
             prefix = os.path.join(out_dir, mode, name)
-            if not os.path.exists(prefix + ".webp"):
+            if not os.path.exists(prefix + "-full.png"):
                 continue
             with open(prefix + ".frame") as fh:
                 frame = fh.read().strip()
@@ -90,7 +89,7 @@ def main(argv):
                 status, detail = "error", "frame %s not rendered" % frame
             else:
                 x, y, w, h = rect
-                current = Image.open(prefix + ".webp").convert("RGB").crop((x, y, x + w, y + h))
+                current = Image.open(prefix + "-full.png").convert("RGB").crop((x, y, x + w, y + h))
                 current.save(prefix + ".png")
                 if update:
                     os.makedirs(os.path.dirname(base_path), exist_ok=True)

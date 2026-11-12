@@ -276,9 +276,11 @@ fails without the fix, then make it pass.
      invariants.
    - Any Lua error raised by the addon fails the run.
 5. **Visual regression** (`scripts/visual-test.sh`, retail): every scenario in
-   `sim/visual/scenarios/` is rendered with the GPU build, cropped to its frame
-   and compared with `sim/visual/baselines/bags/`. Results, diff images (changes
-   in red) and `report.html` go to `.tools/visual-out/`.
+   `sim/visual/scenarios/` is rendered with the GPU build as a lossless PNG,
+   cropped to its frame and compared with `sim/visual/baselines/<mode>/`, once
+   with EllesmereUI core and Bags (`bags`, our plain look) and once with its
+   Blizzard skin module (`skin`). Results, diff images (changes in red) and
+   `report.html` go to `.tools/visual-out/`.
    - After an intended visual change, accept the new images with
      `scripts/visual-test.sh --update [scenario ...]`, look at every changed
      baseline before committing, and commit the baselines with the change.

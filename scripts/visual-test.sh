@@ -11,11 +11,9 @@
 #                                        (sim/visual/texture-inventory.lua) in
 #                                        .tools/visual-out/inventory.log
 #
-# Mode: bags (EUI core + Bags, the dependency: our plain look). Not with EUI's
-# Blizzard skin module: a simulator bug fades every texture there (see
-# sim/.../tests/00_harness.lua); its geometry is covered by the layout tests
-# of `sim-test.sh skin`. Output, diffs and
-# an HTML report land in .tools/visual-out/. Needs wow-ui-sim and the
+# Modes: bags (EUI core + Bags, the dependency: our plain look) and skin (plus
+# EUI's Blizzard skin module, the look most users have). Output, diffs and an
+# HTML report land in .tools/visual-out/. Needs wow-ui-sim and the
 # Python venv from scripts/setup-tools.sh.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -79,7 +77,7 @@ if [ "$INVENTORY" = 1 ]; then
   exit 0
 fi
 
-for mode in bags; do
+for mode in bags skin; do
   unlink_all
   ln -sfn "$ROOT/EllesmereUIBags_Alts" "$ADDONS/EllesmereUIBags_Alts"
   ln -sfn "$ROOT/sim/EllesmereUIBags_Alts_SimTests" "$ADDONS/EllesmereUIBags_Alts_SimTests"
@@ -93,8 +91,8 @@ for mode in bags; do
     frame="$(sed -n 's/^-- frame: *//p' "$scenario" | head -1)"
     frame="${frame:-EllesmereUIBagsAltsBrowser}"
     cat "$ROOT/sim/visual/prelude.lua" "$scenario" > "$OUT/$mode/$name.lua"
-    (cd "$SIM" && "$BIN" --no-saved-vars --exec-lua "@$OUT/$mode/$name.lua" screenshot \
-        -o "$OUT/$mode/$name.webp" -f "$frame" --dump-tree "$frame" > "$OUT/$mode/$name.log" 2>&1) || {
+    (cd "$SIM" && "$BIN" --no-saved-vars --exec-lua "@$OUT/$mode/$name.lua" screenshot --png \
+        -o "$OUT/$mode/$name-full.png" -f "$frame" --dump-tree "$frame" > "$OUT/$mode/$name.log" 2>&1) || {
       echo "render failed: $mode/$name (see $OUT/$mode/$name.log)" >&2; exit 1; }
     echo "$frame" > "$OUT/$mode/$name.frame"
   done
