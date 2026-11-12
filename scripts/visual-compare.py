@@ -8,14 +8,15 @@ For every mode directory in OUT_DIR (bags) and scenario:
     same run and the full-screen render is cropped to it;
   * the crop is compared with BASELINE_DIR/<mode>/<scenario>.webp (lossless): a pixel
     counts as different when a channel differs by more than CHANNEL_TOL
-    (WebP is lossy); the scenario fails above PIXEL_TOL of its pixels or on a
-    size change;
+    (WebP is lossy); the scenario fails when more than EDGE_TOL * sqrt(w * h)
+    pixels differ, or on a size change;
   * --update writes the crop as the new baseline instead.
 Writes <scenario>.png, <scenario>-diff.png and report.html into OUT_DIR.
 Exit code 1 on any failure (missing baseline, size change, difference, Lua
 error during the scenario).
 """
 import html
+import math
 import os
 import re
 import shutil
@@ -27,7 +28,12 @@ from PIL import Image, ImageChops
 # the GPU on macOS and Mesa's CPU renderer on Linux anti-alias slightly apart
 # (up to 0.04% of the pixels differ by more than 48 between them)
 CHANNEL_TOL = 48
-PIXEL_TOL = 0.001       # share of pixels allowed to differ
+# Differing pixels allowed per pixel of the crop's linear size, sqrt(w * h).
+# The anti-aliasing differences sit on glyph and texture edges, whose length
+# grows with the linear size, not the area: a share of the area would let a
+# full bag window hide a broken icon and fail a small tooltip, whose dense
+# small text has more edge per pixel, on aliasing alone.
+EDGE_TOL = 0.5
 MODES = ("bags",)
 
 
@@ -98,11 +104,11 @@ def main(argv):
                         status, detail = "size", "baseline %dx%d, now %dx%d" % (base.size + current.size)
                     else:
                         count, highlight = diff_image(base, current)
-                        share = count / float(w * h)
-                        detail = "%d px differ (%.3f%%)" % (count, share * 100)
+                        allowed = int(EDGE_TOL * math.sqrt(w * h))
+                        detail = "%d px differ (%.3f%%, allowed %d)" % (count, count * 100.0 / (w * h), allowed)
                         if count:
                             highlight.save(prefix + "-diff.png")
-                        if share > PIXEL_TOL:
+                        if count > allowed:
                             status = "diff"
             if status not in ("ok", "updated"):
                 failures += 1

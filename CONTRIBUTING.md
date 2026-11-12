@@ -364,10 +364,13 @@ The sources and references are fetched on every run (a minute or so).
 A third job runs the visual regression tests (retail) on the same runner:
 neither runner has a GPU, so Mesa's CPU Vulkan driver renders
 (`WOW_SIM_SOFTWARE_RENDER=1`). Its renders differ from the macOS baselines
-only in a few glyph edge pixels, which the comparison's per-channel tolerance
-absorbs. It runs the retail checks job's simulator binary from the same
-cache entry and caches the Blizzard textures keyed on their lock; on a failure the renders and `report.html` are
-uploaded as the `visual-out` artifact.
+only in a few glyph edge pixels, which the comparison's tolerances absorb: a
+channel may differ by up to 48, and a scenario may have
+`0.5 * sqrt(width * height)` pixels beyond that, as those edges grow with the
+crop's linear size rather than its area. It runs the retail checks job's
+simulator binary from the same cache entry and caches the Blizzard textures
+keyed on their lock; on a failure the renders and `report.html` are uploaded
+as the `visual-out` artifact.
 
 ### Self-hosted runner
 
