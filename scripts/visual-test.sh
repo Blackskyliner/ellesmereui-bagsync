@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Visual regression tests: renders every scenario in sim/visual/scenarios with
-# the GUI build of wow-ui-sim (real Blizzard FrameXML + EllesmereUI + this
+# wow-ui-sim (real Blizzard FrameXML + EllesmereUI + this
 # addon + the fixture data of the simulator test addon) and compares the
 # target frame against sim/visual/baselines/<mode>/<scenario>.webp (lossless).
 #
@@ -15,16 +15,16 @@
 # Blizzard skin module: a simulator bug fades every texture there (see
 # sim/.../tests/00_harness.lua); its geometry is covered by the layout tests
 # of `sim-test.sh skin`. Output, diffs and
-# an HTML report land in .tools/visual-out/. Needs the GUI build and the
+# an HTML report land in .tools/visual-out/. Needs wow-ui-sim and the
 # Python venv from scripts/setup-tools.sh.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SIM="$ROOT/.tools/vendor/wow-ui-sim"
 EUI="$ROOT/.tools/vendor/EllesmereUI"
-BIN="$SIM/target-gui/release/wow-sim"
+BIN="$SIM/target/release/wow-sim"
 PY="$ROOT/.tools/venv/bin/python"
 OUT="$ROOT/.tools/visual-out"
-[ -x "$BIN" ] || { echo "GUI build of wow-sim missing; run scripts/setup-tools.sh" >&2; exit 2; }
+[ -x "$BIN" ] || { echo "wow-sim not built; run scripts/setup-tools.sh" >&2; exit 2; }
 [ -x "$PY" ] || { echo "Python venv missing; run scripts/setup-tools.sh" >&2; exit 2; }
 
 UPDATE=() INVENTORY=0

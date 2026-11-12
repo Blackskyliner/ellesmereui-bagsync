@@ -6,23 +6,21 @@
 #     12.x from the live branch, WoW Forever 1.60 from the forever branch),
 #     Ketho/vscode-wow-api (API annotations), EllesmereGaming/EllesmereUI (host addon),
 #     Blizzard's GlobalStrings of every client locale (Ketho/BlizzardInterfaceResources)
-#   - Osso/wow-ui-sim (headless WoW UI simulator, Rust) per client + Blizzard UI cache for it
+#   - Osso/wow-ui-sim (WoW UI simulator, Rust, with its GPU renderer) per client + Blizzard UI cache for it
 # Requires: curl, git, a C compiler, make (Linux: readline headers for Lua);
 # cargo, rsync and ICU4C >= 72 (pkg-config) for the simulator, python3 for the checks.
 #
 # Options (CI):
 #   --no-sim          skip wow-ui-sim and the Python venv (lint, API check, busted only)
-#   --no-gui          skip the GPU build of wow-ui-sim and the venv (no visual tests)
 #   --client=<name>   build the simulator for one client only: retail or forever
-#                     (default: both; the visual tests are retail only)
+#                     (default: both)
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 T="$ROOT/.tools"
-SIM=1 GUI=1 CLIENTS="retail forever"
+SIM=1 CLIENTS="retail forever"
 for arg in "$@"; do
   case "$arg" in
-    --no-sim) SIM=0; GUI=0 ;;
-    --no-gui) GUI=0 ;;
+    --no-sim) SIM=0 ;;
     --client=retail|--client=forever) CLIENTS="${arg#--client=}" ;;
     *) echo "unknown option: $arg" >&2; exit 2 ;;
   esac
@@ -202,13 +200,12 @@ elif command -v cargo >/dev/null 2>&1; then
   # The retail profile at the API of the live client: wow-ui-sim's client-retail
   # bundle trails it, and Blizzard's UI from wow-ui-source live already calls
   # the natives of the newer patch (12.1.5: table.contains, math.clamp, ...).
-  SIM_FEATURES=profile-retail,retail-12-1-5,prefork-full-ui
-  FOREVER_SIM_FEATURES=client-wowforever,prefork-full-ui
+  # One build per client, with the GPU renderer (gui): the same binary runs
+  # the tests headless and renders the screenshots of the visual tests.
+  SIM_FEATURES=gui,profile-retail,retail-12-1-5,prefork-full-ui
+  FOREVER_SIM_FEATURES=gui,client-wowforever,prefork-full-ui
   if wants retail; then
     sim_build wow-ui-sim "$WOW_UI_SIM_REV" target "$SIM_FEATURES"
-    # Second build with the GPU renderer for screenshots (visual tests); own
-    # target dir so the headless binary above stays untouched.
-    if [ "$GUI" = 1 ]; then sim_build wow-ui-sim "$WOW_UI_SIM_REV" target-gui "gui,$SIM_FEATURES"; fi
     ui_cache wow-ui-source retail
   fi
   if wants forever; then
@@ -230,7 +227,7 @@ else
   echo "cargo not found: skipping wow-ui-sim (simulator tests unavailable)" >&2
 fi
 # Python venv for the image comparison of the visual tests.
-if [ "$GUI" = 1 ] && [ ! -x "$T/venv/bin/python" ]; then
+if [ "$SIM" = 1 ] && [ ! -x "$T/venv/bin/python" ]; then
   python3 -m venv "$T/venv" && "$T/venv/bin/pip" install -q "pillow==11.3.0"
 fi
 echo "toolchain ready in $T"

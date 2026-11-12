@@ -81,7 +81,7 @@ for client in $CLIENTS; do
 done
 
 case " $CLIENTS " in *" retail "*) visual=1 ;; *) visual=0 ;; esac
-if [ "$visual" = 1 ] && [ -x "$T/vendor/wow-ui-sim/target-gui/release/wow-sim" ] && [ -x "$T/venv/bin/python" ]; then
+if [ "$visual" = 1 ] && [ -x "$T/vendor/wow-ui-sim/target/release/wow-sim" ] && [ -x "$T/venv/bin/python" ]; then
   step "visual regression (wow-ui-sim screenshots vs sim/visual/baselines)"
   vlog="$(mktemp)"
   if bash scripts/visual-test.sh >"$vlog" 2>&1; then
@@ -92,7 +92,7 @@ if [ "$visual" = 1 ] && [ -x "$T/vendor/wow-ui-sim/target-gui/release/wow-sim" ]
   fi
   rm -f "$vlog"
 else
-  step "visual regression skipped (retail only; GUI build or venv missing)"
+  step "visual regression skipped (retail only; simulator or venv missing)"
 fi
 
 printf '\n'

@@ -173,9 +173,8 @@ Prerequisites on the host: `git`, `curl`, a C compiler and `make`, `python3`,
 Forever spell data OpenSSL (Linux: `libssl-dev`; macOS has what it needs). It runs on macOS
 and Linux (there Lua's `linux` target needs the readline headers, e.g.
 `libreadline-dev`). `--no-sim` skips the simulator and
-the venv, `--no-gui` only the GPU build and the venv; `--client=retail` or
-`--client=forever` builds the simulator of one client only (CI uses `--no-gui`
-and one client per job). It builds or fetches:
+the venv; `--client=retail` or `--client=forever` builds the simulator of one
+client only (CI uses one client per job). It builds or fetches:
 
 - Lua 5.1, LuaRocks, busted and luacheck;
 - reference sources: Blizzard's UI source per client (Gethe/wow-ui-source: the
@@ -209,9 +208,9 @@ Blizzard code shows, named in `opts.nilable`); `scripts/check-api.py
 and `tests/99_sim_gaps.lua` fails when a stand-in is no longer missing in the
 simulator, is never called (unless `opts.rarely`) or returns something else
 than documented.
-- [wow-ui-sim](https://github.com/Osso/wow-ui-sim) for retail twice, headless for
-  the test runs (`target/`) and with the GPU renderer for screenshots
-  (`target-gui/`), and headless for Forever (`wow-ui-sim-forever/target/`), plus
+- [wow-ui-sim](https://github.com/Osso/wow-ui-sim) once per client, with the GPU
+  renderer (`wow-ui-sim/target/`, `wow-ui-sim-forever/target/`): the same
+  binary runs the tests headless and renders the visual tests' screenshots, plus
   the Forever spell data it reads, generated from Blizzard's CDN by wow-cli and
   checked against `FOREVER_SPELLS_SHA256`;
 - a Python venv with Pillow for the image comparison.
@@ -341,7 +340,7 @@ with BugSack and `taint.log`. For bug reports, include the output of
 ## Continuous integration
 
 `.github/workflows/ci.yml` runs on every push to `main` and every pull request:
-one Linux job per client (retail, forever) with `setup-tools.sh --no-gui
+one Linux job per client (retail, forever) with `setup-tools.sh
 --client=<client>` and `test.sh --require-sim --client=<client>` (luacheck, API
 check and busted for both clients, the three simulator modes for the job's
 client; a simulator that fails to build fails the job instead of being
@@ -352,20 +351,20 @@ nothing the checks read (the addon, `sim/`, `spec/`, `upstream/*.lua`, the
 scripts the job runs, `scripts/patches/`, `.busted`, `.luacheckrc`,
 `ci.yml`). Releases, the weekly upstream run and manual runs always test.
 
-What is cached: the Lua toolchain, each client's simulator binary alone (about
-80 MB, keyed on its pin, its features and the ICU version) and Forever's spell
+What is cached: the Lua toolchain, each client's simulator binary alone (keyed
+on its pin, its features and the ICU version) and Forever's spell
 data (keyed on `FOREVER_SPELLS_SHA256`). A cache hit skips the Rust build; moving
-a pin builds once (about ten minutes on a runner) and caches the result. The CI sets
+a pin builds once and caches the result. The CI sets
 `RUSTFLAGS`, because wow-ui-sim's own Linux flags compile for the runner's CPU
 (`target-cpu=native`) and a cached binary could then fail on the next runner.
 The sources and references are fetched on every run (a minute or so).
 
-A third job runs the visual regression tests (retail) with the GPU build on
-the same runner: neither runner has a GPU, so Mesa's CPU Vulkan driver renders
+A third job runs the visual regression tests (retail) on the same runner:
+neither runner has a GPU, so Mesa's CPU Vulkan driver renders
 (`WOW_SIM_SOFTWARE_RENDER=1`). Its renders differ from the macOS baselines
 only in a few glyph edge pixels, which the comparison's per-channel tolerance
-absorbs. It caches the GUI binary like the headless one and the Blizzard
-textures keyed on their lock; on a failure the renders and `report.html` are
+absorbs. It runs the retail checks job's simulator binary from the same
+cache entry and caches the Blizzard textures keyed on their lock; on a failure the renders and `report.html` are
 uploaded as the `visual-out` artifact.
 
 ### Self-hosted runner

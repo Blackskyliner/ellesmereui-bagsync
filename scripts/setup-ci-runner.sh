@@ -55,9 +55,9 @@ esac
 
 # The packages ci.yml installs when they are missing (so the job never needs
 # sudo here), what scripts/setup-tools.sh builds with, and what the runner
-# itself and this script use. The visual job adds the GUI simulator's
-# libraries (iced, winit, wgpu), Mesa's CPU Vulkan driver (lavapipe), which
-# renders without a GPU, and python3-venv for the image comparison.
+# itself and this script use: among them the GUI simulator's libraries (iced,
+# winit, wgpu) and python3-venv for the image comparison. The visual job adds
+# Mesa's CPU Vulkan driver (lavapipe), which renders without a GPU.
 PACKAGES=(
   ca-certificates curl git jq tar unzip rsync python3 python3-venv build-essential
   libreadline-dev clang mold pkg-config libicu-dev fonts-dejavu-core libssl-dev

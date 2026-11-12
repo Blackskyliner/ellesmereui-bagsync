@@ -92,13 +92,17 @@ jobs:
       # ICU (pkg-config, libicu-dev): wow-ui-sim links ICU4C, also at run time.
       # DejaVu: the simulator measures text with it when no game fonts exist.
       # OpenSSL (libssl-dev): wow-cli, which fetches Forever's spell data.
+      # What iced, winit and wgpu link: the simulator is the GUI build the
+      # visual job runs too. python3-venv: setup-tools.sh sets up the venv of
+      # the image comparison along with the simulator.
       # Only missing packages are installed, so a self-hosted runner that has
       # them all (CONTRIBUTING.md) needs no sudo.
       - name: Install build dependencies
         if: steps.scope.outputs.run == 'true'
         run: |
           missing=
-          for pkg in libreadline-dev clang mold pkg-config libicu-dev fonts-dejavu-core libssl-dev; do
+          for pkg in libreadline-dev clang mold pkg-config libicu-dev fonts-dejavu-core libssl-dev python3-venv \
+              libxkbcommon-dev libwayland-dev libx11-dev libxcursor-dev libxrandr-dev libxi-dev libasound2-dev; do
             dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q 'ok installed' || missing="$missing $pkg"
           done
           if [ -n "$missing" ]; then
@@ -154,10 +158,11 @@ jobs:
             .tools/rocks
           key: lua-${{ runner.os }}-${{ steps.pins.outputs.system }}-ws${{ steps.pins.outputs.workspace }}-${{ hashFiles('scripts/setup-tools.sh') }}
 
-      # Only the finished binary (about 80 MB) and the revision, patch set and
-      # features it was built from: with both setup-tools.sh skips the Rust build;
-      # the sources are fetched again at the pinned revision. A new pin or patch
-      # set builds once (about ten minutes) and is cached from then on.
+      # Only the finished binary and the revision, patch set and features it
+      # was built from: with both setup-tools.sh skips the Rust build; the
+      # sources are fetched again at the pinned revision. A new pin or patch
+      # set builds once and is cached from then on. The retail key is the
+      # visual job's as well, as both run the same build.
       - name: Cache simulator binary
         if: steps.scope.outputs.run == 'true'
         id: sim-cache
@@ -166,7 +171,7 @@ jobs:
           path: |
             .tools/vendor/${{ steps.pins.outputs.dir }}/target/release/wow-sim
             .tools/vendor/${{ steps.pins.outputs.dir }}/target/release/wow-sim.rev
-          key: wow-sim-${{ runner.os }}-${{ steps.pins.outputs.system }}-ws${{ steps.pins.outputs.workspace }}-icu${{ steps.pins.outputs.icu }}-${{ steps.pins.outputs.sim }}${{ steps.pins.outputs.patches }}-${{ steps.pins.outputs.features }}-headless
+          key: wow-sim-${{ runner.os }}-${{ steps.pins.outputs.system }}-ws${{ steps.pins.outputs.workspace }}-icu${{ steps.pins.outputs.icu }}-${{ steps.pins.outputs.sim }}${{ steps.pins.outputs.patches }}-${{ steps.pins.outputs.features }}
 
       # Forever's simulator reads spell data that wow-cli generates from
       # Blizzard's CDN; setup-tools.sh checks it against its pinned checksum.
@@ -184,10 +189,9 @@ jobs:
 
       # Blizzard's sources, the annotations and the GlobalStrings are fetched
       # fresh, so the API check reports Blizzard changes on the next run.
-      # No GPU build here: the visual job below builds and runs that one.
       - name: Set up toolchain, reference sources and simulator
         if: steps.scope.outputs.run == 'true'
-        run: scripts/setup-tools.sh --no-gui --client=${{ matrix.client }}
+        run: scripts/setup-tools.sh --client=${{ matrix.client }}
 
       - name: Run checks
         if: steps.scope.outputs.run == 'true'
@@ -196,7 +200,7 @@ jobs:
 
   visual:
     name: Visual regression (retail)
-    # The scenarios of sim/visual rendered by the GUI build of wow-ui-sim and
+    # The scenarios of sim/visual rendered by wow-ui-sim and
     # compared with the baselines, on the checks job's runner (CI_RUNNER);
     # scripts/setup-ci-runner.sh installs the GUI libraries there. Neither
     # runner has a GPU: Mesa's CPU Vulkan driver (lavapipe) renders, as
@@ -239,9 +243,8 @@ jobs:
           printf '%s\n' "$reason"
           { echo '```'; printf '%s\n' "run=$run, $reason"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
-      # The checks job's build dependencies, what iced, winit and wgpu link or
-      # load, lavapipe as the only Vulkan adapter, and python3-venv for the
-      # image comparison; only missing ones, as in the checks job.
+      # The checks job's build dependencies and lavapipe as the only Vulkan
+      # adapter; only missing ones, as in the checks job.
       - name: Install build dependencies
         if: steps.scope.outputs.run == 'true'
         run: |
@@ -287,8 +290,7 @@ jobs:
             .tools/rocks
           key: lua-${{ runner.os }}-${{ steps.pins.outputs.system }}-ws${{ steps.pins.outputs.workspace }}-${{ hashFiles('scripts/setup-tools.sh') }}
 
-      # setup-tools.sh builds the headless binary as well; the key is the
-      # checks job's, so both share it.
+      # The checks job's key: both run the same build.
       - name: Cache simulator binary
         if: steps.scope.outputs.run == 'true'
         id: sim-cache
@@ -297,17 +299,7 @@ jobs:
           path: |
             .tools/vendor/wow-ui-sim/target/release/wow-sim
             .tools/vendor/wow-ui-sim/target/release/wow-sim.rev
-          key: wow-sim-${{ runner.os }}-${{ steps.pins.outputs.system }}-ws${{ steps.pins.outputs.workspace }}-icu${{ steps.pins.outputs.icu }}-${{ steps.pins.outputs.sim }}${{ steps.pins.outputs.patches }}-${{ steps.pins.outputs.features }}-headless
-
-      - name: Cache simulator GUI binary
-        if: steps.scope.outputs.run == 'true'
-        id: gui-cache
-        uses: actions/cache@v6
-        with:
-          path: |
-            .tools/vendor/wow-ui-sim/target-gui/release/wow-sim
-            .tools/vendor/wow-ui-sim/target-gui/release/wow-sim.rev
-          key: wow-sim-${{ runner.os }}-${{ steps.pins.outputs.system }}-ws${{ steps.pins.outputs.workspace }}-icu${{ steps.pins.outputs.icu }}-${{ steps.pins.outputs.sim }}${{ steps.pins.outputs.patches }}-${{ steps.pins.outputs.features }}-gui
+          key: wow-sim-${{ runner.os }}-${{ steps.pins.outputs.system }}-ws${{ steps.pins.outputs.workspace }}-icu${{ steps.pins.outputs.icu }}-${{ steps.pins.outputs.sim }}${{ steps.pins.outputs.patches }}-${{ steps.pins.outputs.features }}
 
       # Blizzard's art stays out of the repository; the runner fetches the
       # pinned files once per lock and keeps them in its cache.
@@ -319,10 +311,10 @@ jobs:
           key: blizzard-art-${{ hashFiles('sim/visual/blizzard-art.lock.json') }}
 
       - name: Rust toolchain (to build the simulator, or where cargo is missing)
-        if: steps.scope.outputs.run == 'true' && (steps.pins.outputs.cargo != 'yes' || steps.sim-cache.outputs.cache-hit != 'true' || steps.gui-cache.outputs.cache-hit != 'true')
+        if: steps.scope.outputs.run == 'true' && (steps.pins.outputs.cargo != 'yes' || steps.sim-cache.outputs.cache-hit != 'true')
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Set up toolchain and simulator (with GUI build)
+      - name: Set up toolchain and simulator
         if: steps.scope.outputs.run == 'true'
         run: scripts/setup-tools.sh --client=retail
 
