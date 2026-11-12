@@ -1,13 +1,13 @@
 Subject: [PATCH] fix: give EditBox text the client's font, insets and left
  justification
 
-A SearchBoxTemplate box drew its text yellow, centred and against its left
-edge; the client draws it white, at the left, 16 px in.
+A SearchBoxTemplate box drew its text yellow, centered and against its
+left edge; the client draws it white, at the left, 16 px in.
 
 - An EditBox's <FontString> element (InputBoxVisualTemplate:
   <FontString inherits="ChatFontNormal"/>) was parsed but never applied,
   so the box had no font object. It now sets the box's font object, and
-  the justification and colour the element names.
+  the justification and color the element names.
 - A new EditBox justifies its text LEFT, as GetJustifyH() reports in the
   client, where a FontString starts at CENTER; the element's font object
   leaves that unless it names justifyH itself.
@@ -32,12 +32,12 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 
 diff --git a/src/loader/editbox_font.rs b/src/loader/editbox_font.rs
 new file mode 100644
-index 000000000..95d529e0a
+index 000000000..bbb750521
 --- /dev/null
 +++ b/src/loader/editbox_font.rs
 @@ -0,0 +1,96 @@
 +//! The `<FontString>` element of an EditBox: the font, justification and
-+//! colour of its text.
++//! color of its text.
 +//!
 +//! `<EditBox><FontString inherits="ChatFontNormal" justifyH="LEFT"/></EditBox>`
 +//! describes the box's own text, not a child region. Blizzard's input box
@@ -66,7 +66,7 @@ index 000000000..95d529e0a
 +}
 +
 +/// Lua that applies `font_string` to the EditBox `box_ref`: the font object it
-+/// inherits, then the justification and colour it names. The font object
++/// inherits, then the justification and color it names. The font object
 +/// brings no justification of its own here: a SearchBoxTemplate box, whose
 +/// element names only ChatFontNormal, stays "LEFT" in the client.
 +fn generate_editbox_font_code(box_ref: &str, font_string: &crate::xml::FontStringXml) -> String {
@@ -146,7 +146,7 @@ index f9fe5f13c..fbe94c1fd 100644
  pub(crate) mod chunk_cache;
 diff --git a/src/loader/tests/editbox_font.rs b/src/loader/tests/editbox_font.rs
 new file mode 100644
-index 000000000..0821a8731
+index 000000000..65052b753
 --- /dev/null
 +++ b/src/loader/tests/editbox_font.rs
 @@ -0,0 +1,82 @@
@@ -201,7 +201,7 @@ index 000000000..0821a8731
 +}
 +
 +#[test]
-+fn an_editbox_font_string_element_sets_justification_and_colour() {
++fn an_editbox_font_string_element_sets_justification_and_color() {
 +    let ctx = load_test_xml("editbox-font-attributes", EDITBOX_FONT_XML);
 +    let probe: (String, f64, f64, f64) = ctx
 +        .env
