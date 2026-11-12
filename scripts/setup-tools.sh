@@ -53,11 +53,14 @@ GETHE_FOREVER_REV=aff0d8cd53bf4d9ef1c1dd2786b94461a276fb16 # 1.60.1.70707
 # holds them as git patches, each naming its upstream pull request, applied on
 # top of the pin.
 # wow-ui-sim 0001: FontString:SetFont with an addon's font file falls back to
-# the default font; this loads the file. 0002: without a WoW install the
-# default font is the first system font, which differs between macOS and
-# Linux; WOW_SIM_FALLBACK_FONT pins it. 0003: an EditBox ignored its
+# the default font; this loads the file
+# (https://github.com/Osso/wow-ui-sim/pull/59). 0002: without a WoW install
+# the default font is the first system font, which differs between macOS and
+# Linux; WOW_SIM_FALLBACK_FONT pins it
+# (https://github.com/Osso/wow-ui-sim/pull/60). 0003: an EditBox ignored its
 # template's <FontString> and <TextInsets> (yellow text, no font object, no
-# inset) and centred its text, where the client starts it at the left.
+# inset) and centered its text, where the client starts it at the left
+# (https://github.com/Osso/wow-ui-sim/pull/61).
 # The Forever profile reads selected spell data of client build 1.60.1.70685,
 # which wow-cli generates from Blizzard's CDN (wow-ui-sim
 # docs/specs/forever-spell-data.md gives this checksum for it).
