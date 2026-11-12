@@ -6,6 +6,116 @@
   "cdn_config": "8ecf609471cb2ea16667be9cc2b7a555",
   "files": [
     {
+      "path": "interface/auctionframe/auctionhouse.blp",
+      "file_data_id": 3046538,
+      "content_key": "21910f45eea6d67d371a28b9f9ef80b5",
+      "content_size": 1049748,
+      "encoding_key": "3bf9d7584e2d5a2b4d534e9b3c200bc3",
+      "archive": "befb99ab64b7e6af9cf6c55a58a5b041",
+      "offset": 93289168,
+      "size": 112480
+    },
+    {
+      "path": "interface/buttons/buttonhilight-square.blp",
+      "file_data_id": 130718,
+      "content_key": "80a0508abe3ed4ecd0cdb141c6b0c34f",
+      "content_size": 3916,
+      "encoding_key": "f14632af8f77a7f2ffd75554ddf4e1c4",
+      "archive": "682938601229808ca8cf58edd9672a6b",
+      "offset": 268434589,
+      "size": 642
+    },
+    {
+      "path": "interface/buttons/minimalscrollbarproportional.blp",
+      "file_data_id": 4331838,
+      "content_key": "8057f9372477bd6a68ebca960d4e0619",
+      "content_size": 33940,
+      "encoding_key": "7be175f42d41fe40b5d6c150748a0c06",
+      "archive": "f5bbf4c2f3c842da956163706f102d67",
+      "offset": 119258749,
+      "size": 5926
+    },
+    {
+      "path": "interface/buttons/minimalscrollbarsmallproportional.blp",
+      "file_data_id": 5142787,
+      "content_key": "c555ff94ac78a7e30fc6b6a2b3a2eaf4",
+      "content_size": 5268,
+      "encoding_key": "2d742280ded03efcc5b57d5d0fb53cc8",
+      "archive": "82c9063361263a8f5804af5189548845",
+      "offset": 29720753,
+      "size": 2535
+    },
+    {
+      "path": "interface/buttons/minimalscrollbarsmallvertical.blp",
+      "file_data_id": 5142784,
+      "content_key": "f74379b26c294182c48798204cd1cda2",
+      "content_size": 66708,
+      "encoding_key": "e5e18e145ece4c09fa443dc86597c436",
+      "archive": "244580f7cc427e4c36f3a0a7d580da2e",
+      "offset": 101902357,
+      "size": 532
+    },
+    {
+      "path": "interface/buttons/minimalscrollbarvertical.blp",
+      "file_data_id": 4332072,
+      "content_key": "5ac77f8c5c4360ddfd190debcfdabee4",
+      "content_size": 263316,
+      "encoding_key": "4a52914a18798574e650d4349975cf66",
+      "archive": "c5843db8263e5c12e24c0cb7345095c4",
+      "offset": 999789,
+      "size": 5787
+    },
+    {
+      "path": "interface/buttons/minimalsliderbar.blp",
+      "file_data_id": 4567914,
+      "content_key": "c5f88a44b4cfaaa606086e6f0ed7ad2d",
+      "content_size": 5268,
+      "encoding_key": "93e347e13cae43aad4c3a01cb25c9803",
+      "archive": "697720bf8aba1f880cfd19f7e3ec0940",
+      "offset": 227916778,
+      "size": 1235
+    },
+    {
+      "path": "interface/buttons/redbuttons.blp",
+      "file_data_id": 5262907,
+      "content_key": "f0705b7cdd42ed2238f7582cdb6e4670",
+      "content_size": 9364,
+      "encoding_key": "a0fcd352dded24f5e763dc82d4122ae7",
+      "archive": "5f06714bc438b44e7563d3dd3f9ff2b2",
+      "offset": 190326506,
+      "size": 2122
+    },
+    {
+      "path": "interface/buttons/ui-panel-button-disabled.blp",
+      "file_data_id": 130824,
+      "content_key": "a9ed95ac18b27006cfb28b1d90716158",
+      "content_size": 6676,
+      "encoding_key": "d0c84eb59b65941b195a93667c4133cc",
+      "archive": "45667eef39c3a75c79a9ec7b9fa44498",
+      "offset": 32747925,
+      "size": 910
+    },
+    {
+      "path": "interface/buttons/ui-panel-button-down.blp",
+      "file_data_id": 130825,
+      "content_key": "c6451829de37deac5c844be38de3c4d0",
+      "content_size": 6676,
+      "encoding_key": "e0f9218ac6b14fa8ba39c12066431b0e",
+      "archive": "45667eef39c3a75c79a9ec7b9fa44498",
+      "offset": 32748835,
+      "size": 898
+    },
+    {
+      "path": "interface/buttons/ui-panel-button-highlight.blp",
+      "file_data_id": 130826,
+      "content_key": "1a4b8ac34d140fd149fb17ea6dcc4c2c",
+      "content_size": 3924,
+      "encoding_key": "5704747e9705700b60de243f53dbd8d0",
+      "archive": "45667eef39c3a75c79a9ec7b9fa44498",
+      "offset": 32749733,
+      "size": 728
+    },
+    {
       "path": "Interface/Buttons/UI-Panel-Button-Up.blp",
       "file_data_id": 130828,
       "content_key": "1e10d08981d3341527035d76feee044c",
@@ -14,6 +124,26 @@
       "archive": "45667eef39c3a75c79a9ec7b9fa44498",
       "offset": 32750461,
       "size": 947
+    },
+    {
+      "path": "interface/buttons/ui-quickslot-depress.blp",
+      "file_data_id": 130839,
+      "content_key": "9c2644e9cd1e4d9a6fb45d9107965649",
+      "content_size": 6660,
+      "encoding_key": "041aa3495c54fafc024500ef7ec14eac",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 3761865,
+      "size": 1418
+    },
+    {
+      "path": "interface/buttons/ui-quickslot2.blp",
+      "file_data_id": 130841,
+      "content_key": "119eb9d247366c541ab0a84f2da01c43",
+      "content_size": 3916,
+      "encoding_key": "ef7c8f1e2f4a934e3c1a4ce1c6017ee2",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 3763995,
+      "size": 512
     },
     {
       "path": "interface/buttons/white8x8.blp",
@@ -26,6 +156,16 @@
       "size": 95
     },
     {
+      "path": "interface/characterframe/tempportraitalphamask.blp",
+      "file_data_id": 130924,
+      "content_key": "c8fa668b9c22e08fec544a5e5f2b6dd4",
+      "content_size": 23044,
+      "encoding_key": "8e44927d6957bee3d54ea88e929f31da",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 3892159,
+      "size": 2599
+    },
+    {
       "path": "interface/chatframe/chatframebackground.blp",
       "file_data_id": 130937,
       "content_key": "9521db29b918d3f6077e95d9775dc4e2",
@@ -36,6 +176,176 @@
       "size": 99
     },
     {
+      "path": "interface/collections/collections.blp",
+      "file_data_id": 984826,
+      "content_key": "d0bb97bf04d57a84b43e81b28db52bf8",
+      "content_size": 263316,
+      "encoding_key": "d3a9dfbc879c2b2ca5ef890d7d718b48",
+      "archive": "a7adc61eb6e7cee3093773e865fc0e8d",
+      "offset": 56781457,
+      "size": 47574
+    },
+    {
+      "path": "interface/common/common-iconmask.blp",
+      "file_data_id": 2922105,
+      "content_key": "028fc98d8a65d12f159ea1883eca78b4",
+      "content_size": 3220,
+      "encoding_key": "63f552f6abd172d567de750aa61d99dc",
+      "archive": "01794f476dce0d0adeb975eaff4ff850",
+      "offset": 92364757,
+      "size": 150
+    },
+    {
+      "path": "interface/common/commonbuttontertiary.blp",
+      "file_data_id": 5534021,
+      "content_key": "54b9841f78d046482303b388d137ab4f",
+      "content_size": 263316,
+      "encoding_key": "ccc65470d8d866093c51f15c4166e56d",
+      "archive": "0efba5b71a422e69abf19533f077cf54",
+      "offset": 144199568,
+      "size": 24917
+    },
+    {
+      "path": "interface/common/commoncoinbox.blp",
+      "file_data_id": 4701877,
+      "content_key": "0c10872cf87f898243e8ad9dd7adf61a",
+      "content_size": 17556,
+      "encoding_key": "482ba2db919668a2205d37ec6c53cf75",
+      "archive": "bca3619228acef52b8c00a4265ebc9af",
+      "offset": 170803756,
+      "size": 1778
+    },
+    {
+      "path": "interface/common/commondropdown.blp",
+      "file_data_id": 5390329,
+      "content_key": "085526850ab1824b72362adac2f9eceb",
+      "content_size": 525460,
+      "encoding_key": "c12210ac11ca1dfa695c47750d52a6a3",
+      "archive": "cdde613846c57a90841abb9935371118",
+      "offset": 171942723,
+      "size": 56616
+    },
+    {
+      "path": "interface/common/commonsearch.blp",
+      "file_data_id": 3281887,
+      "content_key": "562b72158d1910fbe37008781c8d5def",
+      "content_size": 132244,
+      "encoding_key": "832e7f68aa9dc24089fd26bda26c2927",
+      "archive": "bca3619228acef52b8c00a4265ebc9af",
+      "offset": 169947480,
+      "size": 3900
+    },
+    {
+      "path": "interface/common/minimalcheckbox.blp",
+      "file_data_id": 4614134,
+      "content_key": "7e2e59cd615d09087330a6e233e83b0e",
+      "content_size": 5268,
+      "encoding_key": "e817ab71098461cbc2257a373f0ed861",
+      "archive": "697720bf8aba1f880cfd19f7e3ec0940",
+      "offset": 228312497,
+      "size": 1223
+    },
+    {
+      "path": "interface/common/ui-searchbox-icon.blp",
+      "file_data_id": 374210,
+      "content_key": "837656c3dd3b21a50c48d37b0a80d38f",
+      "content_size": 1540,
+      "encoding_key": "bf558ee6dc7bebd9426ecf564bbc261c",
+      "archive": "5955972b860319bfa9ce736b34047ba3",
+      "offset": 57882352,
+      "size": 247
+    },
+    {
+      "path": "interface/common/whiteiconframe.blp",
+      "file_data_id": 651080,
+      "content_key": "8c0a85209e0ea038fa0c28dcda447355",
+      "content_size": 3220,
+      "encoding_key": "205fe52fc839cbc994232f372198800b",
+      "archive": "24482ecf71f310e140bd9188cc1c2d85",
+      "offset": 241162266,
+      "size": 417
+    },
+    {
+      "path": "interface/containerframe/bags.blp",
+      "file_data_id": 969828,
+      "content_key": "8a3ec7c0de129cf7f3c5c73c14d77e6c",
+      "content_size": 525460,
+      "encoding_key": "61814396515a124d1337998080425c67",
+      "archive": "88461ab86eff13c19e16d857c4fa48e6",
+      "offset": 91147250,
+      "size": 91175
+    },
+    {
+      "path": "interface/containerframe/ui-bag-components.blp",
+      "file_data_id": 131003,
+      "content_key": "2ac26d593e8cf89a10f4a3bc0f64a66b",
+      "content_size": 175972,
+      "encoding_key": "8ff4bb8e565fa1c262b232efbf285724",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 4413365,
+      "size": 38061
+    },
+    {
+      "path": "interface/containerframe/ui-icon-questbang.blp",
+      "file_data_id": 368362,
+      "content_key": "aafc23aa197507e36cd452b9f02d51f3",
+      "content_size": 6660,
+      "encoding_key": "ec88572ef8fcb7873ff71cf9368e5a9f",
+      "archive": "5955972b860319bfa9ce736b34047ba3",
+      "offset": 10908522,
+      "size": 2681
+    },
+    {
+      "path": "interface/containerframe/ui-icon-questborder.blp",
+      "file_data_id": 368363,
+      "content_key": "0511ecb847c937d3b047a9e9abb7168a",
+      "content_size": 6660,
+      "encoding_key": "94ea4876a28786f1ee5bff6d17654a3b",
+      "archive": "5955972b860319bfa9ce736b34047ba3",
+      "offset": 10911203,
+      "size": 1575
+    },
+    {
+      "path": "interface/cooldown/star4.blp",
+      "file_data_id": 131010,
+      "content_key": "b5973fa3e204265a37a109561e6ef349",
+      "content_size": 12108,
+      "encoding_key": "7d21e66131d97d259d36f9ac881a305e",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 4495536,
+      "size": 5295
+    },
+    {
+      "path": "interface/cooldown/ui-hud-actionbar-secondarycooldown.blp",
+      "file_data_id": 5423465,
+      "content_key": "066cd18f37edd869984022b6c9646604",
+      "content_size": 17556,
+      "encoding_key": "92a4daf4b2c35b73c66f9ec868e77b24",
+      "archive": "74fef1d748cd78a8b44fcab756cd91e7",
+      "offset": 92081623,
+      "size": 815
+    },
+    {
+      "path": "interface/cursor/crosshair/uiquestcrosshair2x.blp",
+      "file_data_id": 6074842,
+      "content_key": "2715a5b53a7d85f8f911b7ae27a77d09",
+      "content_size": 1049748,
+      "encoding_key": "44a16b41ad52939725b89b64be5e2c5a",
+      "archive": "ce54c30fb20fe4f0a2fc4849be205f38",
+      "offset": 100964281,
+      "size": 44773
+    },
+    {
+      "path": "interface/cursor/uicastcursor2x.blp",
+      "file_data_id": 5008297,
+      "content_key": "b26a4d76717f00d861044eafafc59cd2",
+      "content_size": 525460,
+      "encoding_key": "34754f93c3e31aa96b483f4e19c2b07f",
+      "archive": "431d3797c76df782e43a8ddb22c78e43",
+      "offset": 24087796,
+      "size": 113049
+    },
+    {
       "path": "interface/framegeneral/ui-background-marble.blp",
       "file_data_id": 374154,
       "content_key": "5eb5fdf3c1c753c1c4e1ae9de2575f04",
@@ -44,6 +354,66 @@
       "archive": "5955972b860319bfa9ce736b34047ba3",
       "offset": 57742731,
       "size": 20981
+    },
+    {
+      "path": "interface/framegeneral/ui-background-rock.blp",
+      "file_data_id": 374155,
+      "content_key": "4f1b8ed94c12d5c05587f20642cda20d",
+      "content_size": 525460,
+      "encoding_key": "1fd4a876a68734f1f725710e588febce",
+      "archive": "8d5cd1385eff2c9dcde2351d48cdda49",
+      "offset": 194721709,
+      "size": 112834
+    },
+    {
+      "path": "interface/friendsframe/friendslist.blp",
+      "file_data_id": 1524890,
+      "content_key": "6650c9e269d9ab3cb6e86da11266d70b",
+      "content_size": 33940,
+      "encoding_key": "3751c5c84d4f6ef9b327a8c95093e36a",
+      "archive": "43b78c4602b5c997e85acca38cc72e95",
+      "offset": 163055033,
+      "size": 8453
+    },
+    {
+      "path": "interface/friendsframe/informationicon.blp",
+      "file_data_id": 374216,
+      "content_key": "df83fa5fe732b2e7b9adbae39a1e1ffd",
+      "content_size": 1540,
+      "encoding_key": "7d60fd9167c99a21bce7c4441dd30dd2",
+      "archive": "5955972b860319bfa9ce736b34047ba3",
+      "offset": 57885471,
+      "size": 406
+    },
+    {
+      "path": "interface/friendsframe/socialqueuing.blp",
+      "file_data_id": 1416467,
+      "content_key": "6e2e47a77bab0b32643f82e59c356607",
+      "content_size": 66708,
+      "encoding_key": "23fcc473601519467a3a463504e6c764",
+      "archive": "0acc6967c0c08f99e163ea599292f1fe",
+      "offset": 58303676,
+      "size": 7737
+    },
+    {
+      "path": "interface/garrison/garrisonfollowerclassicons.blp",
+      "file_data_id": 1000176,
+      "content_key": "00a9e7ba1c2cd81d660be81b2acb43c2",
+      "content_size": 263316,
+      "encoding_key": "eac6e3ae39db3f02f0ca92dcbd771a42",
+      "archive": "24482ecf71f310e140bd9188cc1c2d85",
+      "offset": 247702296,
+      "size": 104925
+    },
+    {
+      "path": "interface/garrison/garrisonmissionui2.blp",
+      "file_data_id": 952657,
+      "content_key": "e5501243c8f0c6f6d778ec36975082a1",
+      "content_size": 1049748,
+      "encoding_key": "a3014027cda5138ec8a298772fda479e",
+      "archive": "fe516dbb5d7e2b25367c8b0c45e603cf",
+      "offset": 94350835,
+      "size": 292386
     },
     {
       "path": "interface/icons/ability_crown_of_the_heavens_icon.blp",
@@ -1086,6 +1456,46 @@
       "size": 2180
     },
     {
+      "path": "interface/icons/inv_misc_bag_08.blp",
+      "file_data_id": 133633,
+      "content_key": "06021c95021e06f3596d7215d75b5f57",
+      "content_size": 3220,
+      "encoding_key": "07beae3335bde796870604a55af52537",
+      "archive": "bca3619228acef52b8c00a4265ebc9af",
+      "offset": 169794445,
+      "size": 1821
+    },
+    {
+      "path": "interface/icons/inv_misc_bag_10.blp",
+      "file_data_id": 133639,
+      "content_key": "23d48816d1083c552e698b0fb58b9daa",
+      "content_size": 3916,
+      "encoding_key": "be6d4e6fbebb34d4c558e9f20aa5983a",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 49759787,
+      "size": 2131
+    },
+    {
+      "path": "interface/icons/inv_misc_bag_enchantedrunecloth.blp",
+      "file_data_id": 133666,
+      "content_key": "0a8886f1bb51c672b7fc783d44d6efa4",
+      "content_size": 6660,
+      "encoding_key": "74ffb7bf89958e2e198754f4d44d48bf",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 49829552,
+      "size": 2638
+    },
+    {
+      "path": "interface/icons/inv_misc_coin_01.blp",
+      "file_data_id": 133784,
+      "content_key": "1a753f67c74caca49b597b658ec5fa5d",
+      "content_size": 3916,
+      "encoding_key": "3d78a43acf5e484fb37e1a0e64b52947",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 50101823,
+      "size": 2377
+    },
+    {
       "path": "interface/icons/inv_misc_food_11.blp",
       "file_data_id": 133964,
       "content_key": "620a96f57429ae0b6c4dd902b6d56b13",
@@ -1094,6 +1504,16 @@
       "archive": "1918c90d70d27694ba7738c258d907e1",
       "offset": 50566372,
       "size": 1914
+    },
+    {
+      "path": "interface/icons/inv_misc_groupneedmore.blp",
+      "file_data_id": 134149,
+      "content_key": "241851c0ccd17c353f7aeb4eb0d61419",
+      "content_size": 6660,
+      "encoding_key": "2ed181aaf384448f4d59dc9fef11a000",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 51014646,
+      "size": 2192
     },
     {
       "path": "interface/icons/inv_misc_questionmark.blp",
@@ -2216,6 +2636,86 @@
       "size": 1923
     },
     {
+      "path": "interface/interface/framegeneral/uiframe.blp",
+      "file_data_id": 1723831,
+      "content_key": "b2bfe223da7e8dfe2a0280fe33e2333f",
+      "content_size": 17556,
+      "encoding_key": "96864680e3bdf34217d64e1a0cf9aa63",
+      "archive": "ee5f45a86499f291a2b83d45b8c7c2e5",
+      "offset": 78756347,
+      "size": 5406
+    },
+    {
+      "path": "interface/minimap/objecticonsatlas.blp",
+      "file_data_id": 1121272,
+      "content_key": "87671fa910528e9221b7c7eb0a00a060",
+      "content_size": 4195476,
+      "encoding_key": "7fb4548720b1694ae2e8cf70899d26e7",
+      "archive": "9b601f210fd76ff79f47f4b881b56198",
+      "offset": 82809,
+      "size": 1345237
+    },
+    {
+      "path": "interface/paperdoll/ui-paperdoll-slot-bag.blp",
+      "file_data_id": 136511,
+      "content_key": "cb3c5f8ef00bdbb0fc300796f6fe5c9a",
+      "content_size": 3916,
+      "encoding_key": "2532ab0119112f7c46db797069ff31b9",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 58785777,
+      "size": 1931
+    },
+    {
+      "path": "interface/petbattles/petbattle-staticons.blp",
+      "file_data_id": 603586,
+      "content_key": "4e08767ecfac59de5c821c065f70e29d",
+      "content_size": 2564,
+      "encoding_key": "46f3ac808d1ec2dd72de42c9f6dbb535",
+      "archive": "bc9d29d7076a16309df34901c9ee7db6",
+      "offset": 11415098,
+      "size": 1263
+    },
+    {
+      "path": "interface/professions/professionsfxgearaugmentation.blp",
+      "file_data_id": 5891205,
+      "content_key": "6abecb914ae828e8aad1e9f3b2fb73e0",
+      "content_size": 4195476,
+      "encoding_key": "1b13df8d590e233ecdd384e5e03ccfce",
+      "archive": "344aad8c95dd3bc1f79ebbef92ae5d0a",
+      "offset": 131728888,
+      "size": 480307
+    },
+    {
+      "path": "interface/runecarving/runecarvingui.blp",
+      "file_data_id": 3636375,
+      "content_key": "68bc50508eb1a21567c4513f75a8fea5",
+      "content_size": 8389780,
+      "encoding_key": "af7f04c4240ee212dd37f0b670245100",
+      "archive": "327e8959c72d785fac009edd4570ab3d",
+      "offset": 77260884,
+      "size": 1457731
+    },
+    {
+      "path": "interface/store/newshop.blp",
+      "file_data_id": 6368253,
+      "content_key": "e1011a21d713f7829ac47903229949ad",
+      "content_size": 4195476,
+      "encoding_key": "7a82a7453195afd935bc12ccca9d4fe2",
+      "archive": "43b78c4602b5c997e85acca38cc72e95",
+      "offset": 165100440,
+      "size": 775079
+    },
+    {
+      "path": "interface/store/store-item-highlight.blp",
+      "file_data_id": 902180,
+      "content_key": "f7a39a6cf0d5c872a7ce3fab581c704a",
+      "content_size": 6660,
+      "encoding_key": "b31c8a6428c73f8116ccd0760165317d",
+      "archive": "89be2129d089b002941ddda6b3477adb",
+      "offset": 174619776,
+      "size": 1630
+    },
+    {
       "path": "interface/talentframe/talents.blp",
       "file_data_id": 4556093,
       "content_key": "ca0c660f6d33f9ace821765524a24658",
@@ -2566,6 +3066,36 @@
       "size": 130
     },
     {
+      "path": "interface/targetingframe/ui-targetingframe-barfill.blp",
+      "file_data_id": 137014,
+      "content_key": "b01e7fa642108b5e55c251b7605a0af0",
+      "content_size": 23036,
+      "encoding_key": "0fa3c1e5875debd0246edabbb1cbcb22",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 63716125,
+      "size": 995
+    },
+    {
+      "path": "interface/tooltip/tooltiplabel.blp",
+      "file_data_id": 7304549,
+      "content_key": "1c40b472abba908cb614ab2a2c51621e",
+      "content_size": 17556,
+      "encoding_key": "2e42eccebff9dbf6444c809470bd92ff",
+      "archive": "431d3797c76df782e43a8ddb22c78e43",
+      "offset": 43751954,
+      "size": 1218
+    },
+    {
+      "path": "interface/tooltips/uiframetooltip.blp",
+      "file_data_id": 4185447,
+      "content_key": "aa3838bb41a196e4432ed828a5180d11",
+      "content_size": 3220,
+      "encoding_key": "9deef3e29c1bafe0579aa6221778b235",
+      "archive": "be7dbdb9bf8eb34c9c68347770d2432f",
+      "offset": 100754747,
+      "size": 689
+    },
+    {
       "path": "interface/tooltips/uiframetooltipbackground.blp",
       "file_data_id": 4185455,
       "content_key": "dddbab2ac190ca0a6e7e98ead35c19d7",
@@ -2574,6 +3104,16 @@
       "archive": "1575be7f9cdd6b0d06214e2740396839",
       "offset": 95617002,
       "size": 114
+    },
+    {
+      "path": "interface/tooltips/uiframetooltipvertical.blp",
+      "file_data_id": 4185474,
+      "content_key": "4285450e64df722c43ed0a32af1b7796",
+      "content_size": 1684,
+      "encoding_key": "66129a37e545f405de70e5f8f48412bd",
+      "archive": "68c9b716a019a8f9d40d2f8f3d92d1be",
+      "offset": 225335400,
+      "size": 157
     }
   ]
 }
