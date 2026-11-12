@@ -53,9 +53,6 @@ WOW_UI_SIM_FOREVER_REV=079afe1f0df7fdea03ec83d6a0775685b9d1fcce
 # the default font, and that default is the first system font when no WoW
 # install provides Blizzard's; this loads addon fonts and takes the fallback
 # from WOW_SIM_FALLBACK_FONT, so text renders alike on macOS and Linux.
-# wow-ui-sim 0002: Blizzard's textures come only from a WoW install; this
-# also reads them from the Interface tree named by WOW_SIM_INTERFACE_ART_PATH,
-# where scripts/blizzard-art.py puts the pinned ones for the visual tests.
 # The Forever profile reads selected spell data of client build 1.60.1.70685,
 # which wow-cli generates from Blizzard's CDN (wow-ui-sim
 # docs/specs/forever-spell-data.md gives this checksum for it).

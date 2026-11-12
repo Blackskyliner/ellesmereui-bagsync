@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Blizzard UI textures for the visual tests, from Blizzard's CDN.
 
-  blizzard-art.py fetch [DEST]   download the files of the lock into DEST
-                                 (default .tools/blizzard-art/<version>),
-                                 skipping files already there and intact
+  blizzard-art.py fetch [DEST]   download the files of the lock into a
+                                 minimal WoW install at DEST (default
+                                 .tools/blizzard-art/<version>), skipping
+                                 files already there and intact
   blizzard-art.py lock           re-pin: the textures the last visual test run
                                  missed plus those of the lock, against the
                                  current retail build
@@ -12,8 +13,10 @@ The lock (sim/visual/blizzard-art.lock.json) holds keys and archive offsets
 only: Blizzard's art is not ours to redistribute, so the repository never
 carries it. Each file is a byte range of a CDN archive, BLTE-encoded; it is
 decoded and checked against its content key (MD5) before it is written.
-The simulator reads DEST through WOW_SIM_INTERFACE_ART_PATH
-(scripts/patches/wow-ui-sim).
+DEST looks like a WoW install to the simulator: Data/data marks it as one
+(asset-resolver), and the textures sit in _retail_/BlizzardInterfaceArt,
+the extracted tree it reads besides CASC. With WOW_INSTALL_PATH=DEST and
+WOW_SIM_CASC=0 (no CASC archives exist) it reads only that tree.
 """
 import concurrent.futures
 import glob
@@ -99,8 +102,11 @@ def download(entry):
     raise AssertionError("unreachable")
 
 
+ART_DIR = os.path.join("_retail_", "BlizzardInterfaceArt")
+
+
 def fetch_one(entry, dest):
-    path = os.path.join(dest, entry["path"])
+    path = os.path.join(dest, ART_DIR, entry["path"])
     if intact(path, entry):
         return False
     content = blte_decode(download(entry), entry)
@@ -116,6 +122,7 @@ def fetch_one(entry, dest):
 def fetch(dest):
     lock = load_lock()
     dest = dest or default_dest(lock)
+    os.makedirs(os.path.join(dest, "Data", "data"), exist_ok=True)
     with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
         jobs = {pool.submit(fetch_one, e, dest): e for e in lock["files"]}
         fetched = 0

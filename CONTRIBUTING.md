@@ -287,7 +287,10 @@ fails without the fix, then make it pass.
      CDN, never from the repository: `sim/visual/blizzard-art.lock.json` pins
      each file to a byte range of the current retail build, and
      `scripts/blizzard-art.py fetch` (run by `visual-test.sh`) downloads and
-     verifies them into `.tools/blizzard-art/`. A scenario that shows a new
+     verifies them into `.tools/blizzard-art/`, laid out as a minimal WoW
+     install that holds only them. The simulator reads it like an install's
+     extracted art (`WOW_INSTALL_PATH`, `WOW_SIM_CASC=0`), so a real install
+     on the machine does not change the renders. A scenario that shows a new
      texture logs `[TexMgr] Not found` in `.tools/visual-out/`; after a full
      `visual-test.sh` run, `scripts/blizzard-art.py lock` pins those too
      (Rust tool in `scripts/blizzard-art/`; it caches about 350 MB of build
