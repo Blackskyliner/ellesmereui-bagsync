@@ -260,7 +260,23 @@ function W.HidePetTooltip()
     if petTooltip then petTooltip:Hide() end
 end
 
-local GOLD, SILVER, COPPER = "|cffffd700g|r", "|cffc7c7cfs|r", "|cffeda55fc|r"
+-- The unit after each part of a balance, as the ui.moneySymbols setting asks:
+-- coloured letters, or the coin icons of the game's money frames at text
+-- height (the 2px x offset keeps the icon off the digits, as Blizzard's
+-- GetCoinTextureString does).
+local MONEY_SYMBOLS = {
+    text = { g = "|cffffd700g|r", s = "|cffc7c7cfs|r", c = "|cffeda55fc|r" },
+    icons = {
+        g = "|TInterface\\MoneyFrame\\UI-GoldIcon:0:0:2:0|t",
+        s = "|TInterface\\MoneyFrame\\UI-SilverIcon:0:0:2:0|t",
+        c = "|TInterface\\MoneyFrame\\UI-CopperIcon:0:0:2:0|t",
+    },
+}
+
+local function Symbols()
+    local settings = ns.db and ns.db.settings.ui
+    return MONEY_SYMBOLS[settings and settings.moneySymbols] or MONEY_SYMBOLS.text
+end
 
 -- 1234567 -> "1,234,567"
 local function Thousands(n)
@@ -275,6 +291,8 @@ function W.FormatGold(copper)
     if not copper then return "-" end
     local settings = ns.db and ns.db.settings.ui
     local format = settings and settings.moneyFormat or "g"
+    local sym = Symbols()
+    local GOLD, SILVER, COPPER = sym.g, sym.s, sym.c
     copper = math.floor(copper)
     local gold = math.floor(copper / 10000)
     if format ~= "gs" and format ~= "gsc" then return Thousands(gold) .. GOLD end
@@ -294,6 +312,8 @@ end
 
 -- Copper as "1,234g 56s 7c" (zero parts left out; below 1g silver/copper shown).
 function W.FormatMoney(copper)
+    local sym = Symbols()
+    local GOLD, SILVER, COPPER = sym.g, sym.s, sym.c
     copper = math.floor(copper or 0)
     local gold = math.floor(copper / 10000)
     local silver = math.floor((copper % 10000) / 100)

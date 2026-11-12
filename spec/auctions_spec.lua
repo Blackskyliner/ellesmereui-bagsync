@@ -596,5 +596,18 @@ describe("Auction collector", function()
             assert.are.equal("0|cffeda55fc|r", ns.W.FormatGold(0))
             assert.are.equal("-", ns.W.FormatGold(nil))
         end)
+
+        it("shows coin icons instead of letters when the option asks for them", function()
+            local _, ns = world()
+            local ui = ns.db.settings.ui
+            assert.are.equal("text", ui.moneySymbols)
+            ui.moneySymbols = "icons"
+            ui.moneyFormat = "gsc"
+            local G = "|TInterface\\MoneyFrame\\UI-GoldIcon:0:0:2:0|t"
+            local S = "|TInterface\\MoneyFrame\\UI-SilverIcon:0:0:2:0|t"
+            local C = "|TInterface\\MoneyFrame\\UI-CopperIcon:0:0:2:0|t"
+            assert.are.equal("1,234" .. G .. " 56" .. S .. " 7" .. C, ns.W.FormatGold(12345607))
+            assert.are.equal("34" .. S .. " 56" .. C, ns.W.FormatMoney(3456))
+        end)
     end)
 end)
