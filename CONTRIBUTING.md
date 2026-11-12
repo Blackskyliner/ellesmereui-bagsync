@@ -343,7 +343,7 @@ with BugSack and `taint.log`. For bug reports, include the output of
 
 `.github/workflows/ci.yml` runs on every push to `main` and every pull request:
 one Linux job per client (retail, forever) with `setup-tools.sh
---client=<client>` and `test.sh --require-sim --client=<client>` (luacheck, API
+--client=<client>` and `test.sh --require-sim --no-visual --client=<client>` (luacheck, API
 check and busted for both clients, the three simulator modes for the job's
 client; a simulator that fails to build fails the job instead of being
 skipped). It runs on Linux because private repositories are billed ten times

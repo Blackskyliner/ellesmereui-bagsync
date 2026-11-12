@@ -202,7 +202,7 @@ jobs:
 
       - name: Run checks
         if: steps.scope.outputs.run == 'true'
-        run: scripts/test.sh --require-sim --client=${{ matrix.client }}
+        run: scripts/test.sh --require-sim --no-visual --client=${{ matrix.client }}
 
 
   visual:

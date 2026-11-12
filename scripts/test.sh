@@ -7,11 +7,14 @@
 #   --client=<name>     simulator tests of one client only: retail or forever
 #                       (default: both; lint, API check and busted cover both
 #                       clients in every run, the visual tests retail only)
+#   --no-visual         skip the visual tests (CI runs them in a job of their
+#                       own, with the software renderer and Blizzard's textures)
 set -uo pipefail
-REQUIRE_SIM=0 CLIENTS="retail forever"
+REQUIRE_SIM=0 VISUAL=1 CLIENTS="retail forever"
 for arg in "$@"; do
   case "$arg" in
     --require-sim) REQUIRE_SIM=1 ;;
+    --no-visual) VISUAL=0 ;;
     --client=retail|--client=forever) CLIENTS="${arg#--client=}" ;;
     *) echo "unknown option: $arg" >&2; exit 2 ;;
   esac
@@ -80,7 +83,7 @@ for client in $CLIENTS; do
   fi
 done
 
-case " $CLIENTS " in *" retail "*) visual=1 ;; *) visual=0 ;; esac
+case " $CLIENTS " in *" retail "*) visual=$VISUAL ;; *) visual=0 ;; esac
 if [ "$visual" = 1 ] && [ -x "$T/vendor/wow-ui-sim/target/release/wow-sim" ] && [ -x "$T/venv/bin/python" ]; then
   step "visual regression (wow-ui-sim screenshots vs sim/visual/baselines)"
   vlog="$(mktemp)"
@@ -92,7 +95,7 @@ if [ "$visual" = 1 ] && [ -x "$T/vendor/wow-ui-sim/target/release/wow-sim" ] && 
   fi
   rm -f "$vlog"
 else
-  step "visual regression skipped (retail only; simulator or venv missing)"
+  step "visual regression skipped (--no-visual, retail only, or simulator or venv missing)"
 fi
 
 printf '\n'
