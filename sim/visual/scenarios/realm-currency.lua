@@ -1,1 +1,2 @@
-VisualScene("*realm:Blackhand", "currency")
+-- clients: retail
+VisualScene(EUIAltsSimFixture.REALM, "currency")

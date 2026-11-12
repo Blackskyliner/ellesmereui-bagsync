@@ -1,0 +1,16 @@
+[package]
+name = "blizzard-art"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Pins Blizzard UI textures to byte ranges on Blizzard's CDN for the visual tests"
+
+[dependencies]
+# Same revision as the pinned wow-ui-sim (scripts/setup-tools.sh), so the
+# Cargo home of the simulator build already holds it.
+cascette-crypto = { git = "https://github.com/Osso/cascette-rs", rev = "758d8dbfbc64d500b2f8f5b5c133d9f82fa79a48" }
+cascette-formats = { git = "https://github.com/Osso/cascette-rs", rev = "758d8dbfbc64d500b2f8f5b5c133d9f82fa79a48" }
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+hex = "0.4"

@@ -1,1 +1,2 @@
+-- clients: retail
 VisualScene("#warband")

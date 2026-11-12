@@ -27,7 +27,7 @@ files["EllesmereUIBags_Alts/**/*.lua"] = {
         "STANDARD_TEXT_FONT", "GameFontHighlight", "BackdropTemplateMixin", 
         "SetItemButtonTexture", "SetItemButtonCount", "SetItemButtonQuality",
         "HandleModifiedItemClick", "IsModifiedClick", "IsShiftKeyDown", "IsControlKeyDown", "IsAltKeyDown",
-        "BreakUpLargeNumbers", "ITEM_QUALITY_COLORS", "OKAY", "CANCEL",
+        "BreakUpLargeNumbers", "ITEM_QUALITY_COLORS", "OKAY", "CANCEL", "KEYRING",
         "Settings", "CreateSettingsListSectionHeaderInitializer", "CreateSettingsButtonInitializer",
         "TooltipDataProcessor", "Enum", "GetLocale",
         -- Namespaced APIs

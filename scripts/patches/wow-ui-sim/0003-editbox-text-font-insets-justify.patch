@@ -1,0 +1,436 @@
+Subject: [PATCH] fix: give EditBox text the client's font, insets and left
+ justification
+
+A SearchBoxTemplate box drew its text yellow, centered and against its
+left edge; the client draws it white, at the left, 16 px in.
+
+- An EditBox's <FontString> element (InputBoxVisualTemplate:
+  <FontString inherits="ChatFontNormal"/>) was parsed but never applied,
+  so the box had no font object. It now sets the box's font object, and
+  the justification and color the element names.
+- A new EditBox justifies its text LEFT, as GetJustifyH() reports in the
+  client, where a FontString starts at CENTER; the element's font object
+  leaves that unless it names justifyH itself.
+- <TextInsets> came only from the frame's own XML. They now come from its
+  template chain as well, also for CreateFrame with a template.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ docs/wiki/index.md                            |  1 +
+ docs/wiki/investigations/editbox-text-font.md | 43 ++++++++
+ docs/wiki/log.md                              |  4 +
+ src/loader/editbox_font.rs                    | 96 ++++++++++++++++++
+ src/loader/mod.rs                             |  1 +
+ src/loader/xml_frame/finalize.rs              |  7 ++
+ src/loader/xml_frame/setup.rs                 |  2 +-
+ .../create_frame/template_chain/runtime.rs    |  3 +
+ .../template_chain/runtime_loader_effects.rs  |  8 ++
+ src/lua_api/globals/template/direct.rs        | 20 +++-
+ src/widget/frame.rs                           |  5 +
+ tests/editbox_text_defaults.rs                | 97 +++++++++++++++++++
+ 12 files changed, 283 insertions(+), 4 deletions(-)
+ create mode 100644 docs/wiki/investigations/editbox-text-font.md
+ create mode 100644 src/loader/editbox_font.rs
+ create mode 100644 tests/editbox_text_defaults.rs
+
+diff --git a/docs/wiki/index.md b/docs/wiki/index.md
+index c04e13677..97cf37a65 100644
+--- a/docs/wiki/index.md
++++ b/docs/wiki/index.md
+@@ -4279,6 +4279,7 @@ The sixteen retail 12.0.0 `Enum.EditModeDamageMeterSetting.*` and `Enum.EditMode
+ | [[retail-core-behavior-probes]] | Live retail `12.0.5.67823` probes pinned `SetForbidden`, `CreateForbiddenFrame`, invalid `RegisterUnitEvent`, wildcard false attributes, and the improved Raise/Lower capture path |
+ | [[minimap-map-ring-alignment]] | Active minimap bug is map texture/mask/ring alignment, not the SimCommands minimap button; debug the minimap render mask/clip and ring aperture directly |
+ | [[casc-fdid-1579624-root-debug]] | FDID 1579624 root/CASC resolution data, CRLF hash proof, and parser debugging checklist |
++| [[editbox-text-font]] | EditBox text font, insets and LEFT justification from XML templates, checked in the Forever client; the instructions region's Friz Quadrata 10 remains unmodeled |
+ | [[windows-casc-blizzard-taint]] | CASC/TOC load taint and runtime LoadAddOn boundaries; generated template handlers also need declaration-origin taint instead of constructor taint (grouped GREEN pending) |
+ | [[achievement-panel-hide]] | Achievement panel hide now uses Blizzard's managed panel path; animation completion also fires child animation `OnFinished` scripts for alert hide XML |
+ | [[adventure-guide-layout]] | Suggested Content card overlap came from synchronous geometry queries resolving resized anchor targets without updating dependent sibling frames |
+diff --git a/docs/wiki/investigations/editbox-text-font.md b/docs/wiki/investigations/editbox-text-font.md
+new file mode 100644
+index 000000000..e83f03ef6
+--- /dev/null
++++ b/docs/wiki/investigations/editbox-text-font.md
+@@ -0,0 +1,43 @@
++# EditBox text font, insets and justification
++
++A `SearchBoxTemplate` box drew its text yellow, centered and against its left edge. The client draws it white, at the left, 16 px in. Three loader gaps caused it: an EditBox's `<FontString>` element was never applied, a new EditBox started at `CENTER`, and `<TextInsets>` were read only from the frame's own XML. One client quirk around the box's font file and size remains unmodeled.
++
++## Content
++
++### Client behavior
++
++Checked in the WoW Forever client (1.60.1, no addons loaded, running under Wine). Forever and retail ship the same `SearchBoxTemplate` and `InputBoxVisualTemplate`.
++
++| Call | Result |
++|---|---|
++| `CreateFrame("EditBox"):GetJustifyH()` | `LEFT` |
++| `CreateFrame("EditBox"):GetFont()` | `nil, 0` |
++| `CreateFrame("EditBox"):GetTextColor()` | `1, 1, 1, 1` |
++| `CreateFrame("EditBox", nil, UIParent, "InputBoxTemplate"):GetFont()` | `Fonts\ARIALN.TTF, 14, ""` (ChatFontNormal) |
++| `CreateFrame("EditBox", nil, UIParent, "InputBoxInstructionsTemplate"):GetFont()` | `Fonts\FRIZQT__.TTF, 10, ""` |
++| `CreateFrame("EditBox", nil, UIParent, "SearchBoxTemplate")` | `GetJustifyH()` `LEFT`, `GetTextColor()` `1, 1, 1, 1`, `GetTextInsets()` `16, 20, 0, 0`, `GetFont()` `Fonts\FRIZQT__.TTF, 10, ""`, `GetFontObject():GetName()` `nil` |
++| `InputBoxTemplate` box plus `CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")` | `GetFont()` stays `Fonts\ARIALN.TTF, 14, ""` |
++| `ChatFontNormal:GetFont()` | `Fonts\ARIALN.TTF, 14, ""` |
++
++### Root causes and fix
++
++- `FrameXml::font_string_child()` parsed an EditBox's `<FontString>` element, but nothing applied it. `src/loader/editbox_font.rs` now applies the element of the box or its nearest template on both the XML path (`xml_frame/finalize.rs`) and the runtime template path (`runtime_loader_effects.rs`): the font object it inherits, and the `justifyH`, `justifyV` and `<Color>` it names. The font object leaves the justification as it was unless the element names one, because font objects default to `CENTER` while the client keeps a `SearchBoxTemplate` box at `LEFT`.
++- `Frame::new` gave an EditBox the FontString default `CENTER`; it now starts at `LEFT`.
++- `apply_xml_text_insets` read only the frame's own XML. It now falls back to the nearest template in the chain, and the runtime template path applies it too.
++
++### Open: the instructions region's font
++
++`InputBoxTemplate` takes ChatFontNormal's font from its element, as modeled. `InputBoxInstructionsTemplate` adds an `Instructions` FontString region (`GameFontDisableSmall`, Friz Quadrata 10). With it, the client reports Friz Quadrata 10 for the box, but keeps the box's white color. A FontString created at runtime does not have this effect. The rule behind it (declaration order, region type, or something else) is unknown. The simulator keeps ChatFontNormal, so a search box measures its text at 14 instead of 10. The client's font object is unnamed; the simulator's is ChatFontNormal itself.
++
++## Sources
++
++- [editbox_font.rs](../../../src/loader/editbox_font.rs) — applies an EditBox's `<FontString>` element
++- [direct.rs](../../../src/lua_api/globals/template/direct.rs) — `apply_xml_text_insets` with template fallback
++- [editbox_text_defaults.rs](../../../tests/editbox_text_defaults.rs) — tests for the default, the element and the insets on both paths
++- In-game `/dump` and `/run` checks in the WoW Forever client 1.60.1, listed above
++
++## See Also
++
++- [[xml-template-system]] — template chains the element and insets are resolved from
++- [[widget-system]] — EditBox widget defaults
++- [[rendering-pipeline]] — font sources
+diff --git a/docs/wiki/log.md b/docs/wiki/log.md
+index 90d61d353..3cd3a754d 100644
+--- a/docs/wiki/log.md
++++ b/docs/wiki/log.md
+@@ -1,3 +1,7 @@
++## [2026-11-12] investigation | EditBox text font and insets
++
++[EditBox text font, insets and justification](investigations/editbox-text-font.md) records the client checks, the three loader gaps and their fix, and the unmodeled font of `InputBoxInstructionsTemplate`'s instructions region.
++
+ ## [2026-11-12] docs | Pinned fallback font
+ 
+ [Rendering pipeline](systems/rendering-pipeline.md#font-sources) records `WOW_SIM_FALLBACK_FONT`; tests live in `src/render/font.rs`.
+diff --git a/src/loader/editbox_font.rs b/src/loader/editbox_font.rs
+new file mode 100644
+index 000000000..bbb750521
+--- /dev/null
++++ b/src/loader/editbox_font.rs
+@@ -0,0 +1,96 @@
++//! The `<FontString>` element of an EditBox: the font, justification and
++//! color of its text.
++//!
++//! `<EditBox><FontString inherits="ChatFontNormal" justifyH="LEFT"/></EditBox>`
++//! describes the box's own text, not a child region. Blizzard's input box
++//! templates set their text font this way (InputBoxVisualTemplate:
++//! `<FontString inherits="ChatFontNormal"/>`), so a SearchBoxTemplate box
++//! shows white ChatFontNormal text in the client.
++
++use crate::lua_api::LoaderEnv;
++
++use super::error::LoadError;
++use super::helpers::{escape_lua_string, lua_global_ref};
++
++/// The EditBox's own `<FontString>` element, else the nearest one in its
++/// template chain.
++fn resolve_editbox_font_string(
++    frame_xml: &crate::xml::FrameXml,
++    inherits: &str,
++) -> Option<crate::xml::FontStringXml> {
++    if let Some(font_string) = frame_xml.font_string_child() {
++        return Some(font_string.clone());
++    }
++    crate::xml::get_template_chain(inherits)
++        .iter()
++        .rev()
++        .find_map(|entry| entry.frame.font_string_child().cloned())
++}
++
++/// Lua that applies `font_string` to the EditBox `box_ref`: the font object it
++/// inherits, then the justification and color it names. The font object
++/// brings no justification of its own here: a SearchBoxTemplate box, whose
++/// element names only ChatFontNormal, stays "LEFT" in the client.
++fn generate_editbox_font_code(box_ref: &str, font_string: &crate::xml::FontStringXml) -> String {
++    let mut body = String::from("local h, v = box:GetJustifyH(), box:GetJustifyV()\n");
++    if let Some(inherits) = font_string.inherits.as_deref() {
++        for name in inherits
++            .split(',')
++            .map(str::trim)
++            .filter(|name| !name.is_empty())
++        {
++            body.push_str(&format!(
++                "local fo = _G[\"{}\"] if fo then box:SetFontObject(fo) end\n",
++                escape_lua_string(name)
++            ));
++        }
++    }
++    let justify_h = font_string
++        .justify_h
++        .as_deref()
++        .map_or("h".to_string(), |justify| {
++            format!("\"{}\"", escape_lua_string(justify))
++        });
++    let justify_v = font_string
++        .justify_v
++        .as_deref()
++        .map_or("v".to_string(), |justify| {
++            format!("\"{}\"", escape_lua_string(justify))
++        });
++    body.push_str(&format!(
++        "box:SetJustifyH({justify_h})\nbox:SetJustifyV({justify_v})\n"
++    ));
++    if let Some(color) = font_string.color.as_ref() {
++        body.push_str(&format!(
++            "box:SetTextColor({}, {}, {}, {})\n",
++            color.r.unwrap_or(1.0),
++            color.g.unwrap_or(1.0),
++            color.b.unwrap_or(1.0),
++            color.a.unwrap_or(1.0)
++        ));
++    }
++    format!(
++        "do local box = {box} if box and box.GetObjectType and box:GetObjectType() == \"EditBox\" then\n{body}end end\n",
++        box = lua_global_ref(box_ref),
++    )
++}
++
++/// Apply the EditBox `<FontString>` element of `frame_xml` (or of its
++/// template chain `inherits`) to the frame `box_ref_name`.
++pub fn apply_editbox_font_with_ref(
++    env: &LoaderEnv<'_>,
++    frame_xml: &crate::xml::FrameXml,
++    box_name: &str,
++    box_ref_name: &str,
++    inherits: &str,
++) -> Result<(), LoadError> {
++    let Some(font_string) = resolve_editbox_font_string(frame_xml, inherits) else {
++        return Ok(());
++    };
++    let code = generate_editbox_font_code(box_ref_name, &font_string);
++    env.exec(&code).map_err(|e| {
++        LoadError::Lua(format!(
++            "Failed to apply the text font of EditBox {box_name}: {e}"
++        ))
++    })
++}
+diff --git a/src/loader/mod.rs b/src/loader/mod.rs
+index f9fe5f13c..f11bdf9ac 100644
+--- a/src/loader/mod.rs
++++ b/src/loader/mod.rs
+@@ -10,6 +10,7 @@ pub(crate) mod button;
+ pub(crate) mod bytecode;
+ pub(crate) mod bytecode_cache;
+ pub(crate) mod chunk_cache;
++pub(crate) mod editbox_font;
+ mod error;
+ mod file_diagnostics;
+ pub(crate) mod helpers;
+diff --git a/src/loader/xml_frame/finalize.rs b/src/loader/xml_frame/finalize.rs
+index 3aa6a573d..2bbc8d6a8 100644
+--- a/src/loader/xml_frame/finalize.rs
++++ b/src/loader/xml_frame/finalize.rs
+@@ -90,6 +90,13 @@ fn apply_frame_button_extras(
+     apply_button_textures_with_ref(env, frame, name, &frame_ref_name, inherits)?;
+     apply_button_text_with_ref(env, frame, name, &frame_ref_name, "")?;
+     apply_button_fonts_with_ref(env, frame, name, &frame_ref_name, "")?;
++    crate::loader::editbox_font::apply_editbox_font_with_ref(
++        env,
++        frame,
++        name,
++        &frame_ref_name,
++        "",
++    )?;
+     apply_bar_texture(env, frame, name, inherits)?;
+     apply_thumb_texture(env, frame, name, inherits)?;
+     apply_colorselect_textures(env, frame, name, inherits)?;
+diff --git a/src/loader/xml_frame/setup.rs b/src/loader/xml_frame/setup.rs
+index d623bf3f6..c6b7af502 100644
+--- a/src/loader/xml_frame/setup.rs
++++ b/src/loader/xml_frame/setup.rs
+@@ -377,7 +377,7 @@ fn apply_xml_properties_direct(
+     direct::apply_xml_propagation_flags(state, frame_id, frame, inherits);
+     direct::apply_xml_clips_children(state, frame_id, frame, inherits);
+     direct::apply_xml_hit_rect_insets(state, frame_id, frame);
+-    direct::apply_xml_text_insets(state, frame_id, frame);
++    direct::apply_xml_text_insets(state, frame_id, frame, inherits);
+     direct::apply_xml_clamped_to_screen(state, frame_id, frame, inherits);
+     direct::apply_xml_protected(state, frame_id, frame, inherits);
+     direct::apply_xml_id(state, frame_id, frame);
+diff --git a/src/lua_api/globals/create_frame/template_chain/runtime.rs b/src/lua_api/globals/create_frame/template_chain/runtime.rs
+index c6ef4cd85..dd2888848 100644
+--- a/src/lua_api/globals/create_frame/template_chain/runtime.rs
++++ b/src/lua_api/globals/create_frame/template_chain/runtime.rs
+@@ -591,6 +591,9 @@ fn apply_runtime_child_direct_properties_with_inherits(
+     crate::lua_api::globals::template::direct::apply_xml_editbox_attributes(
+         state, frame_id, frame, inherits,
+     );
++    crate::lua_api::globals::template::direct::apply_xml_text_insets(
++        state, frame_id, frame, inherits,
++    );
+     crate::lua_api::globals::template::direct::apply_xml_message_frame_attributes(
+         state, frame_id, frame, inherits,
+     );
+diff --git a/src/lua_api/globals/create_frame/template_chain/runtime_loader_effects.rs b/src/lua_api/globals/create_frame/template_chain/runtime_loader_effects.rs
+index f643a2ff9..9226efe57 100644
+--- a/src/lua_api/globals/create_frame/template_chain/runtime_loader_effects.rs
++++ b/src/lua_api/globals/create_frame/template_chain/runtime_loader_effects.rs
+@@ -96,6 +96,14 @@ fn apply_loader_frame_button_parts(
+         parent_ref_name,
+         inherits,
+     )
++    .map_err(|error| rilua::runtime_error(error.to_string()))?;
++    crate::loader::editbox_font::apply_editbox_font_with_ref(
++        loader_env,
++        frame,
++        frame_name,
++        parent_ref_name,
++        inherits,
++    )
+     .map_err(|error| rilua::runtime_error(error.to_string()))
+ }
+ 
+diff --git a/src/lua_api/globals/template/direct.rs b/src/lua_api/globals/template/direct.rs
+index 68614c054..fe022d9ef 100644
+--- a/src/lua_api/globals/template/direct.rs
++++ b/src/lua_api/globals/template/direct.rs
+@@ -725,9 +725,23 @@ pub fn apply_xml_hit_rect_insets(state: &Rc<RefCell<SimState>>, frame_id: u64, f
+     }
+ }
+ 
+-/// Apply text insets from instance XML.
+-pub fn apply_xml_text_insets(state: &Rc<RefCell<SimState>>, frame_id: u64, frame: &FrameXml) {
+-    if let Some(insets) = frame.text_insets()
++/// Apply text insets from instance XML, else from the nearest template in
++/// the chain that sets them (SearchBoxTemplate's `<TextInsets left="16"/>`).
++pub fn apply_xml_text_insets(
++    state: &Rc<RefCell<SimState>>,
++    frame_id: u64,
++    frame: &FrameXml,
++    inherits: &str,
++) {
++    let chain = (!inherits.is_empty()).then(|| crate::xml::get_template_chain(inherits));
++    let insets = frame.text_insets().cloned().or_else(|| {
++        chain
++            .as_ref()?
++            .iter()
++            .rev()
++            .find_map(|entry| entry.frame.text_insets().cloned())
++    });
++    if let Some(insets) = insets
+         && let Some(frame) = state.borrow_mut().widgets.get_mut_visual(frame_id)
+     {
+         frame.editbox_text_insets = (insets.left(), insets.right(), insets.top(), insets.bottom());
+diff --git a/src/widget/frame.rs b/src/widget/frame.rs
+index 2a2e95585..515470a04 100644
+--- a/src/widget/frame.rs
++++ b/src/widget/frame.rs
+@@ -708,6 +708,11 @@ impl Frame {
+             frame.frame_strata = FrameStrata::Tooltip;
+             frame.has_fixed_frame_strata = true;
+         }
++        // The client starts an EditBox's text at the left (`GetJustifyH()`
++        // is "LEFT" on a new box), unlike a FontString's CENTER.
++        if widget_type == WidgetType::EditBox {
++            frame.justify_h = TextJustify::Left;
++        }
+         frame
+     }
+ 
+diff --git a/tests/editbox_text_defaults.rs b/tests/editbox_text_defaults.rs
+new file mode 100644
+index 000000000..2de715594
+--- /dev/null
++++ b/tests/editbox_text_defaults.rs
+@@ -0,0 +1,97 @@
++//! EditBox text defaults from XML templates: the box's `<FontString>`
++//! element, its `<TextInsets>` and the LEFT justification of a new box, as the
++//! WoW Forever 1.60.1 client reports them.
++use wow_ui_sim::loader::load_addon;
++use wow_ui_sim::lua_api::WowLuaEnv;
++
++const TEMPLATES: &str = r#"<Ui xmlns="http://www.blizzard.com/wow/ui/">
++    <Font name="EditBoxTextProbeFont" virtual="true" font="Fonts\ARIALN.TTF" height="14">
++        <Color r="1.0" g="1.0" b="1.0"/>
++    </Font>
++    <EditBox name="EditBoxTextVisualTemplate" virtual="true">
++        <FontString inherits="EditBoxTextProbeFont"/>
++        <TextInsets left="16" right="20" bottom="0" top="0"/>
++    </EditBox>
++    <EditBox name="EditBoxTextSearchTemplate" inherits="EditBoxTextVisualTemplate" virtual="true"/>
++    <EditBox name="EditBoxTextRightTemplate" virtual="true">
++        <FontString inherits="EditBoxTextProbeFont" justifyH="RIGHT">
++            <Color r="0.5" g="0.25" b="0.0"/>
++        </FontString>
++    </EditBox>
++    <EditBox name="EditBoxTextXmlBox" parent="UIParent" inherits="EditBoxTextSearchTemplate" autoFocus="false"/>
++</Ui>"#;
++
++fn env_with_templates() -> (WowLuaEnv, tempfile::TempDir) {
++    let env = WowLuaEnv::new().unwrap();
++    let addon = tempfile::tempdir().unwrap();
++    std::fs::write(
++        addon.path().join("EditBoxTextProbe.toc"),
++        "## Title: EditBoxTextProbe\ntemplates.xml\n",
++    )
++    .unwrap();
++    std::fs::write(addon.path().join("templates.xml"), TEMPLATES).unwrap();
++    load_addon(
++        &env.loader_env(),
++        &addon.path().join("EditBoxTextProbe.toc"),
++    )
++    .unwrap();
++    (env, addon)
++}
++
++#[test]
++fn a_new_editbox_justifies_its_text_left() {
++    let (env, _addon) = env_with_templates();
++    let justify: String = env
++        .eval(r#"return CreateFrame("EditBox", nil, UIParent):GetJustifyH()"#)
++        .unwrap();
++    assert_eq!(justify, "LEFT");
++}
++
++#[test]
++fn an_editbox_takes_the_font_of_its_inherited_font_string_element() {
++    let (env, _addon) = env_with_templates();
++    let probe: (bool, bool, f64, f64, f64, String) = env
++        .eval(
++            r#"
++            local runtime = CreateFrame("EditBox", nil, UIParent, "EditBoxTextSearchTemplate")
++            local r, g, b = runtime:GetTextColor()
++            return runtime:GetFontObject() == EditBoxTextProbeFont,
++                EditBoxTextXmlBox:GetFontObject() == EditBoxTextProbeFont,
++                r, g, b,
++                runtime:GetJustifyH()
++            "#,
++        )
++        .unwrap();
++    assert_eq!(probe, (true, true, 1.0, 1.0, 1.0, "LEFT".to_string()));
++}
++
++#[test]
++fn an_editbox_font_string_element_sets_justification_and_color() {
++    let (env, _addon) = env_with_templates();
++    let probe: (String, f64, f64, f64) = env
++        .eval(
++            r#"
++            local box = CreateFrame("EditBox", nil, UIParent, "EditBoxTextRightTemplate")
++            local r, g, b = box:GetTextColor()
++            return box:GetJustifyH(), r, g, b
++            "#,
++        )
++        .unwrap();
++    assert_eq!(probe, ("RIGHT".to_string(), 0.5, 0.25, 0.0));
++}
++
++#[test]
++fn an_editbox_takes_the_text_insets_of_its_template() {
++    let (env, _addon) = env_with_templates();
++    let probe: (f64, f64, f64, f64) = env
++        .eval(
++            r#"
++            local runtime = CreateFrame("EditBox", nil, UIParent, "EditBoxTextSearchTemplate")
++            local left, right = runtime:GetTextInsets()
++            local xmlLeft, xmlRight = EditBoxTextXmlBox:GetTextInsets()
++            return left, right, xmlLeft, xmlRight
++            "#,
++        )
++        .unwrap();
++    assert_eq!(probe, (16.0, 20.0, 16.0, 20.0));
++}

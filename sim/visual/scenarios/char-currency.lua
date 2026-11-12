@@ -1,1 +1,2 @@
-VisualScene("Aldrianna-Blackhand", "currency")
+-- clients: retail
+VisualScene(EUIAltsSimFixture.MAIN, "currency")

@@ -1,1 +1,1 @@
-VisualScene("Aldrianna-Blackhand", "auctions")
+VisualScene(EUIAltsSimFixture.MAIN, "auctions")

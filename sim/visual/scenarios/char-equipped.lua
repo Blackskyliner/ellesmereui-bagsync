@@ -1,0 +1,1 @@
+VisualScene(EUIAltsSimFixture.MAIN, "equipped")

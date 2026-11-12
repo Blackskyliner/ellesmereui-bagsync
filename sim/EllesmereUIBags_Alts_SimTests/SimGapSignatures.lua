@@ -3,11 +3,13 @@
 -- SimGaps.lua must match (tests/99_sim_gaps.lua).
 SimGapSignatures = {
     retail = {
+        ["C_AuctionHouse.GetOwnedAuctions"] = { "table" },
+        ["C_PetJournal.GetOwnedBattlePetString"] = false,
+        ["C_PlayerInteractionManager.IsInteractingWithNpcOfType"] = { "boolean" },
         ["IsUsingGamepad"] = { "boolean" },
     },
     forever = {
         ["C_AuctionHouse.GetOwnedAuctions"] = { "table" },
-        ["C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItemByID"] = { "boolean" },
         ["C_Bank.CanViewBank"] = { "boolean" },
         ["C_CurrencyInfo.GetCurrencyIDFromLink"] = { "number" },
         ["C_Item.IsCorruptedItem"] = { "boolean?" },

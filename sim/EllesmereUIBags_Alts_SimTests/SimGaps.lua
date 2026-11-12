@@ -70,14 +70,17 @@ end
 -- Retail: EllesmereUI's gamepad support asks it whenever its bag window opens.
 Gap("IsUsingGamepad", "retail", function() return false end)
 
--- Forever: PlayerInteractionManagerDocumentation.lua: no NPC window is open.
-Gap("C_PlayerInteractionManager.IsInteractingWithNpcOfType", "forever", function() return false end)
+-- Retail: C_PetJournal.GetOwnedBattlePetString (not in the generated docs;
+-- Blizzard's BattlePetTooltip.lua shows its string only when there is one):
+-- the fixture's character owns none of the species.
+Gap("C_PetJournal.GetOwnedBattlePetString", "retail", function() return nil end)
+
+-- Both: PlayerInteractionManagerDocumentation.lua: no NPC window is open.
+Gap("C_PlayerInteractionManager.IsInteractingWithNpcOfType", "both", function() return false end)
 -- AuctionHouseDocumentation.lua: the character has no auctions.
-Gap("C_AuctionHouse.GetOwnedAuctions", "forever", function() return {} end)
--- AzeriteEmpoweredItemDocumentation.lua: Blizzard's item buttons ask it; no
--- Forever item is Azerite empowered.
-Gap("C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItemByID", "forever", function() return false end)
--- BankDocumentation.lua: a banker opens the character bank; Forever has no
+Gap("C_AuctionHouse.GetOwnedAuctions", "both", function() return {} end)
+
+-- Forever: BankDocumentation.lua: a banker opens the character bank; Forever has no
 -- warband bank to view.
 Gap("C_Bank.CanViewBank", "forever", function(bankType) return bankType == Enum.BankType.Character end)
 -- CurrencyInfoDocumentation.lua: the ID of a currency link, 0 for any other

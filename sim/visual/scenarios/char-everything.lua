@@ -1,1 +1,1 @@
-VisualScene("Aldrianna-Blackhand", "all")
+VisualScene(EUIAltsSimFixture.MAIN, "all")
