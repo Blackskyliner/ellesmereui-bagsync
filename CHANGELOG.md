@@ -24,6 +24,8 @@ builds, each tested in the game by the maintainer.
   client's language.
 - **Bugfix:** Without EllesmereUI's skin module, the magnifier and the text of
   the browser's search box no longer touch its left border.
+- **Bugfix:** On WoW Forever, the keyring shows as "Keyring" after the bags in
+  the browser's Bags tab, instead of "Bag -1" before the backpack.
 
 ## 0.10.1
 

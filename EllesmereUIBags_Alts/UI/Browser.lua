@@ -61,6 +61,18 @@ local BAG_TITLES = {
     [0] = "Backpack", [1] = "Bag 1", [2] = "Bag 2", [3] = "Bag 3", [4] = "Bag 4", [5] = "Reagent Bag",
 }
 
+-- The keyring (WoW Forever) is the only bag with a negative ID; it follows
+-- the bags, under the client's own name for it.
+local function BagTitle(bagID)
+    if bagID < 0 then return KEYRING end
+    return L[BAG_TITLES[bagID] or ("Bag " .. bagID)]
+end
+
+local function BagOrder(a, b)
+    if (a < 0) ~= (b < 0) then return b < 0 end
+    return a < b
+end
+
 -------------------------------------------------------------------------------
 --  Data -> sections
 -------------------------------------------------------------------------------
@@ -120,8 +132,10 @@ end
 local function CharSections(c, tab)
     local sections = {}
     if tab == "bags" then
-        for _, bagID in ipairs(SortedIDs(c.bags)) do
-            sections[#sections + 1] = Section(L[BAG_TITLES[bagID] or ("Bag " .. bagID)], c.bags[bagID])
+        local ids = SortedIDs(c.bags)
+        table.sort(ids, BagOrder)
+        for _, bagID in ipairs(ids) do
+            sections[#sections + 1] = Section(BagTitle(bagID), c.bags[bagID])
         end
         return ByEUICategory(sections)
     elseif tab == "bank" then
