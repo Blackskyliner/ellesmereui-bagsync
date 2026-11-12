@@ -5,9 +5,13 @@
                                  minimal WoW install at DEST (default
                                  .tools/blizzard-art/<version>), skipping
                                  files already there and intact
-  blizzard-art.py lock           re-pin: the textures the last visual test run
-                                 missed plus those of the lock, against the
-                                 current retail build
+  blizzard-art.py inventory      list the textures the addon's surfaces need
+                                 (D: held by their frame trees, S: named in our
+                                 code, EllesmereUI's core and Bags, or the
+                                 Blizzard templates and mixins they build on)
+  blizzard-art.py lock           re-pin against the current retail build: the
+                                 inventory, the textures the last visual test
+                                 run missed, and those of the lock
 
 The lock (sim/visual/blizzard-art.lock.json) holds keys and archive offsets
 only: Blizzard's art is not ours to redistribute, so the repository never
@@ -29,6 +33,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+import xml.etree.ElementTree as ET
 import zlib
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -136,8 +141,205 @@ def fetch(dest):
     return 0
 
 
+VENDOR = os.path.join(ROOT, ".tools", "vendor")
+SIM = os.path.join(VENDOR, "wow-ui-sim")
+BLIZZARD_UI = os.path.join(VENDOR, "wow-ui-source", "Interface", "AddOns")
+EUI = os.path.join(VENDOR, "EllesmereUI")
+UI_NS = "{http://www.blizzard.com/wow/ui/}"
+LUA_STRING = re.compile(r'"((?:[^"\\\n]|\\.)*)"|' + r"'((?:[^'\\\n]|\\.)*)'")
+
+
+class Catalog:
+    """The simulator's atlas table (name -> file) and listfile (path, ID)."""
+
+    def __init__(self):
+        self.atlas = {}
+        with open(os.path.join(SIM, "data", "atlas.rs"), encoding="utf-8") as fh:
+            for m in re.finditer(r'^\s*"([^"]+)" => AtlasInfo \{ file: r"([^"]+)"', fh.read(), re.M):
+                self.atlas[m.group(1).lower()] = m.group(2)
+        self.paths, self.ids = {}, {}
+        with open(os.path.join(SIM, "data", "wow-ui-sim-listfile.csv"), encoding="utf-8") as fh:
+            for line in fh:
+                fid, _, path = line.strip().partition(";")
+                stem, ext = os.path.splitext(path.lower())
+                if fid.isdigit() and ext in (".blp", ".tga"):
+                    self.paths.setdefault(stem, path)
+                    self.ids[int(fid)] = path
+
+    def texture(self, text):
+        """A texture path for an atlas name, texture path or file ID; else None."""
+        value = text.strip()
+        if value.isdigit():
+            return self.ids.get(int(value))
+        if value.lower() in self.atlas:
+            return self.texture(self.atlas[value.lower()])
+        key = os.path.splitext(value.replace("\\\\", "/").replace("\\", "/").lower())[0]
+        return self.paths.get(key) or self.paths.get("interface/" + key)
+
+
+def lua_files(*roots):
+    for root in roots:
+        if os.path.isfile(root):
+            yield root
+        for dirpath, _, names in os.walk(root):
+            for name in names:
+                if name.endswith(".lua"):
+                    yield os.path.join(dirpath, name)
+
+
+def literals(chunk):
+    return {a or b for a, b in LUA_STRING.findall(chunk)}
+
+
+LUA_CALL = re.compile(r"\b([A-Z][A-Za-z0-9_]*)\s*\(")
+LUA_BLOCK = re.compile(r"^function\s+([A-Za-z_]\w*)([:.]\w+)?\s*\(.*?^end\b", re.M | re.S)
+LUA_CONST = re.compile(r'^([A-Z][A-Z0-9_]*)\s*=\s*"([^"\n]*)"', re.M)
+LUA_UPPER = re.compile(r"\b([A-Z][A-Z0-9_]{3,})\b")
+LAYOUT = re.compile(r"^\t(\w+)\s*=\s*\n\t\{(.*?)^\t\};?", re.M | re.S)
+
+
+class BlizzardUI:
+    """Blizzard's UI source: virtual and intrinsic XML templates, top-level Lua
+    functions (global ones by name, methods by mixin) and NineSlice layouts."""
+
+    def __init__(self):
+        self.templates, self.functions, self.methods, self.layouts = {}, {}, {}, {}
+        self.constants = {}
+        for dirpath, _, names in os.walk(BLIZZARD_UI):
+            for name in names:
+                path = os.path.join(dirpath, name)
+                if name.endswith(".xml"):
+                    self._index_xml(path)
+                elif name.endswith(".lua"):
+                    self._index_lua(path)
+
+    def _index_xml(self, path):
+        try:
+            tree = ET.parse(path)
+        except ET.ParseError:
+            return
+        for el in tree.iter():
+            name = el.get("name")
+            if name and (el.get("virtual") == "true" or el.get("intrinsic") == "true"):
+                self.templates.setdefault(name, el)
+
+    def _index_lua(self, path):
+        with open(path, encoding="utf-8", errors="ignore") as fh:
+            text = fh.read()
+        for m in LUA_BLOCK.finditer(text):
+            if m.group(2):
+                self.methods.setdefault(m.group(1), []).append(m.group(0))
+            else:
+                self.functions.setdefault(m.group(1), m.group(0))
+        for m in LUA_CONST.finditer(text):
+            self.constants.setdefault(m.group(1), m.group(2))
+        if os.path.basename(path) == "NineSliceLayouts.lua":
+            for m in LAYOUT.finditer(text):
+                self.layouts.setdefault(m.group(1), m.group(2))
+
+    def closure(self, roots, calls, depth=2):
+        """-> the strings reachable from the templates in roots and the global
+        functions in calls: XML attributes and KeyValues, the methods of their
+        mixins, their script handler functions, the NineSlice layouts and
+        templates any of these name (also through string constants such as
+        SCROLL_FRAME_SCROLL_BAR_TEMPLATE), and the global functions that Lua
+        calls, up to depth calls deep."""
+        strings, todo, done = set(), list(roots), set()
+        lua_todo, lua_done = [(c, 0) for c in calls], set()
+
+        def named(value):
+            strings.add(value)
+            if value in self.templates:
+                todo.append(value)
+            if value in self.layouts:
+                strings.update(literals(self.layouts[value]))
+
+        def scan_lua(chunk, level):
+            for value in literals(chunk):
+                named(value)
+            for const in LUA_UPPER.findall(chunk):
+                if const in self.constants:
+                    named(self.constants[const])
+            if level < depth:
+                lua_todo.extend((c, level + 1) for c in LUA_CALL.findall(chunk))
+
+        while todo or lua_todo:
+            while todo:
+                name = todo.pop()
+                if name in done or name not in self.templates:
+                    continue
+                done.add(name)
+                for el in self.templates[name].iter():
+                    tag = el.tag.replace(UI_NS, "")
+                    if tag in self.templates:
+                        todo.append(tag)
+                    for attr in ("file", "atlas", "layoutType"):
+                        if el.get(attr):
+                            named(el.get(attr))
+                    if tag == "KeyValue" and el.get("value"):
+                        named(el.get("value"))
+                    if el.get("function"):
+                        lua_todo.append((el.get("function"), 0))
+                    for attr in ("inherits", "mixin", "secureMixin"):
+                        for ref in (el.get(attr) or "").split(","):
+                            ref = ref.strip()
+                            for block in self.methods.get(ref, ()):
+                                scan_lua(block, 0)
+                            if ref:
+                                todo.append(ref)
+            while lua_todo:
+                name, level = lua_todo.pop()
+                if (name, level) in lua_done:
+                    continue
+                lua_done.add((name, level))
+                if name in self.functions:
+                    scan_lua(self.functions[name], level)
+                for block in self.methods.get(name, ()):
+                    scan_lua(block, level)
+        return strings
+
+
+def static_inventory(catalog):
+    """Textures named in our code and EllesmereUI's Bags module, and in the
+    Blizzard templates, mixins and functions they use. EllesmereUI's core
+    serves every module of the suite; what it puts into our frames the
+    frame-tree inventory finds."""
+    strings, calls = set(), set()
+    for path in lua_files(os.path.join(ROOT, "EllesmereUIBags_Alts"), os.path.join(EUI, "EllesmereUIBags")):
+        with open(path, encoding="utf-8", errors="ignore") as fh:
+            text = fh.read()
+        strings |= literals(text)
+        calls.update(LUA_CALL.findall(text))
+    ui = BlizzardUI()
+    roots = {"ItemButton"} | {t.strip() for text in strings for t in text.split(",") if t.strip() in ui.templates}
+    strings |= ui.closure(roots, calls)
+    return {catalog.texture(t) for t in strings} - {None}
+
+
+def dynamic_inventory(catalog):
+    """Textures the frame trees of every surface hold (visual-test.sh --inventory)."""
+    subprocess.run([os.path.join(ROOT, "scripts", "visual-test.sh"), "--inventory"],
+                   check=True, stdout=sys.stderr)
+    found = set()
+    with open(os.path.join(ROOT, ".tools", "visual-out", "inventory.log"), encoding="utf-8") as fh:
+        for line in fh:
+            kind, _, value = line.rstrip("\n").partition(" ")
+            if kind in ("atlas", "path", "fdid") and "addons" not in value.lower():
+                found.add(catalog.texture(value) or value)
+    return found
+
+
+def inventory(catalog=None):
+    catalog = catalog or Catalog()
+    dynamic = dynamic_inventory(catalog)
+    static = static_inventory(catalog)
+    return dynamic, static
+
+
 def relock():
-    paths = set()
+    catalog = Catalog()
+    dynamic, static = inventory(catalog)
+    paths = dynamic | static
     for log in glob.glob(os.path.join(ROOT, ".tools", "visual-out", "*", "*.log")):
         with open(log, encoding="utf-8", errors="ignore") as fh:
             for line in fh:
@@ -146,6 +348,8 @@ def relock():
                     paths.add(m.group(1))
     if os.path.exists(LOCK):
         paths.update(e["path"] for e in load_lock()["files"])
+    print("blizzard-art: %d textures in the frame trees, %d named in code and templates, %d in all"
+          % (len(dynamic), len(static), len(paths)))
     tool = os.path.join(ROOT, "scripts", "blizzard-art")
     target = os.path.join(ROOT, ".tools", "blizzard-art-target")
     env = dict(os.environ, CARGO_HOME=os.path.join(ROOT, ".tools", "cargo"), CARGO_TARGET_DIR=target)
@@ -155,9 +359,16 @@ def relock():
         fh.write("\n".join(sorted(paths)) + "\n")
     subprocess.run([
         os.path.join(target, "release", "blizzard-art"),
-        "--listfile", os.path.join(ROOT, ".tools", "vendor", "wow-ui-sim", "data", "wow-ui-sim-listfile.csv"),
+        "--listfile", os.path.join(SIM, "data", "wow-ui-sim-listfile.csv"),
         "--paths", listing, "--out", LOCK, "--cache", os.path.join(ROOT, ".tools", "blizzard-cdn"),
     ], check=True)
+    return 0
+
+
+def print_inventory():
+    dynamic, static = inventory()
+    for path in sorted(dynamic | static, key=str.lower):
+        print("%s%s %s" % ("D" if path in dynamic else "-", "S" if path in static else "-", path))
     return 0
 
 
@@ -166,6 +377,8 @@ def main(argv):
         return fetch(argv[1] if len(argv) == 2 else None)
     if argv == ["lock"]:
         return relock()
+    if argv == ["inventory"]:
+        return print_inventory()
     print(__doc__, file=sys.stderr)
     return 2
 

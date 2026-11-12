@@ -7,6 +7,9 @@
 #   scripts/visual-test.sh            compare (exit 1 on any difference)
 #   scripts/visual-test.sh --update   accept the current renders as baselines
 #   scripts/visual-test.sh [--update] <scenario>...   only these scenarios
+#   scripts/visual-test.sh --inventory   list the textures every surface uses
+#                                        (sim/visual/texture-inventory.lua) in
+#                                        .tools/visual-out/inventory.log
 #
 # Mode: bags (EUI core + Bags, the dependency: our plain look). Not with EUI's
 # Blizzard skin module: a simulator bug fades every texture there (see
@@ -24,8 +27,9 @@ OUT="$ROOT/.tools/visual-out"
 [ -x "$BIN" ] || { echo "GUI build of wow-sim missing; run scripts/setup-tools.sh" >&2; exit 2; }
 [ -x "$PY" ] || { echo "Python venv missing; run scripts/setup-tools.sh" >&2; exit 2; }
 
-UPDATE=()
+UPDATE=() INVENTORY=0
 if [ "${1:-}" = "--update" ]; then UPDATE=(--update); shift; fi
+if [ "${1:-}" = "--inventory" ]; then INVENTORY=1; shift; fi
 if [ $# -gt 0 ]; then
   SCENARIOS=("$@")
 else
@@ -61,6 +65,19 @@ export WOW_INSTALL_PATH="$ART" WOW_SIM_CASC=0
 # The binary also looks next to the sources it was built from; naming the
 # directory keeps a cached or copied binary on this checkout's addons.
 export WOW_SIM_ADDONS_PATH="$SIM/Interface/AddOns"
+
+if [ "$INVENTORY" = 1 ]; then
+  ln -sfn "$ROOT/EllesmereUIBags_Alts" "$ADDONS/EllesmereUIBags_Alts"
+  ln -sfn "$ROOT/sim/EllesmereUIBags_Alts_SimTests" "$ADDONS/EllesmereUIBags_Alts_SimTests"
+  ln -sfn "$EUI" "$ADDONS/EllesmereUI"
+  ln -sfn "$EUI/EllesmereUIBags" "$ADDONS/EllesmereUIBags"
+  cat "$ROOT/sim/visual/prelude.lua" "$ROOT/sim/visual/texture-inventory.lua" > "$OUT/inventory.lua"
+  (cd "$SIM" && "$BIN" --no-saved-vars --exec-lua "@$OUT/inventory.lua" dump-tree \
+      --filter EllesmereUIBagsAltsBrowser > "$OUT/inventory.log" 2>&1) || true
+  grep -q "TEXTURE-INVENTORY" "$OUT/inventory.log" || { echo "inventory failed (see $OUT/inventory.log)" >&2; exit 1; }
+  echo "texture inventory: $OUT/inventory.log"
+  exit 0
+fi
 
 for mode in bags; do
   unlink_all

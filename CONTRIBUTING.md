@@ -290,11 +290,24 @@ fails without the fix, then make it pass.
      verifies them into `.tools/blizzard-art/`, laid out as a minimal WoW
      install that holds only them. The simulator reads it like an install's
      extracted art (`WOW_INSTALL_PATH`, `WOW_SIM_CASC=0`), so a real install
-     on the machine does not change the renders. A scenario that shows a new
-     texture logs `[TexMgr] Not found` in `.tools/visual-out/`; after a full
-     `visual-test.sh` run, `scripts/blizzard-art.py lock` pins those too
-     (Rust tool in `scripts/blizzard-art/`; it caches about 350 MB of build
-     manifests and archive indices in `.tools/blizzard-cdn/`).
+     on the machine does not change the renders.
+   - `scripts/blizzard-art.py inventory` lists the textures the addon's
+     surfaces need, from two sides. `visual-test.sh --inventory`
+     (`sim/visual/texture-inventory.lua`) opens every owner kind, tab and
+     tooltip and EllesmereUI's bag window and lists what their frame trees
+     hold, hidden regions and button states included. A static pass follows
+     the Blizzard templates our code and EllesmereUI Bags use through
+     Blizzard's XML and Lua (inherits, mixins, script handlers, NineSlice
+     layouts, the functions they call), so states no scenario shows, such as
+     every item quality and overlay, are covered too. The simulator does not
+     log every texture it misses (atlas pieces fail silently), so the
+     `[TexMgr] Not found` lines alone are not enough.
+   - `scripts/blizzard-art.py lock` pins the inventory, the textures the last
+     visual test run missed and those already pinned, against the current
+     retail build. Run it after a change that shows new Blizzard art, then
+     `visual-test.sh --update` and check the new baselines (Rust tool in
+     `scripts/blizzard-art/`; it caches about 350 MB of build manifests and
+     archive indices in `.tools/blizzard-cdn/`).
 
 ### Known limits of the simulator
 
