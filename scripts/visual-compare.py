@@ -18,6 +18,7 @@ error during the scenario).
 import html
 import os
 import re
+import shutil
 import sys
 
 from PIL import Image, ImageChops
@@ -105,7 +106,9 @@ def main(argv):
                             status = "diff"
             if status not in ("ok", "updated"):
                 failures += 1
-            rows.append((mode, name, status, detail, base_path))
+            if os.path.exists(base_path):
+                shutil.copyfile(base_path, prefix + "-baseline.webp")
+            rows.append((mode, name, status, detail))
             print("%-8s %-6s %-22s %s" % (status.upper(), mode, name, detail))
     write_report(out_dir, rows)
     print("\n%d scenario renders, %d failed. Report: %s" % (len(rows), failures, os.path.join(out_dir, "report.html")))
@@ -113,19 +116,21 @@ def main(argv):
 
 
 def write_report(out_dir, rows):
+    # Images are referenced relative to the report, with the baseline copied
+    # next to the render, so the directory works as a CI artifact anywhere.
     def img(path):
         if not os.path.exists(path):
             return "<em>-</em>"
-        return '<img src="file://%s">' % html.escape(os.path.abspath(path))
+        return '<img src="%s">' % html.escape(os.path.relpath(path, out_dir).replace(os.sep, "/"))
     parts = ["<!doctype html><meta charset='utf-8'><title>Visual test report</title>",
              "<style>body{font:13px sans-serif;background:#1b1b1f;color:#ddd}td{vertical-align:top;padding:6px}"
              "img{max-width:460px;border:1px solid #444}.fail{color:#ff6b6b}.ok{color:#7bd88f}</style>",
              "<table><tr><th>scenario</th><th>baseline</th><th>current</th><th>diff</th></tr>"]
-    for mode, name, status, detail, base_path in sorted(rows, key=lambda r: (r[2] in ("ok", "updated"), r[0], r[1])):
+    for mode, name, status, detail in sorted(rows, key=lambda r: (r[2] in ("ok", "updated"), r[0], r[1])):
         prefix = os.path.join(out_dir, mode, name)
         cls = "ok" if status in ("ok", "updated") else "fail"
         parts.append("<tr><td><b>%s/%s</b><br><span class='%s'>%s</span><br>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" % (
-            mode, name, cls, status, html.escape(detail), img(base_path), img(prefix + ".png"), img(prefix + "-diff.png")))
+            mode, name, cls, status, html.escape(detail), img(prefix + "-baseline.webp"), img(prefix + ".png"), img(prefix + "-diff.png")))
     parts.append("</table>")
     with open(os.path.join(out_dir, "report.html"), "w", encoding="utf-8") as fh:
         fh.write("\n".join(parts))
