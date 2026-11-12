@@ -3,14 +3,15 @@
 local ns = EllesmereUIBagsAlts._ns
 local Lay = EUIAltsLayout
 
+local Fixture = EUIAltsSimFixture
 local VIEWS = {
-    { owner = "Aldrianna-Blackhand", tabs = { "all", "bags", "bank", "equipped", "mail", "auctions", "currency" } },
-    { owner = "Bob-Blackhand", tabs = { "bags", "bank" } },          -- empty bank: hint text
+    { owner = Fixture.MAIN, tabs = { "all", "bags", "bank", "equipped", "mail", "auctions", "currency" } },
+    { owner = Fixture.SECOND, tabs = { "bags", "bank" } },          -- empty bank: hint text
     { owner = "*all", tabs = { "all", "bags", "bank", "mail", "auctions", "currency" } },
-    { owner = "*realm:Blackhand", tabs = { "all", "currency" } },
-    { owner = "#warband" },
-    { owner = "@Knights of Ellesmere-Blackhand" },
+    { owner = Fixture.REALM, tabs = { "all", "currency" } },
+    { owner = Fixture.GUILD },
 }
+if ns.Compat.HAS_WARBAND_BANK then VIEWS[#VIEWS + 1] = { owner = "#warband" } end
 local SEARCHES = { "n", "valor", "zzzz" }
 -- The title row matches EllesmereUI Bags' bag header (HEADER_H = 35, inset
 -- 1 px, EllesmereUIBags.lua CreateHeader); everything in it must fit it.

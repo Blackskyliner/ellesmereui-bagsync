@@ -67,7 +67,8 @@ local function hoverAll(list, count)
 end
 
 local TABS = { "all", "bags", "bank", "equipped", "mail", "auctions", "currency" }
-local owners = { "*all", "*realm:Blackhand", ns.WARBAND_OWNER }
+local owners = { "*all", EUIAltsSimFixture.REALM }
+if ns.Compat.HAS_WARBAND_BANK then owners[#owners + 1] = ns.WARBAND_OWNER end
 for key in pairs(ns.db.chars) do owners[#owners + 1] = key end
 for key in pairs(ns.db.guilds or {}) do owners[#owners + 1] = "@" .. key end
 
