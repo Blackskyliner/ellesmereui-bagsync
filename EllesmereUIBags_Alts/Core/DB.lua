@@ -7,7 +7,7 @@
 --
 --  Layout
 --    schema   = <number>
---    settings = { collect = {...}, tooltip = {...}, ui = {...}, firstRunAsked }
+--    settings = { collect = {...}, tooltip = {...}, ui = {...}, firstRunAsked, seenNew }
 --    chars    = { [guid] = CharRecord }   (versions before 0.10.0: "FirstName-Realm", see ns.AdoptLegacyChar)
 --    warband  = { money, moneyAt, bank = Container, bankAt }
 --    guilds   = { ["Guild-Realm"] = { name, realm, faction, money, scannedAt, tabs = { [tab] = Container } } }
@@ -48,13 +48,18 @@ ns.DEFAULTS = {
         tooltip = {
             enabled     = false,
             modifier    = "none",       -- "none" | "shift" | "ctrl" | "alt"
-            realmScope  = "connected",  -- "all" | "connected" | "realm"
+            realmScope  = "connected",  -- "connected" | "realm": characters shown by default
+            otherRealms = "never",      -- "never" | "shift" | "ctrl" | "alt" | "always": the rest
+            detail      = "text",       -- "total" | "text" | "icons" (two lines) | "compact"
+            showTabs    = false,        -- bank, warband bank and guild bank tabs per item
+            sort        = "count",      -- "count" | "recent" | "name"; the current character stays first
             showTotal   = true,
             hideCurrent = false,
             showWarband = true,
             showGuild   = true,
             maxChars    = 10,
         },
+        seenNew = {},    -- settings variable -> true: its NEW label was shown once (Options/Options.lua)
         ui = {
             headerButton     = false,
             useEUICategories = false,
@@ -71,6 +76,31 @@ ns.DEFAULTS = {
 local MIGRATIONS = {
     -- [2] = function(db) end,
 }
+
+-- Choices each tooltip setting accepts; anything else falls back to its default.
+local TOOLTIP_CHOICES = {
+    modifier    = { none = true, shift = true, ctrl = true, alt = true },
+    realmScope  = { connected = true, realm = true },
+    otherRealms = { never = true, shift = true, ctrl = true, alt = true, always = true },
+    detail      = { total = true, text = true, icons = true, compact = true },
+    sort        = { count = true, recent = true, name = true },
+}
+local MAX_CHARS_LIMIT = 40
+ns.MAX_CHARS_LIMIT = MAX_CHARS_LIMIT
+
+function ns.NormalizeTooltipSettings(t)
+    -- A stored scope "all" (written by older versions) is "other realms: always".
+    if t.realmScope == "all" then
+        t.realmScope = "connected"
+        t.otherRealms = "always"
+    end
+    local defaults = ns.DEFAULTS.settings.tooltip
+    for field, valid in pairs(TOOLTIP_CHOICES) do
+        if not valid[t[field]] then t[field] = defaults[field] end
+    end
+    local n = math.floor(tonumber(t.maxChars) or defaults.maxChars)
+    t.maxChars = math.max(1, math.min(MAX_CHARS_LIMIT, n))
+end
 
 local function MergeDefaults(target, defaults)
     for k, dv in pairs(defaults) do
@@ -190,6 +220,7 @@ function ns.InitDB()
     db.schema = ns.SCHEMA
 
     MergeDefaults(db, ns.DEFAULTS)
+    ns.NormalizeTooltipSettings(db.settings.tooltip)
 
     -- Only the shape here; every stored record is checked by SanitizeData on
     -- activation, so an unused addon does not walk its data at login.

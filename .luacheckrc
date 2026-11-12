@@ -29,6 +29,7 @@ files["EllesmereUIBags_Alts/**/*.lua"] = {
         "HandleModifiedItemClick", "IsModifiedClick", "IsShiftKeyDown", "IsControlKeyDown", "IsAltKeyDown",
         "BreakUpLargeNumbers", "ITEM_QUALITY_COLORS", "OKAY", "CANCEL", "KEYRING",
         "Settings", "CreateSettingsListSectionHeaderInitializer", "CreateSettingsButtonInitializer",
+        "SettingsPanel", "ScrollUtil", "EventRegistry", "MinimalSliderWithSteppersMixin", "GetMouseFoci",
         "TooltipDataProcessor", "Enum", "GetLocale",
         -- Namespaced APIs
         "C_AddOns", "C_Container", "C_PlayerInteractionManager", "C_Bank", "C_Item", "C_AuctionHouse", "C_EquipmentSet",

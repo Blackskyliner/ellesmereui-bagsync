@@ -414,8 +414,12 @@ local function CreateResultRow(parent)
         if not self.itemID then return end
         local tooltip = W.GetTooltip()
         tooltip:SetOwner(self, "ANCHOR_RIGHT")
-        tooltip:SetHyperlink("item:" .. self.itemID)
-        tooltip:Show()
+        tooltip:ProcessInfo({
+            getterName = "GetHyperlink",
+            getterArgs = { "item:" .. self.itemID },
+            tooltipPostCall = ns.AddOwnerLines,
+            euiAltsOwners = self.itemID,
+        })
     end)
     r:SetScript("OnLeave", function() W.GetTooltip():Hide() end)
     r:SetScript("OnClick", function(self)
@@ -754,7 +758,10 @@ local function RenderCurrencies(f, quantities, width, shared)
     return y, total
 end
 
--- "Alice 5 (Bags 3, Bank 2), Warband 10"
+-- "Alice 5 [bags][bank], Warband 10 [warband]": who holds how many, and
+-- where as location icons, readable without hovering.
+local LOCATION_ORDER = { "bags", "bank", "equipped", "mail", "auctions", "warband", "guild" }
+
 local function DescribeOwners(itemID)
     local byOwner = ns.Index:Get(itemID)
     if not byOwner then return "" end
@@ -771,7 +778,11 @@ local function DescribeOwners(itemID)
         else
             label = CharLabel(owner)
         end
-        parts[#parts + 1] = { text = label .. " " .. n, n = n }
+        local icons = {}
+        for _, loc in ipairs(LOCATION_ORDER) do
+            if byLoc[loc] then icons[#icons + 1] = ns.LocationIcon(loc, 12) end
+        end
+        parts[#parts + 1] = { text = label .. " " .. n .. " " .. table.concat(icons), n = n }
     end
     table.sort(parts, function(a, b) return a.n > b.n end)
     local out = {}
@@ -1016,7 +1027,7 @@ function Browser:Refresh()
             sections = g and TabSections(g.tabs) or {}
         end
         if sections then
-            height = f.grid:Layout(sections, width, isAll or state.tab == "all")
+            height = f.grid:Layout(sections, width)
             count = f.grid.used
         end
         if isChar and state.tab == "mail" then

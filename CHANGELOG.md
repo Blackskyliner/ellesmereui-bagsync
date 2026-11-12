@@ -22,6 +22,20 @@ builds, each tested in the game by the maintainer.
 - **New:** A "?" beside the browser's search box explains the search syntax on
   hover: words, item ID, `q:` quality and `t:` item type, with examples in the
   client's language.
+- **New:** Tooltip option "Detail": total only, locations as text, or location
+  icons on two lines or one. Hovering a choice previews it with your own items.
+- **New:** Tooltip option "Show bank tabs": the bank, warband bank and guild bank
+  tabs that hold the item, by name or by their icon.
+- **New:** Tooltip options to sort characters by amount, last played or name,
+  and to set how many are listed (1 to 40).
+- **New:** Tooltip option "Other realms": never, always, or while Shift, Ctrl or
+  Alt is held. The former realm scope "All realms" becomes "Always".
+- **New:** New options carry the game's NEW label in the settings until seen.
+- **Enhanced:** The browser's item tooltips show who holds an item and where in
+  every view and in the search, following the tooltip options; search hits list
+  an icon per location next to each holder.
+- **Enhanced:** The current character leads the tooltip counts, set apart by a
+  thin rule.
 - **Bugfix:** Without EllesmereUI's skin module, the magnifier and the text of
   the browser's search box no longer touch its left border.
 - **Bugfix:** On WoW Forever, the keyring shows as "Keyring" after the bags in

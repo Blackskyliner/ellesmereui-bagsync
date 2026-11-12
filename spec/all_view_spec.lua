@@ -137,7 +137,16 @@ describe("All characters view", function()
         local text = tooltipText(env)
         assert.truthy(text:find("Alice", 1, true))
         assert.truthy(text:find("Bags: 20, Bank: 5", 1, true))
-        assert.truthy(text:find("Carol%-Proudmoore"))  -- other realm: listed with its realm
+        assert.falsy(text:find("Carol", 1, true))       -- other realm: not in the realm scope
+        assert.truthy(text:find("Total | 28", 1, true))       -- Alice 25 + Bob 3
+        -- the tooltip settings apply: other realms always, listed with their realm
+        ns.db.settings.tooltip.otherRealms = "always"
+        ns.SettingsChanged()
+        for i = 1, f.grid.used do
+            if f.grid.buttons[i].itemID == 2589 then f.grid.buttons[i]:RunScript("OnEnter") end
+        end
+        text = tooltipText(env)
+        assert.truthy(text:find("Carol%-Proudmoore"))
         assert.truthy(text:find("Total | 35", 1, true))
         assert.are.same({}, env.__errors)
     end)
@@ -154,14 +163,15 @@ describe("All characters view", function()
         end
         local _, n = tooltipText(env):gsub("Total", "")
         assert.are.equal(1, n)
-        -- a single character's bag tab keeps the normal (feature) lines
+        -- a single character's bag tab: the same lines, once
         ns.Browser:Select("Player-1-Alice")
         ns.Browser:SelectTab("bags")
         for i = 1, f.grid.used do
             if f.grid.buttons[i].itemID == 2589 then f.grid.buttons[i]:RunScript("OnEnter") end
         end
-        assert.is_nil(env.EllesmereUIBagsAltsTooltip.processingInfo.euiAltsOwners)
-        assert.truthy(tooltipText(env):find("Total", 1, true))
+        assert.are.equal(2589, env.EllesmereUIBagsAltsTooltip.processingInfo.euiAltsOwners)
+        _, n = tooltipText(env):gsub("Total", "")
+        assert.are.equal(1, n)
     end)
 
     it("sums currencies over all characters, warband-wide ones counted once", function()
@@ -215,12 +225,12 @@ describe("Everything tab of a character", function()
             if f.grid.buttons[i].itemID == 2589 then f.grid.buttons[i]:RunScript("OnEnter") end
         end
         assert.truthy(tooltipText(env):find("Bags: 20, Bank: 5", 1, true))
-        -- the per-location tabs keep their own tooltip (no owner lines)
+        -- the per-location tabs show the same owner lines
         ns.Browser:SelectTab("bags")
         for i = 1, f.grid.used do
             if f.grid.buttons[i].itemID == 2589 then f.grid.buttons[i]:RunScript("OnEnter") end
         end
-        assert.is_nil(env.EllesmereUIBagsAltsTooltip.processingInfo.euiAltsOwners)
+        assert.truthy(tooltipText(env):find("Bags: 20, Bank: 5", 1, true))
     end)
 
     it("stays on Everything when switching characters", function()

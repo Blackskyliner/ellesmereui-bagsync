@@ -36,7 +36,8 @@ Version 0.10.2, by Blackskyliner.
   own auctions whenever the client reports them at the auction house.
 - **Tooltip counts** (opt-in): every item tooltip lists which character has how
   many and where (bags, bank, equipped, mail, auctions), plus the warband bank,
-  guild banks and a total.
+  guild banks and a total; as text or location icons, optionally down to the
+  bank tab.
 - **Browser** (`/alts`): a window with all characters grouped by realm, the warband
   bank and your guild banks, with tabs for bags, bank, equipped, mail, auctions and
   currencies. An **Everything** tab merges all locations of a character, and the
@@ -151,8 +152,9 @@ show all stored items merged: equal items share one slot with the total amount,
 gear with different links stays apart. Items are grouped by item class, or by
 EllesmereUI's bag categories when that option is on. The Everything tab covers
 bags, banks, equipped gear, mail, auctions and guild banks; the other tabs filter
-by location. Every character has an Everything tab as well. In these views the
-tooltip always shows who holds how many, even with tooltip counts off. A realm
+by location. Every character has an Everything tab as well. Every item tooltip
+in the browser shows who holds how many and where, even with tooltip counts off;
+it follows the tooltip options except the Shift/Ctrl/Alt condition. A realm
 overview contains only that realm's characters and guild banks; the warband bank
 is account-wide and belongs to "All characters". The footer shows the total gold
 and the number of characters.
@@ -174,16 +176,33 @@ first term is taken as an item ID too), `q:epic` or `q:4` (quality), `t:armor`
 (type/subtype). All terms must match. The search covers characters, the warband
 bank and guild banks and shows at most 300 items. Words and a number also search the
 names of stored currencies; those hits come first, with the total and the
-per-character amounts. `id:`, `q:` and `t:` filter items only. Hover the `?`
-beside the search box for this syntax in the game.
+per-character amounts. `id:`, `q:` and `t:` filter items only. Every item hit
+lists its holders with an icon per location (bags, bank, equipped, mail,
+auctions, warband bank, guild bank). Hover the `?` beside the search box for this
+syntax in the game.
 
 **Tooltip counts.** One line per character with the split by location, plus the
-warband bank, guild banks and the total, at most ten characters. They appear on
-the game's item tooltip (bags, bank, auction house and so on), on chat link
-tooltips and in the browser, never on comparison tooltips, units or world
-objects. Options: only while Shift, Ctrl or Alt is held; realm scope
-(connected realms, this realm, all realms); total; hide the current character;
-include the warband bank; include guild banks.
+warband bank, guild banks and the total. The current character comes first, set
+apart by a thin rule. They appear on the game's item tooltip (bags, bank,
+auction house and so on), on chat link tooltips and in the browser, never on
+comparison tooltips, units or world objects. Options:
+
+- Show counts: always, or only while Shift, Ctrl or Alt is held.
+- Characters: connected realms or this realm only. Other realms: never, always,
+  or while Shift, Ctrl or Alt is held.
+- Detail: total only; locations as text (default, `Bags: 3, Bank: 2`); location
+  icons on a second line under the character's total; location icons on one line.
+  Hovering a choice shows a preview built from your own items.
+- Show bank tabs: names the bank, warband bank and guild bank tabs that hold the
+  item, in brackets after their bank (`Guild Bank: 40 (Mats 30, Herbs 10)`; with
+  icons the tab icons you chose).
+- Sort characters by amount, last played or name; characters listed (1 to 40,
+  default 10; the rest are summed up in one line).
+- Total; hide the current character; include the warband bank; include guild
+  banks.
+
+New options carry the game's NEW label in the settings until you have seen them
+once.
 
 ## When data is recorded
 
