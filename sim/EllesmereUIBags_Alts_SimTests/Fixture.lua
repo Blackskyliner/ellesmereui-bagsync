@@ -32,6 +32,27 @@ local function WithFixtureIcon(id, ...)
     return ...
 end
 
+-- The simulator's currency tooltip data has no lines, so Blizzard's
+-- SetCurrencyByID shows an empty tooltip, which hides itself and drops its
+-- owner, and the lines added after it are lost. The client's tooltip starts
+-- with the currency's name in its quality colour; while the fixture is
+-- installed that line stands in when the simulator gives none (a post call
+-- runs before Blizzard shows the tooltip and cannot be removed again). The
+-- simulator's data carries no id either; the getter's argument names it.
+local currencyNameHooked
+local function HookCurrencyName()
+    if currencyNameHooked then return end
+    currencyNameHooked = true
+    TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Currency, function(tooltip, data)
+        if not saved or tooltip:NumLines() > 0 then return end
+        local args = tooltip.processingInfo and tooltip.processingInfo.getterArgs
+        local info = C_CurrencyInfo.GetCurrencyInfo(data and data.id or args and args[1])
+        if not info then return end
+        local quality = ITEM_QUALITY_COLORS[info.quality or 1]
+        GameTooltip_AddColoredLine(tooltip, info.name, quality and quality.color or HIGHLIGHT_FONT_COLOR)
+    end)
+end
+
 local function enc(id, count) return id .. "," .. (count or 1) end
 
 local function container(size, items, name)
@@ -81,6 +102,7 @@ function EUIAltsSimFixture.Install()
     local infoInstant = C_Item.GetItemInfoInstant
     saved.infoInstant = infoInstant
     C_Item.GetItemInfoInstant = function(item) return WithFixtureIcon(item, infoInstant(item)) end
+    HookCurrencyName()
     local now = time()
     for k, v in pairs(chars(now)) do db.chars[k] = v end
     db.warband = { money = 250000000, bankAt = now - 9000, bank = {

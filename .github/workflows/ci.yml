@@ -123,6 +123,7 @@ jobs:
           # cache keys must not contain commas
           echo "features=$(sed -n "s/^ *${prefix}SIM_FEATURES=//p" scripts/setup-tools.sh | tr , +)" >> "$GITHUB_OUTPUT"
           echo "spells=$(sed -n 's/^FOREVER_SPELLS_SHA256=//p' scripts/setup-tools.sh)" >> "$GITHUB_OUTPUT"
+          echo "gethe=$(sed -n 's/^GETHE_RETAIL_REV=\([0-9a-f]*\).*/\1/p' scripts/setup-tools.sh)" >> "$GITHUB_OUTPUT"
           # the patch set setup-tools.sh applies on top of the pin (patches_id)
           if ls scripts/patches/"$dir"/*.patch >/dev/null 2>&1; then
             echo "patches=-patches$(cat scripts/patches/"$dir"/*.patch | sha256sum | cut -c1-12)" >> "$GITHUB_OUTPUT"
@@ -182,6 +183,15 @@ jobs:
         with:
           path: .tools/simhome/Library/Caches/wow-ui-sim/spells/wowforever/spells.json
           key: forever-spells-${{ steps.pins.outputs.spells }}
+
+      # The retail simulator runs only the Blizzard UI of the build it pins,
+      # which it downloads from Blizzard's CDN once (setup-tools.sh ui_sync).
+      - name: Cache retail Blizzard UI
+        if: steps.scope.outputs.run == 'true' && matrix.client == 'retail'
+        uses: actions/cache@v6
+        with:
+          path: .tools/simhome/Library/Caches/wow-ui-sim/blizzard-ui/retail
+          key: blizzard-ui-retail-${{ steps.pins.outputs.gethe }}
 
       - name: Rust toolchain (to build the simulator, or where cargo is missing)
         if: steps.scope.outputs.run == 'true' && (steps.pins.outputs.cargo != 'yes' || steps.sim-cache.outputs.cache-hit != 'true' || (matrix.client == 'forever' && steps.spells-cache.outputs.cache-hit != 'true'))
@@ -273,6 +283,7 @@ jobs:
         id: pins
         run: |
           echo "sim=$(sed -n 's/^WOW_UI_SIM_REV=//p' scripts/setup-tools.sh)" >> "$GITHUB_OUTPUT"
+          echo "gethe=$(sed -n 's/^GETHE_RETAIL_REV=\([0-9a-f]*\).*/\1/p' scripts/setup-tools.sh)" >> "$GITHUB_OUTPUT"
           echo "features=$(sed -n 's/^ *SIM_FEATURES=//p' scripts/setup-tools.sh | tr , +)" >> "$GITHUB_OUTPUT"
           if ls scripts/patches/wow-ui-sim/*.patch >/dev/null 2>&1; then
             echo "patches=-patches$(cat scripts/patches/wow-ui-sim/*.patch | sha256sum | cut -c1-12)" >> "$GITHUB_OUTPUT"
@@ -316,6 +327,13 @@ jobs:
         with:
           path: .tools/blizzard-art
           key: blizzard-art-${{ hashFiles('sim/visual/blizzard-art.lock.json') }}
+
+      - name: Cache retail Blizzard UI
+        if: steps.scope.outputs.run == 'true'
+        uses: actions/cache@v6
+        with:
+          path: .tools/simhome/Library/Caches/wow-ui-sim/blizzard-ui/retail
+          key: blizzard-ui-retail-${{ steps.pins.outputs.gethe }}
 
       - name: Rust toolchain (to build the simulator, or where cargo is missing)
         if: steps.scope.outputs.run == 'true' && (steps.pins.outputs.cargo != 'yes' || steps.sim-cache.outputs.cache-hit != 'true')

@@ -179,28 +179,30 @@ registry and build directory there instead of in `.tools`, for a machine that
 wipes `.tools` per run (the self-hosted CI runner). It builds or fetches:
 
 - Lua 5.1, LuaRocks, busted and luacheck;
-- reference sources: Blizzard's UI source per client (Gethe/wow-ui-source: the
-  `live` branch for retail, `forever` for WoW Forever), Ketho's API annotations,
+- reference sources: Blizzard's UI source per client (Gethe/wow-ui-source at
+  the retail and WoW Forever builds the simulator pins), Ketho's API annotations,
   EllesmereUI's source and Blizzard's GlobalStrings of every client locale
   (Ketho/BlizzardInterfaceResources);
 
 EllesmereUI and wow-ui-sim are pinned to revisions the whole suite passes against
-(`ELLESMEREUI_REV`, `WOW_UI_SIM_REV` and `WOW_UI_SIM_FOREVER_REV` in the script;
-Forever needs a newer simulator than retail, whose newer revisions only accept
-Blizzard UI pinned from Blizzard's CDN), so a push is judged by its
-own changes; `ELLESMEREUI_REV=latest scripts/setup-tools.sh` (in a fresh `.tools`)
+(`ELLESMEREUI_REV`, `WOW_UI_SIM_REV` and `WOW_UI_SIM_FOREVER_REV` in the script),
+so a push is judged by its own changes. Blizzard's UI source follows the
+simulator: wow-ui-sim runs only the Blizzard UI of the client build it pins
+(`data/blizzard-ui-builds/<profile>.json`), so `GETHE_RETAIL_REV` and
+`GETHE_FOREVER_REV` pin Gethe/wow-ui-source to that build's revision, for the
+simulator and the API check alike, and the script stops when they disagree with
+the simulator pin. The retail simulator downloads its Blizzard UI from
+Blizzard's CDN itself, once per pin; Forever's is a copy of the pinned Gethe
+tree; `ELLESMEREUI_REV=latest scripts/setup-tools.sh` (in a fresh `.tools`)
 tests the newest EllesmereUI. Move a pin deliberately: change the revision, rerun
 the script (it moves the checkout) and run the whole suite, visual tests included.
 A simulator fix the suite needs before upstream merges it goes into
 `scripts/patches/<checkout>/` as a git patch naming its upstream pull request;
 the script applies it on top of the pin and rebuilds when the patch set
 changes. Once a pin contains the fix, the patch goes.
-The other sources follow their upstream branch, on every run of the script. As
-Blizzard's UI comes from the live branch, wow-ui-sim is built for the API of the
-live client (`SIM_FEATURES`, e.g. `retail-12-1-5`): when a patch goes live and
-Blizzard's code calls natives the simulator lacks, that feature moves to the new
-patch. When EllesmereUI or Blizzard's UI starts calling a client API the
-simulator lacks, a stand-in goes into
+The annotations and GlobalStrings follow their upstream branch, on every run of
+the script. When EllesmereUI or Blizzard's UI calls a client API the simulator
+lacks, a stand-in goes into
 `sim/EllesmereUIBags_Alts_SimTests/SimGaps.lua`, never into the addon:
 `Gap(name, client, fn, opts)` with the client it is missing for. Its returns
 follow the client's API docs (or, where the docs are wrong, what the client's own
@@ -230,7 +232,7 @@ fails without the fix, then make it pass.
 1. **luacheck**: Lua 5.1, every global declared (`.luacheckrc`).
 2. **API check** (`scripts/check-api.py`): every global function, every `C_*`
    function, `Enum` value, event and template the addon uses must exist in the
-   UI source of every client (Gethe/wow-ui-source `live` and `forever`) or in
+   UI source of every client (Gethe/wow-ui-source at the pinned builds) or in
    Ketho's API annotations (for Forever only those its own Blizzard code uses);
    in `Core/ClientCompat.lua` one client is enough. The TOC must list each
    client's interface number. It also checks the contract with EllesmereUI's
@@ -324,11 +326,6 @@ fails without the fix, then make it pass.
 - It creates no native tooltip lines, `EditBox:SetText` does not fire
   `OnTextChanged`, and runtime taint that spreads from event handlers into
   Blizzard's secure code is not tracked.
-- Method hooks placed on one object fire for every object of that type
-  (`tests/00_harness.lua` pins this for the retail simulator). EllesmereUI's skin
-  module then fades every texture, which is why the visual tests render without
-  it; the `skin` run still checks the geometry. When that harness test starts
-  failing, the simulator is fixed and the skin mode can join the visual tests.
 - Its Forever profile models neither the keyring nor bank bags nor the ammo slot
   yet (placeholders report none); `spec/forever_spec.lua` covers those paths.
 
