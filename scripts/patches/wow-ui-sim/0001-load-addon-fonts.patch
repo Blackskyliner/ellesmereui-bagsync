@@ -12,13 +12,12 @@ leaves the font as it was.
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ---
  docs/wiki/log.md                              |   4 +
- docs/wiki/systems/rendering-pipeline.md       |   4 +
- src/loader/tests/addon_font.rs                |  27 ++
- src/loader/tests/mod.rs                       |   1 +
+ docs/wiki/systems/rendering-pipeline.md       |   5 +
  .../text_attribute_event/text/formatting.rs   |  24 ++
  src/render/font.rs                            | 240 +++++++++++++++++-
- 6 files changed, 295 insertions(+), 5 deletions(-)
- create mode 100644 src/loader/tests/addon_font.rs
+ tests/set_font_addon_file.rs                  |  28 ++
+ 5 files changed, 296 insertions(+), 5 deletions(-)
+ create mode 100644 tests/set_font_addon_file.rs
 
 diff --git a/docs/wiki/log.md b/docs/wiki/log.md
 index 04cdbbbbe..ad640be24 100644
@@ -33,7 +32,7 @@ index 04cdbbbbe..ad640be24 100644
  
  Updated [[addon-loading]] and the [phase contract](../specs/addon-load-phases.md) with R64 phases and R64b/c follower behavior, plus R70 PTR phase/mask evidence. Retail and Forever resolve followers without enable-state filtering and submit them through the generic loader; target `ADDON_LOADED` precedes follower requests, and one follower failure does not stop later submissions or change target success. PTR parser-to-child-list linkage remains UNKNOWN, so the simulator applies the INFERRED resolver model and tests a pre-populated child list only. R70 models cached PTR `CharacterCreate` as an INFERRED phase-two Glue root, loads its required chain before its files, and makes no relative-order claim against PTRFeedbackGlue.
 diff --git a/docs/wiki/systems/rendering-pipeline.md b/docs/wiki/systems/rendering-pipeline.md
-index cfe17fda6..0a648c04a 100644
+index cfe17fda6..574a4b6c7 100644
 --- a/docs/wiki/systems/rendering-pipeline.md
 +++ b/docs/wiki/systems/rendering-pipeline.md
 @@ -100,6 +100,10 @@ Follow-ups `4e344ab4f` and `1ecc0c98c` cache cumulative offsets only for one ren
@@ -42,56 +41,19 @@ index cfe17fda6..0a648c04a 100644
  
 +## Font sources
 +
-+`WowFontSystem` (`src/render/font.rs`) loads Blizzard's fonts (`Fonts\\FRIZQT__.TTF`, ...) from CASC at startup. A font file an addon ships (`Interface\\AddOns\\<Addon>\\...`) is loaded on first use from the AddOns directories, resolved ignoring case, and keeps the weight, style and stretch of its face, so a bold file of a family renders bold. A missing addon font warns once and uses the default font.
++`WowFontSystem` (`src/render/font.rs`) loads Blizzard's fonts (`Fonts\\FRIZQT__.TTF`, ...) from CASC at startup. A font file an addon ships (`Interface\\AddOns\\<Addon>\\...`) is loaded on first use from the AddOns directories, resolved ignoring case, and keeps the weight, style and stretch of its face, so a bold file of a family renders bold. `SetFont` with an addon path that names no file raises the client's error, `FontString:SetFont(): Invalid font asset (<path>): file not found`, and keeps the font (checked in the WoW Forever 1.60.1 client); a file that is not a font warns once and draws in the default font.
 +
  ## FontString smooth scaling
  
  `0624da720` adds independent `Frame.font_string_smooth_scaling`, shared fractional line-height shaping, mode-keyed caches, and ordinary/runtime/inherited XML handling under retail 12.0.5+. `3c8b48012` adds wrapped render/cache measurement assertions. Contract, inferred-policy boundaries, RED provenance, current GREEN status, earlier XML epoch gap, and future native recorder live in [FontString smooth scaling](../../specs/fontstring-smooth-scaling.md). No native/GPU visual proof is claimed.
-diff --git a/src/loader/tests/addon_font.rs b/src/loader/tests/addon_font.rs
-new file mode 100644
-index 000000000..e485e6229
---- /dev/null
-+++ b/src/loader/tests/addon_font.rs
-@@ -0,0 +1,27 @@
-+use super::*;
-+
-+#[test]
-+fn set_font_with_a_missing_addon_font_file_raises_the_client_error() {
-+    let ctx = load_test_xml("set-font-missing-addon-file", "<Ui/>");
-+    let probe: (bool, String, String, f64) = ctx
-+        .env
-+        .eval(
-+            r#"
-+            local fs = UIParent:CreateFontString()
-+            fs:SetFont("Fonts\\ARIALN.TTF", 12, "")
-+            local ok, err = pcall(fs.SetFont, fs, "Interface\\AddOns\\NoSuchAddon\\x.ttf", 16, "")
-+            local path, height = fs:GetFont()
-+            return ok, tostring(err), path, height
-+            "#,
-+        )
-+        .expect("missing font probe should execute");
-+    assert!(!probe.0, "SetFont should raise an error");
-+    assert!(
-+        probe.1.ends_with(
-+            "FontString:SetFont(): Invalid font asset (Interface\\AddOns\\NoSuchAddon\\x.ttf): file not found"
-+        ),
-+        "unexpected error: {}",
-+        probe.1
-+    );
-+    assert_eq!((probe.2.as_str(), probe.3), ("Fonts\\ARIALN.TTF", 12.0));
-+}
-diff --git a/src/loader/tests/mod.rs b/src/loader/tests/mod.rs
-index 17912b812..473ab28c3 100644
---- a/src/loader/tests/mod.rs
-+++ b/src/loader/tests/mod.rs
-@@ -3,6 +3,7 @@
- account_store_ui_fixture! {
-     mod account_store;
- }
-+mod addon_font;
- mod button_text;
- mod button_textures;
- mod lua_loading;
+@@ -119,6 +123,7 @@ The headless path is implemented in `src/render/headless.rs` and uses the same W
+ 
+ ## Sources
+ 
++- [font.rs](../../../src/render/font.rs) — font sources: Blizzard fonts from CASC, addon font files loaded on first use, the error for a missing one
+ - [FontString smooth scaling](../../specs/fontstring-smooth-scaling.md) — inferred height policy, tests, scope and future native probe
+ 
+ - [rendering-pipeline.md](../../rendering-pipeline.md) — QuadBatch, shaders, atlas, hit testing, alpha, text
 diff --git a/src/lua_api/frame/methods/text_attribute_event/text/formatting.rs b/src/lua_api/frame/methods/text_attribute_event/text/formatting.rs
 index 729346516..4728ac94c 100644
 --- a/src/lua_api/frame/methods/text_attribute_event/text/formatting.rs
@@ -446,3 +408,37 @@ index 434c80c0a..6b913b31e 100644
      #[test]
      fn can_shape_text_with_loaded_font() {
          let mut fs = WowFontSystem::new();
+diff --git a/tests/set_font_addon_file.rs b/tests/set_font_addon_file.rs
+new file mode 100644
+index 000000000..0c9c56572
+--- /dev/null
++++ b/tests/set_font_addon_file.rs
+@@ -0,0 +1,28 @@
++//! FontString:SetFont with a font file below Interface\AddOns that does not
++//! exist: the client (WoW Forever 1.60.1) raises "Invalid font asset" and
++//! keeps the font.
++use wow_ui_sim::lua_api::WowLuaEnv;
++
++#[test]
++fn set_font_with_a_missing_addon_font_file_raises_the_client_error() {
++    let env = WowLuaEnv::new().unwrap();
++    let (ok, err, path, height): (bool, String, String, f64) = env
++        .eval(
++            r#"
++            local fs = UIParent:CreateFontString()
++            fs:SetFont("Fonts\\ARIALN.TTF", 12, "")
++            local ok, err = pcall(fs.SetFont, fs, "Interface\\AddOns\\NoSuchAddon\\x.ttf", 16, "")
++            local path, height = fs:GetFont()
++            return ok, tostring(err), path, height
++            "#,
++        )
++        .expect("missing font probe should execute");
++    assert!(!ok, "SetFont should raise an error");
++    assert!(
++        err.ends_with(
++            "FontString:SetFont(): Invalid font asset (Interface\\AddOns\\NoSuchAddon\\x.ttf): file not found"
++        ),
++        "unexpected error: {err}"
++    );
++    assert_eq!((path.as_str(), height), ("Fonts\\ARIALN.TTF", 12.0));
++}

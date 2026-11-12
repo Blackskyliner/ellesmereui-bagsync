@@ -11,9 +11,9 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ---
  AGENTS.md                               |  1 +
  docs/wiki/log.md                        |  4 ++
- docs/wiki/systems/rendering-pipeline.md |  2 +
+ docs/wiki/systems/rendering-pipeline.md |  4 +-
  src/render/font.rs                      | 78 +++++++++++++++++++++++--
- 4 files changed, 80 insertions(+), 5 deletions(-)
+ 4 files changed, 81 insertions(+), 6 deletions(-)
 
 diff --git a/AGENTS.md b/AGENTS.md
 index 84392b501..2f7ff4318 100644
@@ -40,18 +40,27 @@ index ad640be24..90d61d353 100644
  
  [Rendering pipeline](systems/rendering-pipeline.md#font-sources) records addon font loading on first use; tests live in `src/render/font.rs`.
 diff --git a/docs/wiki/systems/rendering-pipeline.md b/docs/wiki/systems/rendering-pipeline.md
-index 0a648c04a..0b248b542 100644
+index 574a4b6c7..a5cb3dc62 100644
 --- a/docs/wiki/systems/rendering-pipeline.md
 +++ b/docs/wiki/systems/rendering-pipeline.md
 @@ -104,6 +104,8 @@ Follow-ups `4e344ab4f` and `1ecc0c98c` cache cumulative offsets only for one ren
  
- `WowFontSystem` (`src/render/font.rs`) loads Blizzard's fonts (`Fonts\\FRIZQT__.TTF`, ...) from CASC at startup. A font file an addon ships (`Interface\\AddOns\\<Addon>\\...`) is loaded on first use from the AddOns directories, resolved ignoring case, and keeps the weight, style and stretch of its face, so a bold file of a family renders bold. A missing addon font warns once and uses the default font.
+ `WowFontSystem` (`src/render/font.rs`) loads Blizzard's fonts (`Fonts\\FRIZQT__.TTF`, ...) from CASC at startup. A font file an addon ships (`Interface\\AddOns\\<Addon>\\...`) is loaded on first use from the AddOns directories, resolved ignoring case, and keeps the weight, style and stretch of its face, so a bold file of a family renders bold. `SetFont` with an addon path that names no file raises the client's error, `FontString:SetFont(): Invalid font asset (<path>): file not found`, and keeps the font (checked in the WoW Forever 1.60.1 client); a file that is not a font warns once and draws in the default font.
  
 +Without CASC every Blizzard font path maps to one fallback family: the font file `WOW_SIM_FALLBACK_FONT` names, else the first system face. The first system face differs between operating systems, so renders compared across machines pin the fallback.
 +
  ## FontString smooth scaling
  
  `0624da720` adds independent `Frame.font_string_smooth_scaling`, shared fractional line-height shaping, mode-keyed caches, and ordinary/runtime/inherited XML handling under retail 12.0.5+. `3c8b48012` adds wrapped render/cache measurement assertions. Contract, inferred-policy boundaries, RED provenance, current GREEN status, earlier XML epoch gap, and future native recorder live in [FontString smooth scaling](../../specs/fontstring-smooth-scaling.md). No native/GPU visual proof is claimed.
+@@ -123,7 +125,7 @@ The headless path is implemented in `src/render/headless.rs` and uses the same W
+ 
+ ## Sources
+ 
+-- [font.rs](../../../src/render/font.rs) — font sources: Blizzard fonts from CASC, addon font files loaded on first use, the error for a missing one
++- [font.rs](../../../src/render/font.rs) — font sources: Blizzard fonts from CASC, addon font files loaded on first use, the error for a missing one, the fallback family without CASC and `WOW_SIM_FALLBACK_FONT`
+ - [FontString smooth scaling](../../specs/fontstring-smooth-scaling.md) — inferred height policy, tests, scope and future native probe
+ 
+ - [rendering-pipeline.md](../../rendering-pipeline.md) — QuadBatch, shaders, atlas, hit testing, alpha, text
 diff --git a/src/render/font.rs b/src/render/font.rs
 index 6b913b31e..bab37adc3 100644
 --- a/src/render/font.rs

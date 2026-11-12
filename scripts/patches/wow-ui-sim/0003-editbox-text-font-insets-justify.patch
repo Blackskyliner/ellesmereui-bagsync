@@ -16,20 +16,96 @@ left edge; the client draws it white, at the left, 16 px in.
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ---
- src/loader/editbox_font.rs                    | 96 +++++++++++++++++++
+ docs/wiki/index.md                            |  1 +
+ docs/wiki/investigations/editbox-text-font.md | 43 ++++++++
+ docs/wiki/log.md                              |  4 +
+ src/loader/editbox_font.rs                    | 96 ++++++++++++++++++
  src/loader/mod.rs                             |  1 +
- src/loader/tests/editbox_font.rs              | 82 ++++++++++++++++
- src/loader/tests/mod.rs                       |  1 +
  src/loader/xml_frame/finalize.rs              |  7 ++
  src/loader/xml_frame/setup.rs                 |  2 +-
  .../create_frame/template_chain/runtime.rs    |  3 +
  .../template_chain/runtime_loader_effects.rs  |  8 ++
  src/lua_api/globals/template/direct.rs        | 20 +++-
  src/widget/frame.rs                           |  5 +
- 10 files changed, 221 insertions(+), 4 deletions(-)
+ tests/editbox_text_defaults.rs                | 97 +++++++++++++++++++
+ 12 files changed, 283 insertions(+), 4 deletions(-)
+ create mode 100644 docs/wiki/investigations/editbox-text-font.md
  create mode 100644 src/loader/editbox_font.rs
- create mode 100644 src/loader/tests/editbox_font.rs
+ create mode 100644 tests/editbox_text_defaults.rs
 
+diff --git a/docs/wiki/index.md b/docs/wiki/index.md
+index c04e13677..97cf37a65 100644
+--- a/docs/wiki/index.md
++++ b/docs/wiki/index.md
+@@ -4279,6 +4279,7 @@ The sixteen retail 12.0.0 `Enum.EditModeDamageMeterSetting.*` and `Enum.EditMode
+ | [[retail-core-behavior-probes]] | Live retail `12.0.5.67823` probes pinned `SetForbidden`, `CreateForbiddenFrame`, invalid `RegisterUnitEvent`, wildcard false attributes, and the improved Raise/Lower capture path |
+ | [[minimap-map-ring-alignment]] | Active minimap bug is map texture/mask/ring alignment, not the SimCommands minimap button; debug the minimap render mask/clip and ring aperture directly |
+ | [[casc-fdid-1579624-root-debug]] | FDID 1579624 root/CASC resolution data, CRLF hash proof, and parser debugging checklist |
++| [[editbox-text-font]] | EditBox text font, insets and LEFT justification from XML templates, checked in the Forever client; the instructions region's Friz Quadrata 10 remains unmodeled |
+ | [[windows-casc-blizzard-taint]] | CASC/TOC load taint and runtime LoadAddOn boundaries; generated template handlers also need declaration-origin taint instead of constructor taint (grouped GREEN pending) |
+ | [[achievement-panel-hide]] | Achievement panel hide now uses Blizzard's managed panel path; animation completion also fires child animation `OnFinished` scripts for alert hide XML |
+ | [[adventure-guide-layout]] | Suggested Content card overlap came from synchronous geometry queries resolving resized anchor targets without updating dependent sibling frames |
+diff --git a/docs/wiki/investigations/editbox-text-font.md b/docs/wiki/investigations/editbox-text-font.md
+new file mode 100644
+index 000000000..e83f03ef6
+--- /dev/null
++++ b/docs/wiki/investigations/editbox-text-font.md
+@@ -0,0 +1,43 @@
++# EditBox text font, insets and justification
++
++A `SearchBoxTemplate` box drew its text yellow, centered and against its left edge. The client draws it white, at the left, 16 px in. Three loader gaps caused it: an EditBox's `<FontString>` element was never applied, a new EditBox started at `CENTER`, and `<TextInsets>` were read only from the frame's own XML. One client quirk around the box's font file and size remains unmodeled.
++
++## Content
++
++### Client behavior
++
++Checked in the WoW Forever client (1.60.1, no addons loaded, running under Wine). Forever and retail ship the same `SearchBoxTemplate` and `InputBoxVisualTemplate`.
++
++| Call | Result |
++|---|---|
++| `CreateFrame("EditBox"):GetJustifyH()` | `LEFT` |
++| `CreateFrame("EditBox"):GetFont()` | `nil, 0` |
++| `CreateFrame("EditBox"):GetTextColor()` | `1, 1, 1, 1` |
++| `CreateFrame("EditBox", nil, UIParent, "InputBoxTemplate"):GetFont()` | `Fonts\ARIALN.TTF, 14, ""` (ChatFontNormal) |
++| `CreateFrame("EditBox", nil, UIParent, "InputBoxInstructionsTemplate"):GetFont()` | `Fonts\FRIZQT__.TTF, 10, ""` |
++| `CreateFrame("EditBox", nil, UIParent, "SearchBoxTemplate")` | `GetJustifyH()` `LEFT`, `GetTextColor()` `1, 1, 1, 1`, `GetTextInsets()` `16, 20, 0, 0`, `GetFont()` `Fonts\FRIZQT__.TTF, 10, ""`, `GetFontObject():GetName()` `nil` |
++| `InputBoxTemplate` box plus `CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")` | `GetFont()` stays `Fonts\ARIALN.TTF, 14, ""` |
++| `ChatFontNormal:GetFont()` | `Fonts\ARIALN.TTF, 14, ""` |
++
++### Root causes and fix
++
++- `FrameXml::font_string_child()` parsed an EditBox's `<FontString>` element, but nothing applied it. `src/loader/editbox_font.rs` now applies the element of the box or its nearest template on both the XML path (`xml_frame/finalize.rs`) and the runtime template path (`runtime_loader_effects.rs`): the font object it inherits, and the `justifyH`, `justifyV` and `<Color>` it names. The font object leaves the justification as it was unless the element names one, because font objects default to `CENTER` while the client keeps a `SearchBoxTemplate` box at `LEFT`.
++- `Frame::new` gave an EditBox the FontString default `CENTER`; it now starts at `LEFT`.
++- `apply_xml_text_insets` read only the frame's own XML. It now falls back to the nearest template in the chain, and the runtime template path applies it too.
++
++### Open: the instructions region's font
++
++`InputBoxTemplate` takes ChatFontNormal's font from its element, as modeled. `InputBoxInstructionsTemplate` adds an `Instructions` FontString region (`GameFontDisableSmall`, Friz Quadrata 10). With it, the client reports Friz Quadrata 10 for the box, but keeps the box's white color. A FontString created at runtime does not have this effect. The rule behind it (declaration order, region type, or something else) is unknown. The simulator keeps ChatFontNormal, so a search box measures its text at 14 instead of 10. The client's font object is unnamed; the simulator's is ChatFontNormal itself.
++
++## Sources
++
++- [editbox_font.rs](../../../src/loader/editbox_font.rs) — applies an EditBox's `<FontString>` element
++- [direct.rs](../../../src/lua_api/globals/template/direct.rs) — `apply_xml_text_insets` with template fallback
++- [editbox_text_defaults.rs](../../../tests/editbox_text_defaults.rs) — tests for the default, the element and the insets on both paths
++- In-game `/dump` and `/run` checks in the WoW Forever client 1.60.1, listed above
++
++## See Also
++
++- [[xml-template-system]] — template chains the element and insets are resolved from
++- [[widget-system]] — EditBox widget defaults
++- [[rendering-pipeline]] — font sources
+diff --git a/docs/wiki/log.md b/docs/wiki/log.md
+index 90d61d353..3cd3a754d 100644
+--- a/docs/wiki/log.md
++++ b/docs/wiki/log.md
+@@ -1,3 +1,7 @@
++## [2026-11-12] investigation | EditBox text font and insets
++
++[EditBox text font, insets and justification](investigations/editbox-text-font.md) records the client checks, the three loader gaps and their fix, and the unmodeled font of `InputBoxInstructionsTemplate`'s instructions region.
++
+ ## [2026-11-12] docs | Pinned fallback font
+ 
+ [Rendering pipeline](systems/rendering-pipeline.md#font-sources) records `WOW_SIM_FALLBACK_FONT`; tests live in `src/render/font.rs`.
 diff --git a/src/loader/editbox_font.rs b/src/loader/editbox_font.rs
 new file mode 100644
 index 000000000..bbb750521
@@ -133,117 +209,17 @@ index 000000000..bbb750521
 +    })
 +}
 diff --git a/src/loader/mod.rs b/src/loader/mod.rs
-index f9fe5f13c..fbe94c1fd 100644
+index f9fe5f13c..f11bdf9ac 100644
 --- a/src/loader/mod.rs
 +++ b/src/loader/mod.rs
-@@ -7,6 +7,7 @@ mod addon_saved_variables;
- #[cfg(test)]
- mod addon_saved_variables_tests;
- pub(crate) mod button;
-+pub(crate) mod editbox_font;
+@@ -10,6 +10,7 @@ pub(crate) mod button;
  pub(crate) mod bytecode;
  pub(crate) mod bytecode_cache;
  pub(crate) mod chunk_cache;
-diff --git a/src/loader/tests/editbox_font.rs b/src/loader/tests/editbox_font.rs
-new file mode 100644
-index 000000000..65052b753
---- /dev/null
-+++ b/src/loader/tests/editbox_font.rs
-@@ -0,0 +1,82 @@
-+use super::*;
-+
-+const EDITBOX_FONT_XML: &str = r#"
-+<Ui xmlns="http://www.blizzard.com/wow/ui/">
-+    <Font name="EditBoxFontProbe" virtual="true" font="Fonts\ARIALN.TTF" height="14">
-+        <Color r="1.0" g="1.0" b="1.0"/>
-+    </Font>
-+    <EditBox name="EditBoxFontVisualTemplate" virtual="true">
-+        <FontString inherits="EditBoxFontProbe"/>
-+        <TextInsets left="16" right="20" bottom="0" top="0"/>
-+    </EditBox>
-+    <EditBox name="EditBoxFontSearchTemplate" inherits="EditBoxFontVisualTemplate" virtual="true"/>
-+    <EditBox name="EditBoxFontRightTemplate" virtual="true">
-+        <FontString inherits="EditBoxFontProbe" justifyH="RIGHT">
-+            <Color r="0.5" g="0.25" b="0.0"/>
-+        </FontString>
-+    </EditBox>
-+    <EditBox name="EditBoxFontXmlBox" parent="UIParent" inherits="EditBoxFontSearchTemplate" autoFocus="false"/>
-+</Ui>
-+"#;
-+
-+#[test]
-+fn a_new_editbox_justifies_its_text_left() {
-+    let ctx = load_test_xml("editbox-default-justify", EDITBOX_FONT_XML);
-+    let justify: String = ctx
-+        .env
-+        .eval(r#"return CreateFrame("EditBox", nil, UIParent):GetJustifyH()"#)
-+        .expect("justify probe should execute");
-+    assert_eq!(justify, "LEFT");
-+}
-+
-+#[test]
-+fn an_editbox_takes_the_font_of_its_inherited_font_string_element() {
-+    let ctx = load_test_xml("editbox-template-font", EDITBOX_FONT_XML);
-+    let probe: (bool, bool, f64, f64, f64, String) = ctx
-+        .env
-+        .eval(
-+            r#"
-+            local runtime = CreateFrame("EditBox", nil, UIParent, "EditBoxFontSearchTemplate")
-+            local r, g, b = runtime:GetTextColor()
-+            return runtime:GetFontObject() == EditBoxFontProbe,
-+                EditBoxFontXmlBox:GetFontObject() == EditBoxFontProbe,
-+                r, g, b,
-+                runtime:GetJustifyH()
-+            "#,
-+        )
-+        .expect("template font probe should execute");
-+    assert_eq!(probe, (true, true, 1.0, 1.0, 1.0, "LEFT".to_string()));
-+}
-+
-+#[test]
-+fn an_editbox_font_string_element_sets_justification_and_color() {
-+    let ctx = load_test_xml("editbox-font-attributes", EDITBOX_FONT_XML);
-+    let probe: (String, f64, f64, f64) = ctx
-+        .env
-+        .eval(
-+            r#"
-+            local box = CreateFrame("EditBox", nil, UIParent, "EditBoxFontRightTemplate")
-+            local r, g, b = box:GetTextColor()
-+            return box:GetJustifyH(), r, g, b
-+            "#,
-+        )
-+        .expect("font attribute probe should execute");
-+    assert_eq!(probe, ("RIGHT".to_string(), 0.5, 0.25, 0.0));
-+}
-+
-+#[test]
-+fn an_editbox_takes_the_text_insets_of_its_template() {
-+    let ctx = load_test_xml("editbox-template-insets", EDITBOX_FONT_XML);
-+    let probe: (f64, f64, f64, f64) = ctx
-+        .env
-+        .eval(
-+            r#"
-+            local runtime = CreateFrame("EditBox", nil, UIParent, "EditBoxFontSearchTemplate")
-+            local left, right = runtime:GetTextInsets()
-+            local xmlLeft, xmlRight = EditBoxFontXmlBox:GetTextInsets()
-+            return left, right, xmlLeft, xmlRight
-+            "#,
-+        )
-+        .expect("text insets probe should execute");
-+    assert_eq!(probe, (16.0, 20.0, 16.0, 20.0));
-+}
-diff --git a/src/loader/tests/mod.rs b/src/loader/tests/mod.rs
-index 473ab28c3..c908efd6e 100644
---- a/src/loader/tests/mod.rs
-+++ b/src/loader/tests/mod.rs
-@@ -5,6 +5,7 @@ account_store_ui_fixture! {
- }
- mod addon_font;
- mod button_text;
-+mod editbox_font;
- mod button_textures;
- mod lua_loading;
- mod reload_factory_xml;
++pub(crate) mod editbox_font;
+ mod error;
+ mod file_diagnostics;
+ pub(crate) mod helpers;
 diff --git a/src/loader/xml_frame/finalize.rs b/src/loader/xml_frame/finalize.rs
 index 3aa6a573d..2bbc8d6a8 100644
 --- a/src/loader/xml_frame/finalize.rs
@@ -355,3 +331,106 @@ index 2a2e95585..515470a04 100644
          frame
      }
  
+diff --git a/tests/editbox_text_defaults.rs b/tests/editbox_text_defaults.rs
+new file mode 100644
+index 000000000..2de715594
+--- /dev/null
++++ b/tests/editbox_text_defaults.rs
+@@ -0,0 +1,97 @@
++//! EditBox text defaults from XML templates: the box's `<FontString>`
++//! element, its `<TextInsets>` and the LEFT justification of a new box, as the
++//! WoW Forever 1.60.1 client reports them.
++use wow_ui_sim::loader::load_addon;
++use wow_ui_sim::lua_api::WowLuaEnv;
++
++const TEMPLATES: &str = r#"<Ui xmlns="http://www.blizzard.com/wow/ui/">
++    <Font name="EditBoxTextProbeFont" virtual="true" font="Fonts\ARIALN.TTF" height="14">
++        <Color r="1.0" g="1.0" b="1.0"/>
++    </Font>
++    <EditBox name="EditBoxTextVisualTemplate" virtual="true">
++        <FontString inherits="EditBoxTextProbeFont"/>
++        <TextInsets left="16" right="20" bottom="0" top="0"/>
++    </EditBox>
++    <EditBox name="EditBoxTextSearchTemplate" inherits="EditBoxTextVisualTemplate" virtual="true"/>
++    <EditBox name="EditBoxTextRightTemplate" virtual="true">
++        <FontString inherits="EditBoxTextProbeFont" justifyH="RIGHT">
++            <Color r="0.5" g="0.25" b="0.0"/>
++        </FontString>
++    </EditBox>
++    <EditBox name="EditBoxTextXmlBox" parent="UIParent" inherits="EditBoxTextSearchTemplate" autoFocus="false"/>
++</Ui>"#;
++
++fn env_with_templates() -> (WowLuaEnv, tempfile::TempDir) {
++    let env = WowLuaEnv::new().unwrap();
++    let addon = tempfile::tempdir().unwrap();
++    std::fs::write(
++        addon.path().join("EditBoxTextProbe.toc"),
++        "## Title: EditBoxTextProbe\ntemplates.xml\n",
++    )
++    .unwrap();
++    std::fs::write(addon.path().join("templates.xml"), TEMPLATES).unwrap();
++    load_addon(
++        &env.loader_env(),
++        &addon.path().join("EditBoxTextProbe.toc"),
++    )
++    .unwrap();
++    (env, addon)
++}
++
++#[test]
++fn a_new_editbox_justifies_its_text_left() {
++    let (env, _addon) = env_with_templates();
++    let justify: String = env
++        .eval(r#"return CreateFrame("EditBox", nil, UIParent):GetJustifyH()"#)
++        .unwrap();
++    assert_eq!(justify, "LEFT");
++}
++
++#[test]
++fn an_editbox_takes_the_font_of_its_inherited_font_string_element() {
++    let (env, _addon) = env_with_templates();
++    let probe: (bool, bool, f64, f64, f64, String) = env
++        .eval(
++            r#"
++            local runtime = CreateFrame("EditBox", nil, UIParent, "EditBoxTextSearchTemplate")
++            local r, g, b = runtime:GetTextColor()
++            return runtime:GetFontObject() == EditBoxTextProbeFont,
++                EditBoxTextXmlBox:GetFontObject() == EditBoxTextProbeFont,
++                r, g, b,
++                runtime:GetJustifyH()
++            "#,
++        )
++        .unwrap();
++    assert_eq!(probe, (true, true, 1.0, 1.0, 1.0, "LEFT".to_string()));
++}
++
++#[test]
++fn an_editbox_font_string_element_sets_justification_and_color() {
++    let (env, _addon) = env_with_templates();
++    let probe: (String, f64, f64, f64) = env
++        .eval(
++            r#"
++            local box = CreateFrame("EditBox", nil, UIParent, "EditBoxTextRightTemplate")
++            local r, g, b = box:GetTextColor()
++            return box:GetJustifyH(), r, g, b
++            "#,
++        )
++        .unwrap();
++    assert_eq!(probe, ("RIGHT".to_string(), 0.5, 0.25, 0.0));
++}
++
++#[test]
++fn an_editbox_takes_the_text_insets_of_its_template() {
++    let (env, _addon) = env_with_templates();
++    let probe: (f64, f64, f64, f64) = env
++        .eval(
++            r#"
++            local runtime = CreateFrame("EditBox", nil, UIParent, "EditBoxTextSearchTemplate")
++            local left, right = runtime:GetTextInsets()
++            local xmlLeft, xmlRight = EditBoxTextXmlBox:GetTextInsets()
++            return left, right, xmlLeft, xmlRight
++            "#,
++        )
++        .unwrap();
++    assert_eq!(probe, (16.0, 20.0, 16.0, 20.0));
++}
