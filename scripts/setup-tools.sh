@@ -52,9 +52,9 @@ WOW_UI_SIM_FOREVER_REV=079afe1f0df7fdea03ec83d6a0775685b9d1fcce
 # per level made insecure frame calls in combat take minutes
 # (https://github.com/Osso/wow-ui-sim/pull/53).
 # wow-ui-sim 0001: FontString:SetFont with an addon's font file falls back to
-# the default font, and that default is the first system font when no WoW
-# install provides Blizzard's; this loads addon fonts and takes the fallback
-# from WOW_SIM_FALLBACK_FONT, so text renders alike on macOS and Linux.
+# the default font; this loads the file. 0002: without a WoW install the
+# default font is the first system font, which differs between macOS and
+# Linux; WOW_SIM_FALLBACK_FONT pins it.
 # The Forever profile reads selected spell data of client build 1.60.1.70685,
 # which wow-cli generates from Blizzard's CDN (wow-ui-sim
 # docs/specs/forever-spell-data.md gives this checksum for it).
