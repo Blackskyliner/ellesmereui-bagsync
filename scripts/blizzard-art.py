@@ -9,9 +9,10 @@
                                  (D: held by their frame trees, S: named in our
                                  code, EllesmereUI's core and Bags, or the
                                  Blizzard templates and mixins they build on)
-  blizzard-art.py lock           re-pin against the current retail build: the
-                                 inventory, the textures the last visual test
-                                 run missed, and those of the lock
+  blizzard-art.py lock           re-pin against the current retail build until
+                                 the inventory and a run of every scenario
+                                 find no texture missing; fails on anything it
+                                 cannot pin or the simulator cannot decode
 
 The lock (sim/visual/blizzard-art.lock.json) holds keys and archive offsets
 only: Blizzard's art is not ours to redistribute, so the repository never
@@ -336,20 +337,21 @@ def inventory(catalog=None):
     return dynamic, static
 
 
-def relock():
-    catalog = Catalog()
-    dynamic, static = inventory(catalog)
-    paths = dynamic | static
-    for log in glob.glob(os.path.join(ROOT, ".tools", "visual-out", "*", "*.log")):
+def texture_errors(log_dir):
+    """-> (paths the simulator did not find, files it failed to decode) in
+    the logs below log_dir."""
+    missing, broken = set(), set()
+    for log in glob.glob(os.path.join(log_dir, "**", "*.log"), recursive=True):
         with open(log, encoding="utf-8", errors="ignore") as fh:
             for line in fh:
-                m = re.search(r"\[TexMgr\] Not found: (.+)$", line.rstrip("\n"))
+                m = re.search(r"\[TexMgr\] (Not found|Load error): (.+)$", line.rstrip("\n"))
                 if m:
-                    paths.add(m.group(1))
-    if os.path.exists(LOCK):
-        paths.update(e["path"] for e in load_lock()["files"])
-    print("blizzard-art: %d textures in the frame trees, %d named in code and templates, %d in all"
-          % (len(dynamic), len(static), len(paths)))
+                    (missing if m.group(1) == "Not found" else broken).add(m.group(2))
+    return missing, broken
+
+
+def write_lock(paths):
+    """Pins paths against the current retail build; -> the paths it could not pin."""
     tool = os.path.join(ROOT, "scripts", "blizzard-art")
     target = os.path.join(ROOT, ".tools", "blizzard-art-target")
     env = dict(os.environ, CARGO_HOME=os.path.join(ROOT, ".tools", "cargo"), CARGO_TARGET_DIR=target)
@@ -357,12 +359,59 @@ def relock():
     listing = os.path.join(ROOT, ".tools", "blizzard-art-paths.txt")
     with open(listing, "w", encoding="utf-8") as fh:
         fh.write("\n".join(sorted(paths)) + "\n")
-    subprocess.run([
+    run = subprocess.run([
         os.path.join(target, "release", "blizzard-art"),
         "--listfile", os.path.join(SIM, "data", "wow-ui-sim-listfile.csv"),
         "--paths", listing, "--out", LOCK, "--cache", os.path.join(ROOT, ".tools", "blizzard-cdn"),
-    ], check=True)
-    return 0
+    ], check=True, stderr=subprocess.PIPE, text=True)
+    sys.stderr.write(run.stderr)
+    return [line for line in run.stderr.splitlines() if line.startswith("not in ")]
+
+
+def relock():
+    """Pins until a full run finds nothing missing: each round fetches the
+    lock, takes the inventory, renders every scenario, and pins whatever the
+    inventory names or the simulator did not find. Anything that cannot be
+    pinned or decoded fails the run, so the lock covers every texture the
+    simulator asks for."""
+    catalog = Catalog()
+    static = static_inventory(catalog)
+    logs = os.path.join(ROOT, ".tools", "visual-out")
+    if not os.path.exists(LOCK):
+        # The renders need a lock to fetch; the static inventory seeds it.
+        unpinned = write_lock(static)
+        if unpinned:
+            print("blizzard-art: cannot pin:\n  " + "\n  ".join(unpinned), file=sys.stderr)
+            return 1
+    for round_no in range(1, 6):
+        locked = {e["path"] for e in load_lock()["files"]} if os.path.exists(LOCK) else set()
+        if fetch(None):
+            return 1
+        dynamic = dynamic_inventory(catalog)
+        missing, broken = texture_errors(logs)
+        subprocess.run([os.path.join(ROOT, "scripts", "visual-test.sh")], stdout=sys.stderr)
+        more_missing, more_broken = texture_errors(logs)
+        missing |= more_missing
+        broken |= more_broken
+        if broken:
+            print("blizzard-art: the simulator failed to decode:\n  " + "\n  ".join(sorted(broken)), file=sys.stderr)
+            return 1
+        wanted = {catalog.texture(p) or p for p in dynamic | static | missing}
+        new = {p for p in wanted if p.lower() not in {l.lower() for l in locked}}
+        print("blizzard-art: round %d: %d in the frame trees, %d named in code and templates, "
+              "%d not found by the simulator, %d new" % (round_no, len(dynamic), len(static), len(missing), len(new)))
+        if not new and not missing:
+            print("blizzard-art: %d textures pinned; no texture missing" % len(locked))
+            return 0
+        if not new:
+            print("blizzard-art: still not found although pinned:\n  " + "\n  ".join(sorted(missing)), file=sys.stderr)
+            return 1
+        unpinned = write_lock(locked | wanted)
+        if unpinned:
+            print("blizzard-art: cannot pin:\n  " + "\n  ".join(unpinned), file=sys.stderr)
+            return 1
+    print("blizzard-art: no fixed point after 5 rounds", file=sys.stderr)
+    return 1
 
 
 def print_inventory():

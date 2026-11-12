@@ -302,10 +302,15 @@ fails without the fix, then make it pass.
      every item quality and overlay, are covered too. The simulator does not
      log every texture it misses (atlas pieces fail silently), so the
      `[TexMgr] Not found` lines alone are not enough.
-   - `scripts/blizzard-art.py lock` pins the inventory, the textures the last
-     visual test run missed and those already pinned, against the current
-     retail build. Run it after a change that shows new Blizzard art, then
-     `visual-test.sh --update` and check the new baselines (Rust tool in
+   - `scripts/blizzard-art.py lock` pins against the current retail build
+     until nothing is missing: each round fetches the lock, takes the
+     inventory, renders every scenario and pins what the inventory names or
+     the simulator did not find. It stops when a round finds nothing new and
+     nothing missing, and fails on anything it cannot pin or decode; started
+     without a lock it arrives at the same file. Textures the simulator asks
+     for but our surfaces never show (its talent frame preloads them) stay in:
+     the lock has no filters. Run it after a change that shows new Blizzard
+     art, then `visual-test.sh --update` and check the new baselines (Rust tool in
      `scripts/blizzard-art/`; it caches about 350 MB of build manifests and
      archive indices in `.tools/blizzard-cdn/`).
 
