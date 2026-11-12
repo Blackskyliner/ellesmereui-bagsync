@@ -11,6 +11,27 @@ local saved
 
 local LINEN, WOOL, HEARTH, THUNDERFURY, ORE, POTION = 2589, 2592, 6948, 19019, 190396, 212345
 
+-- The simulator's item table lacks most of these items and answers with the
+-- question-mark icon; their own icons (file data IDs) let screenshots show the
+-- grid the way the client does. Items the simulator knows keep its answer.
+local ICONS = {
+    [LINEN] = 132889,       -- inv_fabric_linen_01
+    [WOOL] = 132911,        -- inv_fabric_wool_01
+    [THUNDERFURY] = 135349, -- inv_sword_39
+    [ORE] = 4581144,        -- inv_ore_draconium
+    [POTION] = 1385333,     -- inv_alchemy_70_red
+}
+local QUESTION_MARK = 134400
+
+local function WithFixtureIcon(id, ...)
+    local itemID, itemType, itemSubType, equipLoc, icon = ...
+    local own = ICONS[tonumber(itemID or id)]
+    if own and icon == QUESTION_MARK then
+        return itemID, itemType, itemSubType, equipLoc, own, select(6, ...)
+    end
+    return ...
+end
+
 local function enc(id, count) return id .. "," .. (count or 1) end
 
 local function container(size, items, name)
@@ -57,6 +78,9 @@ function EUIAltsSimFixture.Install()
     local db = ns.db
     saved = { chars = {}, warband = db.warband, guilds = db.guilds, currencyMeta = db.currencyMeta }
     for k, v in pairs(db.chars) do saved.chars[k] = v end
+    local infoInstant = C_Item.GetItemInfoInstant
+    saved.infoInstant = infoInstant
+    C_Item.GetItemInfoInstant = function(item) return WithFixtureIcon(item, infoInstant(item)) end
     local now = time()
     for k, v in pairs(chars(now)) do db.chars[k] = v end
     db.warband = { money = 250000000, bankAt = now - 9000, bank = {
@@ -81,6 +105,7 @@ function EUIAltsSimFixture.Uninstall()
     wipe(db.chars)
     for k, v in pairs(saved.chars) do db.chars[k] = v end
     db.warband, db.guilds, db.currencyMeta = saved.warband, saved.guilds, saved.currencyMeta
+    C_Item.GetItemInfoInstant = saved.infoInstant
     saved = nil
     ns.Index:Invalidate()
     ns.Browser:RequestRefresh()
