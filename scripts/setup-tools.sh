@@ -51,7 +51,9 @@ GETHE_RETAIL_REV=15881d522c44cd106d3d8660106ec9f9d2f44167  # 12.1.5.70575
 GETHE_FOREVER_REV=aff0d8cd53bf4d9ef1c1dd2786b94461a276fb16 # 1.60.1.70707
 # Fixes the suite needs before upstream has them: scripts/patches/<checkout>/
 # holds them as git patches, each naming its upstream pull request, applied on
-# top of the pin.
+# top of the pin. scripts/patches/wow-ui-sim-forever links to wow-ui-sim's,
+# as both checkouts sit at the same revision; it becomes a directory of its
+# own when the pins part.
 # wow-ui-sim 0001: FontString:SetFont with an addon's font file falls back to
 # the default font; this loads the file
 # (https://github.com/Osso/wow-ui-sim/pull/59). 0002: without a WoW install

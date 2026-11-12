@@ -216,16 +216,20 @@ jobs:
 
 
   visual:
-    name: Visual regression (retail)
+    name: Visual regression (${{ matrix.client }})
     # The scenarios of sim/visual rendered by wow-ui-sim and
-    # compared with the baselines, on the checks job's runner (CI_RUNNER);
+    # compared with the client's baselines, on the checks job's runner (CI_RUNNER);
     # scripts/setup-ci-runner.sh installs the GUI libraries there. Neither
     # runner has a GPU: Mesa's CPU Vulkan driver (lavapipe) renders, as
     # WOW_SIM_SOFTWARE_RENDER asks wgpu for its fallback adapter. Text and
     # textures match the macOS renders the baselines come from: EUI's font
     # stands in for Blizzard's, and the Blizzard textures pinned in
-    # sim/visual/blizzard-art.lock.json come from Blizzard's CDN
-    # (scripts/blizzard-art.py).
+    # the client's lock (sim/visual/blizzard-art*.lock.json) come from
+    # Blizzard's CDN (scripts/blizzard-art.py).
+    strategy:
+      fail-fast: false
+      matrix:
+        client: [retail, forever]
     runs-on: ${{ vars.CI_RUNNER && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON(vars.CI_RUNNER) || 'ubuntu-latest' }}
     timeout-minutes: 90
     env:
@@ -277,16 +281,22 @@ jobs:
             sudo apt-get update -q && sudo apt-get install -y -q $missing
           fi
 
-      # The checks job's cache key parts for the retail simulator.
+      # The checks job's cache key parts for the client's simulator.
       - name: Pinned revisions
         if: steps.scope.outputs.run == 'true'
         id: pins
+        env:
+          CLIENT: ${{ matrix.client }}
         run: |
-          echo "sim=$(sed -n 's/^WOW_UI_SIM_REV=//p' scripts/setup-tools.sh)" >> "$GITHUB_OUTPUT"
+          if [ "$CLIENT" = forever ]; then dir=wow-ui-sim-forever prefix=FOREVER_ lock=blizzard-art-forever.lock.json; else dir=wow-ui-sim prefix= lock=blizzard-art.lock.json; fi
+          echo "dir=$dir" >> "$GITHUB_OUTPUT"
+          echo "lock=sim/visual/$lock" >> "$GITHUB_OUTPUT"
+          echo "sim=$(sed -n "s/^WOW_UI_SIM_${prefix}REV=//p" scripts/setup-tools.sh)" >> "$GITHUB_OUTPUT"
           echo "gethe=$(sed -n 's/^GETHE_RETAIL_REV=\([0-9a-f]*\).*/\1/p' scripts/setup-tools.sh)" >> "$GITHUB_OUTPUT"
-          echo "features=$(sed -n 's/^ *SIM_FEATURES=//p' scripts/setup-tools.sh | tr , +)" >> "$GITHUB_OUTPUT"
-          if ls scripts/patches/wow-ui-sim/*.patch >/dev/null 2>&1; then
-            echo "patches=-patches$(cat scripts/patches/wow-ui-sim/*.patch | sha256sum | cut -c1-12)" >> "$GITHUB_OUTPUT"
+          echo "features=$(sed -n "s/^ *${prefix}SIM_FEATURES=//p" scripts/setup-tools.sh | tr , +)" >> "$GITHUB_OUTPUT"
+          echo "spells=$(sed -n 's/^FOREVER_SPELLS_SHA256=//p' scripts/setup-tools.sh)" >> "$GITHUB_OUTPUT"
+          if ls scripts/patches/"$dir"/*.patch >/dev/null 2>&1; then
+            echo "patches=-patches$(cat scripts/patches/"$dir"/*.patch | sha256sum | cut -c1-12)" >> "$GITHUB_OUTPUT"
           fi
           echo "icu=$(pkg-config --modversion icu-i18n)" >> "$GITHUB_OUTPUT"
           echo "system=$(. /etc/os-release && echo "$ID$VERSION_ID")-$RUNNER_ARCH" >> "$GITHUB_OUTPUT"
@@ -315,9 +325,19 @@ jobs:
         uses: actions/cache@v6
         with:
           path: |
-            .tools/vendor/wow-ui-sim/target/release/wow-sim
-            .tools/vendor/wow-ui-sim/target/release/wow-sim.rev
+            .tools/vendor/${{ steps.pins.outputs.dir }}/target/release/wow-sim
+            .tools/vendor/${{ steps.pins.outputs.dir }}/target/release/wow-sim.rev
           key: wow-sim-${{ runner.os }}-${{ steps.pins.outputs.system }}-ws${{ steps.pins.outputs.workspace }}-icu${{ steps.pins.outputs.icu }}-${{ steps.pins.outputs.sim }}${{ steps.pins.outputs.patches }}-${{ steps.pins.outputs.features }}
+
+      # As in the checks job: Forever's simulator reads spell data that
+      # wow-cli generates from Blizzard's CDN.
+      - name: Cache Forever spell data
+        id: spells-cache
+        if: steps.scope.outputs.run == 'true' && matrix.client == 'forever'
+        uses: actions/cache@v6
+        with:
+          path: .tools/simhome/Library/Caches/wow-ui-sim/spells/wowforever/spells.json
+          key: forever-spells-${{ steps.pins.outputs.spells }}
 
       # Blizzard's art stays out of the repository; the runner fetches the
       # pinned files once per lock and keeps them in its cache.
@@ -326,17 +346,17 @@ jobs:
         uses: actions/cache@v6
         with:
           path: .tools/blizzard-art
-          key: blizzard-art-${{ hashFiles('sim/visual/blizzard-art.lock.json') }}
+          key: blizzard-art-${{ matrix.client }}-${{ hashFiles(steps.pins.outputs.lock) }}
 
       - name: Cache retail Blizzard UI
-        if: steps.scope.outputs.run == 'true'
+        if: steps.scope.outputs.run == 'true' && matrix.client == 'retail'
         uses: actions/cache@v6
         with:
           path: .tools/simhome/Library/Caches/wow-ui-sim/blizzard-ui/retail
           key: blizzard-ui-retail-${{ steps.pins.outputs.gethe }}
 
       - name: Rust toolchain (to build the simulator, or where cargo is missing)
-        if: steps.scope.outputs.run == 'true' && (steps.pins.outputs.cargo != 'yes' || steps.sim-cache.outputs.cache-hit != 'true')
+        if: steps.scope.outputs.run == 'true' && (steps.pins.outputs.cargo != 'yes' || steps.sim-cache.outputs.cache-hit != 'true' || (matrix.client == 'forever' && steps.spells-cache.outputs.cache-hit != 'true'))
         uses: dtolnay/rust-toolchain@stable
 
       # SIM_CARGO_DIR as in the checks job.
@@ -344,19 +364,22 @@ jobs:
         if: steps.scope.outputs.run == 'true'
         run: |
           if [ "$RUNNER_ENVIRONMENT" = self-hosted ]; then export SIM_CARGO_DIR="$HOME/.cache/eui-sim-cargo"; fi
-          scripts/setup-tools.sh --client=retail
+          scripts/setup-tools.sh --client="$CLIENT"
+        env:
+          CLIENT: ${{ matrix.client }}
 
       - name: Run visual tests
         if: steps.scope.outputs.run == 'true'
         env:
           WOW_SIM_SOFTWARE_RENDER: "1"
-        run: scripts/visual-test.sh
+          CLIENT: ${{ matrix.client }}
+        run: scripts/visual-test.sh --client="$CLIENT"
 
       # Renders, diffs and the HTML report of a failed comparison.
       - name: Upload renders on failure
         if: failure() && steps.scope.outputs.run == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: visual-out
+          name: visual-out-${{ matrix.client }}
           retention-days: 7
           path: .tools/visual-out

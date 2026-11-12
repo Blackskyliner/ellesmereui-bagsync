@@ -1,1 +1,1 @@
-VisualScene("Aldrianna-Blackhand", "mail")
+VisualScene(EUIAltsSimFixture.MAIN, "mail")

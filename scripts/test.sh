@@ -6,7 +6,8 @@
 #                       (CI: a broken simulator build must not pass as "skipped")
 #   --client=<name>     simulator tests of one client only: retail or forever
 #                       (default: both; lint, API check and busted cover both
-#                       clients in every run, the visual tests retail only)
+#                       clients in every run; simulator and visual tests the
+#                       chosen ones)
 #   --no-visual         skip the visual tests (CI runs them in a job of their
 #                       own, with the software renderer and Blizzard's textures)
 set -uo pipefail
@@ -83,20 +84,22 @@ for client in $CLIENTS; do
   fi
 done
 
-case " $CLIENTS " in *" retail "*) visual=$VISUAL ;; *) visual=0 ;; esac
-if [ "$visual" = 1 ] && [ -x "$T/vendor/wow-ui-sim/target/release/wow-sim" ] && [ -x "$T/venv/bin/python" ]; then
-  step "visual regression (wow-ui-sim screenshots vs sim/visual/baselines)"
-  vlog="$(mktemp)"
-  if bash scripts/visual-test.sh >"$vlog" 2>&1; then
-    tail -1 "$vlog"
+for client in $CLIENTS; do
+  if [ "$client" = forever ]; then sim="$T/vendor/wow-ui-sim-forever"; else sim="$T/vendor/wow-ui-sim"; fi
+  if [ "$VISUAL" = 1 ] && [ -x "$sim/target/release/wow-sim" ] && [ -x "$T/venv/bin/python" ]; then
+    step "visual regression $client (wow-ui-sim screenshots vs sim/visual/baselines/$client)"
+    vlog="$(mktemp)"
+    if bash scripts/visual-test.sh --client="$client" >"$vlog" 2>&1; then
+      tail -1 "$vlog"
+    else
+      grep -v "^OK " "$vlog"
+      fail=1
+    fi
+    rm -f "$vlog"
   else
-    grep -v "^OK " "$vlog"
-    fail=1
+    step "visual regression $client skipped (--no-visual, or simulator or venv missing)"
   fi
-  rm -f "$vlog"
-else
-  step "visual regression skipped (--no-visual, retail only, or simulator or venv missing)"
-fi
+done
 
 printf '\n'
 if [ $fail -eq 0 ]; then echo "ALL CHECKS PASSED"; else echo "CHECKS FAILED"; fi

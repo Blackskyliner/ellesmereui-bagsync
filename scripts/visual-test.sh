@@ -2,37 +2,57 @@
 # Visual regression tests: renders every scenario in sim/visual/scenarios with
 # wow-ui-sim (real Blizzard FrameXML + EllesmereUI + this
 # addon + the fixture data of the simulator test addon) and compares the
-# target frame against sim/visual/baselines/<mode>/<scenario>.webp (lossless).
+# target frame against sim/visual/baselines/<client>/<mode>/<scenario>.webp
+# (lossless).
 #
 #   scripts/visual-test.sh            compare (exit 1 on any difference)
 #   scripts/visual-test.sh --update   accept the current renders as baselines
 #   scripts/visual-test.sh [--update] <scenario>...   only these scenarios
 #   scripts/visual-test.sh --inventory   list the textures every surface uses
 #                                        (sim/visual/texture-inventory.lua) in
-#                                        .tools/visual-out/inventory.log
+#                                        .tools/visual-out/<client>/inventory.log
+# --client=forever first renders the WoW Forever client (its FrameXML, its own
+# simulator build and textures) instead of retail. A scenario runs on both
+# clients unless a "-- clients:" line names only one.
 #
 # Modes: bags (EUI core + Bags, the dependency: our plain look) and skin (plus
 # EUI's Blizzard skin module, the look most users have). Output, diffs and an
-# HTML report land in .tools/visual-out/. Needs wow-ui-sim and the
+# HTML report land in .tools/visual-out/<client>/. Needs wow-ui-sim and the
 # Python venv from scripts/setup-tools.sh.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SIM="$ROOT/.tools/vendor/wow-ui-sim"
+CLIENT=retail
+case "${1:-}" in
+  --client=retail|--client=forever) CLIENT="${1#--client=}"; shift ;;
+  --client=*) echo "unknown client: ${1#--client=}" >&2; exit 2 ;;
+esac
+if [ "$CLIENT" = forever ]; then SIM="$ROOT/.tools/vendor/wow-ui-sim-forever"; else SIM="$ROOT/.tools/vendor/wow-ui-sim"; fi
 EUI="$ROOT/.tools/vendor/EllesmereUI"
 BIN="$SIM/target/release/wow-sim"
 PY="$ROOT/.tools/venv/bin/python"
-OUT="$ROOT/.tools/visual-out"
-[ -x "$BIN" ] || { echo "wow-sim not built; run scripts/setup-tools.sh" >&2; exit 2; }
+OUT="$ROOT/.tools/visual-out/$CLIENT"
+[ -x "$BIN" ] || { echo "wow-sim ($CLIENT) not built; run scripts/setup-tools.sh" >&2; exit 2; }
 [ -x "$PY" ] || { echo "Python venv missing; run scripts/setup-tools.sh" >&2; exit 2; }
 
 UPDATE=() INVENTORY=0
 if [ "${1:-}" = "--update" ]; then UPDATE=(--update); shift; fi
 if [ "${1:-}" = "--inventory" ]; then INVENTORY=1; shift; fi
+# for_client <scenario file>: whether it runs on this client.
+for_client() {
+  local clients
+  clients="$(sed -n 's/^-- clients: *//p' "$1" | head -1)"
+  [ -z "$clients" ] || [[ " $clients " == *" $CLIENT "* ]]
+}
+SCENARIOS=()
 if [ $# -gt 0 ]; then
-  SCENARIOS=("$@")
+  for name in "$@"; do
+    [ -f "$ROOT/sim/visual/scenarios/$name.lua" ] || { echo "no scenario $name" >&2; exit 2; }
+    for_client "$ROOT/sim/visual/scenarios/$name.lua" && SCENARIOS+=("$name")
+  done
 else
-  SCENARIOS=()
-  for f in "$ROOT"/sim/visual/scenarios/*.lua; do SCENARIOS+=("$(basename "$f" .lua)"); done
+  for f in "$ROOT"/sim/visual/scenarios/*.lua; do
+    for_client "$f" && SCENARIOS+=("$(basename "$f" .lua)")
+  done
 fi
 
 ADDONS="$SIM/Interface/AddOns"
@@ -51,13 +71,14 @@ export WOW_SIM_NO_SOUND=1
 # font without a WoW install, a different one per operating system; EUI's
 # default font stands in for them on every machine (scripts/patches/wow-ui-sim).
 export WOW_SIM_FALLBACK_FONT="$EUI/media/fonts/Expressway.TTF"
-# Blizzard's textures (icons, atlases, frame art): the files pinned in
-# sim/visual/blizzard-art.lock.json, fetched from Blizzard's CDN into a
-# minimal WoW install in .tools that holds only them (scripts/blizzard-art.py).
+# Blizzard's textures (icons, atlases, frame art): the files pinned in the
+# client's lock (sim/visual/blizzard-art.lock.json, blizzard-art-forever.lock.json),
+# fetched from Blizzard's CDN into a minimal WoW install in .tools that holds
+# only them (scripts/blizzard-art.py).
 # Without CASC archives there, the simulator reads them from the install's
 # extracted art tree; a real install on this machine is not used, so every
 # machine renders the same textures.
-ART="$("$PY" "$ROOT/scripts/blizzard-art.py" fetch | sed -n 's/^blizzard-art: [0-9]* files in \(.*\) ([0-9]* fetched)$/\1/p')"
+ART="$("$PY" "$ROOT/scripts/blizzard-art.py" --client="$CLIENT" fetch | sed -n 's/^blizzard-art: [0-9]* files in \(.*\) ([0-9]* fetched)$/\1/p')"
 [ -d "$ART/Data/data" ] || { echo "Blizzard textures missing; see scripts/blizzard-art.py" >&2; exit 2; }
 export WOW_INSTALL_PATH="$ART" WOW_SIM_CASC=0
 # The binary also looks next to the sources it was built from; naming the
@@ -87,7 +108,6 @@ for mode in bags skin; do
   mkdir -p "$OUT/$mode"
   for name in "${SCENARIOS[@]}"; do
     scenario="$ROOT/sim/visual/scenarios/$name.lua"
-    [ -f "$scenario" ] || { echo "no scenario $name" >&2; exit 2; }
     frame="$(sed -n 's/^-- frame: *//p' "$scenario" | head -1)"
     frame="${frame:-EllesmereUIBagsAltsBrowser}"
     cat "$ROOT/sim/visual/prelude.lua" "$scenario" > "$OUT/$mode/$name.lua"
@@ -98,4 +118,4 @@ for mode in bags skin; do
   done
 done
 
-"$PY" "$ROOT/scripts/visual-compare.py" ${UPDATE[@]+"${UPDATE[@]}"} "$OUT" "$ROOT/sim/visual/baselines" "${SCENARIOS[@]}"
+"$PY" "$ROOT/scripts/visual-compare.py" ${UPDATE[@]+"${UPDATE[@]}"} "$OUT" "$ROOT/sim/visual/baselines/$CLIENT" "${SCENARIOS[@]}"

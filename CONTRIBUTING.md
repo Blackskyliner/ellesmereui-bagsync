@@ -275,12 +275,21 @@ fails without the fix, then make it pass.
      text, no frame far above its window's level. New UI must keep these
      invariants.
    - Any Lua error raised by the addon fails the run.
-5. **Visual regression** (`scripts/visual-test.sh`, retail): every scenario in
-   `sim/visual/scenarios/` is rendered with the GPU build as a lossless PNG,
-   cropped to its frame and compared with `sim/visual/baselines/<mode>/`, once
-   with EllesmereUI core and Bags (`bags`, our plain look) and once with its
-   Blizzard skin module (`skin`). Results, diff images (changes in red) and
-   `report.html` go to `.tools/visual-out/`.
+5. **Visual regression** (`scripts/visual-test.sh [--client=forever]`): every
+   scenario in `sim/visual/scenarios/` is rendered with the client's GPU build
+   as a lossless PNG, cropped to its frame and compared with
+   `sim/visual/baselines/<client>/<mode>/`, once with EllesmereUI core and Bags
+   (`bags`, our plain look) and once with its Blizzard skin module (`skin`).
+   Results, diff images (changes in red) and `report.html` go to
+   `.tools/visual-out/<client>/`.
+   - A scenario runs on both clients unless a `-- clients:` line names one
+     (the warband and the currency scenarios are retail only). Scenarios open
+     the fixture's owners by name (`EUIAltsSimFixture.MAIN`, `SECOND`,
+     `REALM`, `GUILD`), which hold each client's shape: on Forever characters
+     keyed by GUID under a realm group, full names with surnames (two share a
+     first name), balances in gold, silver and copper, a keyring and an ammo
+     stack, Classic items. The Forever simulator knows almost no Classic item,
+     so the fixture also gives its own items their names and qualities there.
    - After an intended visual change, accept the new images with
      `scripts/visual-test.sh --update [scenario ...]`, look at every changed
      baseline before committing, and commit the baselines with the change.
@@ -289,9 +298,11 @@ fails without the fix, then make it pass.
    - Text renders in EllesmereUI's font, also where Blizzard's fonts are asked
      for, so macOS and Linux measure it alike (`WOW_SIM_FALLBACK_FONT`).
    - Blizzard's textures (item icons, atlases, frame art) come from Blizzard's
-     CDN, never from the repository: `sim/visual/blizzard-art.lock.json` pins
-     each file to a byte range of the current retail build, and
-     `scripts/blizzard-art.py fetch` (run by `visual-test.sh`) downloads and
+     CDN, never from the repository: each client's lock
+     (`sim/visual/blizzard-art.lock.json`, `blizzard-art-forever.lock.json`
+     for the CDN product `wowf`) pins each file to a byte range of its
+     current build, and `scripts/blizzard-art.py [--client=forever] fetch`
+     (run by `visual-test.sh`) downloads and
      verifies them into `.tools/blizzard-art/`, laid out as a minimal WoW
      install that holds only them. The simulator reads it like an install's
      extracted art (`WOW_INSTALL_PATH`, `WOW_SIM_CASC=0`), so a real install
@@ -307,12 +318,16 @@ fails without the fix, then make it pass.
      every item quality and overlay, are covered too. The simulator does not
      log every texture it misses (atlas pieces fail silently), so the
      `[TexMgr] Not found` lines alone are not enough.
-   - `scripts/blizzard-art.py lock` pins against the current retail build
-     until nothing is missing: each round fetches the lock, takes the
+   - `scripts/blizzard-art.py [--client=forever] lock` pins against the
+     client's current build until nothing is missing: each round fetches the lock, takes the
      inventory, renders every scenario and pins what the inventory names or
      the simulator did not find. It stops when a round finds nothing new and
      nothing missing, and fails on anything it cannot pin or decode; started
-     without a lock it arrives at the same file. Textures the simulator asks
+     without a lock it arrives at the same file. What can never be pinned for
+     the client is listed under `absent` in its lock instead: textures its
+     build lacks (on Forever the retail talent icons the simulator preloads)
+     and names the simulator cannot map (no listfile entry, or an atlas
+     missing from its table for the client, such as `coin-gold` on Forever). Textures the simulator asks
      for but our surfaces never show (its talent frame preloads them) stay in:
      the lock has no filters. Run it after a change that shows new Blizzard
      art, then `visual-test.sh --update` and check the new baselines (Rust tool in
@@ -329,7 +344,10 @@ fails without the fix, then make it pass.
   `OnTextChanged`, and runtime taint that spreads from event handlers into
   Blizzard's secure code is not tracked.
 - Its Forever profile models neither the keyring nor bank bags nor the ammo slot
-  yet (placeholders report none); `spec/forever_spec.lua` covers those paths.
+  yet (placeholders report none); `spec/forever_spec.lua` covers those paths,
+  the fixture shows them in the Forever visual tests. Its Forever item table
+  is nearly empty, and its Forever atlas table lacks some atlases the client
+  has (the coins, `bag-main`).
 
 ## In-game validation
 
@@ -360,16 +378,16 @@ a pin builds once and caches the result. The CI sets
 (`target-cpu=native`) and a cached binary could then fail on the next runner.
 The sources and references are fetched on every run (a minute or so).
 
-A third job runs the visual regression tests (retail) on the same runner:
+A third job runs the visual regression tests, once per client, on the same runner:
 neither runner has a GPU, so Mesa's CPU Vulkan driver renders
 (`WOW_SIM_SOFTWARE_RENDER=1`). Its renders differ from the macOS baselines
 only in a few glyph edge pixels, which the comparison's tolerances absorb: a
 channel may differ by up to 48, and a scenario may have
 `0.5 * sqrt(width * height)` pixels beyond that, as those edges grow with the
-crop's linear size rather than its area. It runs the retail checks job's
-simulator binary from the same cache entry and caches the Blizzard textures
-keyed on their lock; on a failure the renders and `report.html` are uploaded
-as the `visual-out` artifact.
+crop's linear size rather than its area. It runs the checks job's simulator
+binary of the client from the same cache entry and caches the Blizzard
+textures keyed on the client's lock; on a failure the renders and
+`report.html` are uploaded as the `visual-out-<client>` artifact.
 
 ### Self-hosted runner
 
