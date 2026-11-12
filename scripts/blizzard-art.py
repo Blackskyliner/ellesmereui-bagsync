@@ -112,7 +112,11 @@ ART_DIR = os.path.join("_retail_", "BlizzardInterfaceArt")
 
 
 def fetch_one(entry, dest):
-    path = os.path.join(dest, ART_DIR, entry["path"])
+    # One case for the whole tree: the listfile spells a few paths with
+    # capitals (Interface/Buttons/...), and on a case-sensitive file system
+    # those would become a second Interface directory next to interface/,
+    # of which the simulator's case-insensitive lookup only searches one.
+    path = os.path.join(dest, ART_DIR, entry["path"].lower())
     if intact(path, entry):
         return False
     content = blte_decode(download(entry), entry)
