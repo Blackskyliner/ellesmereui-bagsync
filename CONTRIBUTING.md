@@ -339,8 +339,8 @@ a pin builds once (about ten minutes on a runner) and caches the result. The CI 
 (`target-cpu=native`) and a cached binary could then fail on the next runner.
 The sources and references are fetched on every run (a minute or so).
 
-A third job runs the visual regression tests (retail) with the GPU build: the
-runner has no GPU, so Mesa's CPU Vulkan driver renders
+A third job runs the visual regression tests (retail) with the GPU build on
+the same runner: neither runner has a GPU, so Mesa's CPU Vulkan driver renders
 (`WOW_SIM_SOFTWARE_RENDER=1`). Its renders differ from the macOS baselines
 only in a few glyph edge pixels, which the comparison's per-channel tolerance
 absorbs. It caches the GUI binary like the headless one and the Blizzard
@@ -376,7 +376,8 @@ runner machine
 RUNNER_TOKEN=<token> ./setup-ci-runner.sh
 ```
 
-installs the packages, turns on automatic security updates, adds a 4 GB swap
+installs the packages (including the GUI simulator's libraries and Mesa's
+Vulkan driver for the visual job), turns on automatic security updates, adds a 4 GB swap
 file for the simulator's Rust build, creates the user `ghrunner` without a
 password or sudo, installs Rust (rustup, stable) and the newest runner
 release for that user after checking their SHA-256, registers the runner with

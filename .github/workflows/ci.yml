@@ -197,15 +197,15 @@ jobs:
   visual:
     name: Visual regression (retail)
     # The scenarios of sim/visual rendered by the GUI build of wow-ui-sim and
-    # compared with the baselines. Always on GitHub's runners: the self-hosted
-    # one (CI_RUNNER) lacks the GUI libraries and has no sudo to add them.
-    # The runner has no GPU: Mesa's CPU Vulkan driver (lavapipe) renders, as
+    # compared with the baselines, on the checks job's runner (CI_RUNNER);
+    # scripts/setup-ci-runner.sh installs the GUI libraries there. Neither
+    # runner has a GPU: Mesa's CPU Vulkan driver (lavapipe) renders, as
     # WOW_SIM_SOFTWARE_RENDER asks wgpu for its fallback adapter. Text and
     # textures match the macOS renders the baselines come from: EUI's font
     # stands in for Blizzard's, and the Blizzard textures pinned in
     # sim/visual/blizzard-art.lock.json come from Blizzard's CDN
     # (scripts/blizzard-art.py).
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON(vars.CI_RUNNER) || 'ubuntu-latest' }}
     timeout-minutes: 90
     env:
       ELLESMEREUI_REV: ${{ inputs.ellesmereui-rev }}
@@ -240,14 +240,22 @@ jobs:
           { echo '```'; printf '%s\n' "run=$run, $reason"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
       # The checks job's build dependencies, what iced, winit and wgpu link or
-      # load, and lavapipe as the only Vulkan adapter.
+      # load, lavapipe as the only Vulkan adapter, and python3-venv for the
+      # image comparison; only missing ones, as in the checks job.
       - name: Install build dependencies
         if: steps.scope.outputs.run == 'true'
         run: |
-          sudo apt-get update -q
-          sudo apt-get install -y -q libreadline-dev clang mold pkg-config libicu-dev fonts-dejavu-core libssl-dev \
-            libxkbcommon-dev libwayland-dev libx11-dev libxcursor-dev libxrandr-dev libxi-dev libasound2-dev \
-            libvulkan1 mesa-vulkan-drivers
+          missing=
+          for pkg in libreadline-dev clang mold pkg-config libicu-dev fonts-dejavu-core libssl-dev python3-venv \
+              libxkbcommon-dev libwayland-dev libx11-dev libxcursor-dev libxrandr-dev libxi-dev libasound2-dev \
+              libvulkan1 mesa-vulkan-drivers; do
+            dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q 'ok installed' || missing="$missing $pkg"
+          done
+          if [ -n "$missing" ]; then
+            echo "installing:$missing"
+            # shellcheck disable=SC2086
+            sudo apt-get update -q && sudo apt-get install -y -q $missing
+          fi
 
       # The checks job's cache key parts for the retail simulator.
       - name: Pinned revisions
@@ -262,6 +270,12 @@ jobs:
           echo "icu=$(pkg-config --modversion icu-i18n)" >> "$GITHUB_OUTPUT"
           echo "system=$(. /etc/os-release && echo "$ID$VERSION_ID")-$RUNNER_ARCH" >> "$GITHUB_OUTPUT"
           echo "workspace=$(printf %s "$GITHUB_WORKSPACE" | sha256sum | cut -c1-8)" >> "$GITHUB_OUTPUT"
+          # cargo in ~/.cargo/bin on a self-hosted runner, as in the checks job
+          if ! command -v cargo >/dev/null && [ -x "$HOME/.cargo/bin/cargo" ]; then
+            echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+            PATH="$HOME/.cargo/bin:$PATH"
+          fi
+          echo "cargo=$(command -v cargo >/dev/null && echo yes || echo no)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Lua toolchain
         if: steps.scope.outputs.run == 'true'
@@ -304,8 +318,8 @@ jobs:
           path: .tools/blizzard-art
           key: blizzard-art-${{ hashFiles('sim/visual/blizzard-art.lock.json') }}
 
-      - name: Rust toolchain
-        if: steps.scope.outputs.run == 'true'
+      - name: Rust toolchain (to build the simulator, or where cargo is missing)
+        if: steps.scope.outputs.run == 'true' && (steps.pins.outputs.cargo != 'yes' || steps.sim-cache.outputs.cache-hit != 'true' || steps.gui-cache.outputs.cache-hit != 'true')
         uses: dtolnay/rust-toolchain@stable
 
       - name: Set up toolchain and simulator (with GUI build)
