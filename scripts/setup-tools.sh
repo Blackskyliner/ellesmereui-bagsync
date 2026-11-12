@@ -55,7 +55,9 @@ GETHE_FOREVER_REV=aff0d8cd53bf4d9ef1c1dd2786b94461a276fb16 # 1.60.1.70707
 # wow-ui-sim 0001: FontString:SetFont with an addon's font file falls back to
 # the default font; this loads the file. 0002: without a WoW install the
 # default font is the first system font, which differs between macOS and
-# Linux; WOW_SIM_FALLBACK_FONT pins it.
+# Linux; WOW_SIM_FALLBACK_FONT pins it. 0003: an EditBox ignored its
+# template's <FontString> and <TextInsets> (yellow text, no font object, no
+# inset) and centred its text, where the client starts it at the left.
 # The Forever profile reads selected spell data of client build 1.60.1.70685,
 # which wow-cli generates from Blizzard's CDN (wow-ui-sim
 # docs/specs/forever-spell-data.md gives this checksum for it).
@@ -138,6 +140,10 @@ patched() {
   have="$(cat "$dir/.git/eui-patches" 2>/dev/null || true)"
   [ "$have" = "$want" ] && return 0
   git -C "$dir" checkout -q -f HEAD
+  # checkout leaves the files an earlier patch set created; git apply would
+  # stop at those the set creates again.
+  sed -n '/^--- \/dev\/null$/{n;s|^+++ b/||p;}' "$ROOT"/scripts/patches/"$1"/*.patch \
+    | while read -r f; do rm -f "$dir/$f"; done
   git -C "$dir" apply "$ROOT"/scripts/patches/"$1"/*.patch
   echo "$want" > "$dir/.git/eui-patches"
 }
