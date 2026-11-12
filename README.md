@@ -144,7 +144,8 @@ in chat, ctrl-click opens the dressing room. "Delete data" at the bottom removes
 another character or a guild bank (asks first); the current character and the
 warband bank cannot be deleted. The option "Money display in the browser" picks
 the parts of a balance: whole gold (retail default), gold and silver, or gold,
-silver and copper (WoW Forever default).
+silver and copper (WoW Forever default). "Money symbols" picks coloured
+letters (g, s, c) or coin icons after each part.
 
 **Overviews.** "All characters" at the top of the sidebar and every realm header
 show all stored items merged: equal items share one slot with the total amount,

@@ -22,6 +22,8 @@ builds, each tested in the game by the maintainer.
 - **New:** A "?" beside the browser's search box explains the search syntax on
   hover: words, item ID, `q:` quality and `t:` item type, with examples in the
   client's language.
+- **New:** The option "Money symbols" shows coin icons instead of the
+  coloured letters g, s and c after the parts of a balance in the browser.
 - **Bugfix:** Without EllesmereUI's skin module, the magnifier and the text of
   the browser's search box no longer touch its left border.
 - **Bugfix:** On WoW Forever, the keyring shows as "Keyring" after the bags in
