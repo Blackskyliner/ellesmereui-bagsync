@@ -1,0 +1,74 @@
+Subject: [PATCH] feat: resolve Blizzard textures from WOW_SIM_INTERFACE_ART_PATH
+
+Without a WoW install Blizzard's textures are missing. An extracted
+Interface tree named by WOW_SIM_INTERFACE_ART_PATH stands in for the
+install's BlizzardInterfaceArt, so machines without one, such as CI
+runners, render a fixed set of textures.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+diff --git a/src/texture/resolve.rs b/src/texture/resolve.rs
+index 6e1b27d64..de7579f68 100644
+--- a/src/texture/resolve.rs
++++ b/src/texture/resolve.rs
+@@ -27,15 +27,26 @@ fn casc_enabled() -> bool {
+     })
+ }
+ 
++/// An extracted Interface tree (`<root>/Interface/...`) named by
++/// `WOW_SIM_INTERFACE_ART_PATH` stands in for the install's: it lets machines
++/// without a WoW install, such as CI runners, render a fixed set of textures.
++fn interface_art_override() -> Option<PathBuf> {
++    std::env::var_os("WOW_SIM_INTERFACE_ART_PATH")
++        .filter(|path| !path.is_empty())
++        .map(PathBuf::from)
++}
++
+ #[cfg(feature = "casc")]
+ fn blizzard_interface_art_root() -> Option<PathBuf> {
+-    asset_resolver::wow_install_path()
+-        .and_then(|root| crate::paths::blizzard_interface_art_root_for_install_root(&root))
++    interface_art_override().or_else(|| {
++        asset_resolver::wow_install_path()
++            .and_then(|root| crate::paths::blizzard_interface_art_root_for_install_root(&root))
++    })
+ }
+ 
+ #[cfg(not(feature = "casc"))]
+ fn blizzard_interface_art_root() -> Option<PathBuf> {
+-    None
++    interface_art_override()
+ }
+ 
+ #[cfg(feature = "casc")]
+diff --git a/src/texture/tests.rs b/src/texture/tests.rs
+index 1034602fd..90f025c99 100644
+--- a/src/texture/tests.rs
++++ b/src/texture/tests.rs
+@@ -217,6 +217,26 @@ fn test_simcommands_minimap_placeholder_resolves_from_default_addons_path() {
+     );
+ }
+ 
++#[test]
++fn interface_art_path_resolves_blizzard_textures_without_an_install() {
++    let art = TempDir::new().unwrap();
++    let icons = art.path().join("interface").join("icons");
++    fs::create_dir_all(&icons).unwrap();
++    let img = image::RgbaImage::from_pixel(2, 2, image::Rgba([10, 20, 30, 255]));
++    img.save(icons.join("eui_test_icon.png")).unwrap();
++
++    // SAFETY: no other test reads WOW_SIM_INTERFACE_ART_PATH, and the
++    // directory holds only this test's file.
++    unsafe { std::env::set_var("WOW_SIM_INTERFACE_ART_PATH", art.path()) };
++    let mut mgr = TextureManager::new();
++    let with_prefix = mgr.load("Interface\\ICONS\\EUI_Test_Icon").map(|t| t.width);
++    let without_prefix = mgr.load("icons/eui_test_icon").map(|t| t.width);
++    unsafe { std::env::remove_var("WOW_SIM_INTERFACE_ART_PATH") };
++
++    assert_eq!(with_prefix, Some(2));
++    assert_eq!(without_prefix, Some(2));
++}
++
+ #[test]
+ fn test_nonexistent_texture_returns_none() {
+     let mut mgr = TextureManager::new();
