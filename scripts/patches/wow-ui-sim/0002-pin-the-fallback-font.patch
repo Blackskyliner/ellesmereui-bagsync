@@ -53,7 +53,7 @@ index 0a648c04a..0b248b542 100644
  
  `0624da720` adds independent `Frame.font_string_smooth_scaling`, shared fractional line-height shaping, mode-keyed caches, and ordinary/runtime/inherited XML handling under retail 12.0.5+. `3c8b48012` adds wrapped render/cache measurement assertions. Contract, inferred-policy boundaries, RED provenance, current GREEN status, earlier XML epoch gap, and future native recorder live in [FontString smooth scaling](../../specs/fontstring-smooth-scaling.md). No native/GPU visual proof is claimed.
 diff --git a/src/render/font.rs b/src/render/font.rs
-index dd811c665..a243684e7 100644
+index 6b913b31e..bab37adc3 100644
 --- a/src/render/font.rs
 +++ b/src/render/font.rs
 @@ -424,7 +424,8 @@ impl WowFontSystem {
@@ -116,7 +116,7 @@ index dd811c665..a243684e7 100644
  }
  
  fn first_system_family_name(db: &fontdb::Database) -> Option<String> {
-@@ -1112,6 +1141,45 @@ mod tests {
+@@ -1128,6 +1157,45 @@ mod tests {
          assert_eq!(fs.attrs(Some(path)).weight, weight);
      }
  
@@ -160,5 +160,5 @@ index dd811c665..a243684e7 100644
 +    }
 +
      #[test]
-     fn set_font_with_a_missing_addon_font_uses_the_default_font() {
+     fn only_a_missing_addon_font_file_counts_as_missing() {
          let root = tempfile::tempdir().unwrap();

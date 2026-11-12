@@ -233,12 +233,12 @@ index 000000000..65052b753
 +    assert_eq!(probe, (16.0, 20.0, 16.0, 20.0));
 +}
 diff --git a/src/loader/tests/mod.rs b/src/loader/tests/mod.rs
-index 17912b812..524a31e1a 100644
+index 473ab28c3..c908efd6e 100644
 --- a/src/loader/tests/mod.rs
 +++ b/src/loader/tests/mod.rs
-@@ -4,6 +4,7 @@ account_store_ui_fixture! {
-     mod account_store;
+@@ -5,6 +5,7 @@ account_store_ui_fixture! {
  }
+ mod addon_font;
  mod button_text;
 +mod editbox_font;
  mod button_textures;

@@ -3,17 +3,22 @@ Subject: [PATCH] feat: load the font files addons ship on first use
 FontString:SetFont with a font file an addon ships
 (Interface\AddOns\<Addon>\...) used the default font, as only Blizzard's
 font paths were known. Load such a file from the AddOns directories on
-first use, resolved ignoring case like the client's file lookup, with the
-weight, style and stretch of its face, so a bold file of a family renders
-bold. A missing file warns once and keeps the default font; what the
-client does then is not documented.
+first use, resolved ignoring case, with the weight, style and stretch of
+its face, so a bold file of a family renders bold. A path below
+Interface\AddOns that names no file raises the client's error,
+"FontString:SetFont(): Invalid font asset (<path>): file not found", and
+leaves the font as it was.
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ---
- docs/wiki/log.md                        |   4 +
- docs/wiki/systems/rendering-pipeline.md |   4 +
- src/render/font.rs                      | 207 +++++++++++++++++++++++-
- 3 files changed, 210 insertions(+), 5 deletions(-)
+ docs/wiki/log.md                              |   4 +
+ docs/wiki/systems/rendering-pipeline.md       |   4 +
+ src/loader/tests/addon_font.rs                |  27 ++
+ src/loader/tests/mod.rs                       |   1 +
+ .../text_attribute_event/text/formatting.rs   |  24 ++
+ src/render/font.rs                            | 240 +++++++++++++++++-
+ 6 files changed, 295 insertions(+), 5 deletions(-)
+ create mode 100644 src/loader/tests/addon_font.rs
 
 diff --git a/docs/wiki/log.md b/docs/wiki/log.md
 index 04cdbbbbe..ad640be24 100644
@@ -42,8 +47,95 @@ index cfe17fda6..0a648c04a 100644
  ## FontString smooth scaling
  
  `0624da720` adds independent `Frame.font_string_smooth_scaling`, shared fractional line-height shaping, mode-keyed caches, and ordinary/runtime/inherited XML handling under retail 12.0.5+. `3c8b48012` adds wrapped render/cache measurement assertions. Contract, inferred-policy boundaries, RED provenance, current GREEN status, earlier XML epoch gap, and future native recorder live in [FontString smooth scaling](../../specs/fontstring-smooth-scaling.md). No native/GPU visual proof is claimed.
+diff --git a/src/loader/tests/addon_font.rs b/src/loader/tests/addon_font.rs
+new file mode 100644
+index 000000000..e485e6229
+--- /dev/null
++++ b/src/loader/tests/addon_font.rs
+@@ -0,0 +1,27 @@
++use super::*;
++
++#[test]
++fn set_font_with_a_missing_addon_font_file_raises_the_client_error() {
++    let ctx = load_test_xml("set-font-missing-addon-file", "<Ui/>");
++    let probe: (bool, String, String, f64) = ctx
++        .env
++        .eval(
++            r#"
++            local fs = UIParent:CreateFontString()
++            fs:SetFont("Fonts\\ARIALN.TTF", 12, "")
++            local ok, err = pcall(fs.SetFont, fs, "Interface\\AddOns\\NoSuchAddon\\x.ttf", 16, "")
++            local path, height = fs:GetFont()
++            return ok, tostring(err), path, height
++            "#,
++        )
++        .expect("missing font probe should execute");
++    assert!(!probe.0, "SetFont should raise an error");
++    assert!(
++        probe.1.ends_with(
++            "FontString:SetFont(): Invalid font asset (Interface\\AddOns\\NoSuchAddon\\x.ttf): file not found"
++        ),
++        "unexpected error: {}",
++        probe.1
++    );
++    assert_eq!((probe.2.as_str(), probe.3), ("Fonts\\ARIALN.TTF", 12.0));
++}
+diff --git a/src/loader/tests/mod.rs b/src/loader/tests/mod.rs
+index 17912b812..473ab28c3 100644
+--- a/src/loader/tests/mod.rs
++++ b/src/loader/tests/mod.rs
+@@ -3,6 +3,7 @@
+ account_store_ui_fixture! {
+     mod account_store;
+ }
++mod addon_font;
+ mod button_text;
+ mod button_textures;
+ mod lua_loading;
+diff --git a/src/lua_api/frame/methods/text_attribute_event/text/formatting.rs b/src/lua_api/frame/methods/text_attribute_event/text/formatting.rs
+index 729346516..4728ac94c 100644
+--- a/src/lua_api/frame/methods/text_attribute_event/text/formatting.rs
++++ b/src/lua_api/frame/methods/text_attribute_event/text/formatting.rs
+@@ -351,6 +351,11 @@ pub(crate) fn set_font(state: &mut LuaState) -> LuaResult<u32> {
+         state.push(Val::Bool(false));
+         return Ok(1);
+     }
++    if let Some(path) = font.as_deref()
++        && crate::render::font::addon_font_file_missing(path)
++    {
++        return Err(missing_font_asset_error(state, id, path));
++    }
+     let size = match stack_val(state, 3) {
+         Val::Num(n) => Some(n as f32),
+         _ => None,
+@@ -370,6 +375,25 @@ pub(crate) fn set_font(state: &mut LuaState) -> LuaResult<u32> {
+     Ok(1)
+ }
+ 
++/// The client's error for a font file it cannot find, e.g.
++/// `FontString:SetFont(): Invalid font asset (Interface\\AddOns\\X\\x.ttf): file not found`.
++fn missing_font_asset_error(state: &mut LuaState, id: u64, path: &str) -> rilua::LuaError {
++    let object_type = borrow_state(state)
++        .ok()
++        .and_then(|sim| {
++            sim.widgets.get(id).map(|frame| {
++                frame
++                    .object_type_name
++                    .clone()
++                    .unwrap_or_else(|| frame.widget_type.as_str().to_string())
++            })
++        })
++        .unwrap_or_else(|| "FontString".to_string());
++    runtime_error(format!(
++        "{object_type}:SetFont(): Invalid font asset ({path}): file not found"
++    ))
++}
++
+ /// Generation acceptance is separate; this path validates only known arguments.
+ fn reject_wrath_font_arguments(state: &mut LuaState, id: u64) -> LuaResult<Option<u32>> {
+     let fontstring = borrow_state(state)?
 diff --git a/src/render/font.rs b/src/render/font.rs
-index 434c80c0a..dd811c665 100644
+index 434c80c0a..6b913b31e 100644
 --- a/src/render/font.rs
 +++ b/src/render/font.rs
 @@ -4,7 +4,8 @@
@@ -165,7 +257,7 @@ index 434c80c0a..dd811c665 100644
      };
  
      for wow_path in wow_paths {
-@@ -747,6 +802,54 @@ fn normalize_wow_path(path: &str) -> String {
+@@ -747,6 +802,70 @@ fn normalize_wow_path(path: &str) -> String {
      path.replace('/', "\\").to_uppercase()
  }
  
@@ -188,13 +280,29 @@ index 434c80c0a..dd811c665 100644
 +    Some(rest.iter().collect())
 +}
 +
++/// Whether `wow_path` names a font file below `Interface\\AddOns` that no
++/// AddOns directory holds. The client's `SetFont` rejects such a path with a
++/// Lua error; Blizzard's own font paths are never checked here, as they come
++/// from a WoW install the simulator may lack.
++pub fn addon_font_file_missing(wow_path: &str) -> bool {
++    addon_font_file_missing_in(addon_font_roots(), wow_path)
++}
++
++fn addon_font_file_missing_in(roots: &[PathBuf], wow_path: &str) -> bool {
++    addon_relative_font_path(wow_path).is_some_and(|relative| {
++        !roots
++            .iter()
++            .any(|root| resolve_case_insensitive(root, &relative).is_some())
++    })
++}
++
 +fn addon_font_roots() -> &'static [PathBuf] {
 +    static ROOTS: std::sync::OnceLock<Vec<PathBuf>> = std::sync::OnceLock::new();
 +    ROOTS.get_or_init(crate::paths::default_addons_paths)
 +}
 +
-+/// Resolve each component of `relative` below `root` ignoring case, as the
-+/// client's file lookup does.
++/// Resolve each component of `relative` below `root` ignoring case, as on the
++/// file systems the client runs on.
 +fn resolve_case_insensitive(root: &Path, relative: &Path) -> Option<PathBuf> {
 +    let mut path = root.to_path_buf();
 +    for part in relative.iter() {
@@ -220,7 +328,7 @@ index 434c80c0a..dd811c665 100644
  /// Extract the font family name from raw TTF data using fontdb.
  fn fontdb_family_name(data: &[u8]) -> Option<String> {
      // Parse the font to get its family name
-@@ -930,6 +1033,100 @@ mod tests {
+@@ -930,6 +1049,117 @@ mod tests {
          assert_eq!(name, default_name);
      }
  
@@ -304,7 +412,24 @@ index 434c80c0a..dd811c665 100644
 +    }
 +
 +    #[test]
-+    fn set_font_with_a_missing_addon_font_uses_the_default_font() {
++    fn only_a_missing_addon_font_file_counts_as_missing() {
++        let root = tempfile::tempdir().unwrap();
++        std::fs::create_dir_all(root.path().join("MyAddon/Media")).unwrap();
++        std::fs::write(root.path().join("MyAddon/Media/Font.TTF"), b"x").unwrap();
++        let roots = [root.path().to_path_buf()];
++        assert!(!addon_font_file_missing_in(
++            &roots,
++            "Interface\\AddOns\\MyAddon\\media\\font.ttf"
++        ));
++        assert!(addon_font_file_missing_in(
++            &roots,
++            "Interface\\AddOns\\MyAddon\\none.ttf"
++        ));
++        assert!(!addon_font_file_missing_in(&roots, "Fonts\\FRIZQT__.TTF"));
++    }
++
++    #[test]
++    fn a_missing_addon_font_is_drawn_in_the_default_font() {
 +        let root = tempfile::tempdir().unwrap();
 +        let roots = [root.path().to_path_buf()];
 +        let path = "Interface\\AddOns\\MyAddon\\none.ttf";
