@@ -1,10 +1,11 @@
 //! Pins Blizzard UI textures to byte ranges on Blizzard's CDN.
 //!
-//!   blizzard-art --listfile CSV --paths FILE --out LOCK [--cache DIR]
+//!   blizzard-art --listfile CSV --paths FILE --out LOCK [--cache DIR] [--product NAME]
 //!
 //! Reads WoW texture paths (one per line, as the addons and FrameXML request
 //! them), maps them to file data IDs with the simulator's listfile, and
-//! resolves each one through the current retail build: root (file data ID ->
+//! resolves each one through the current build of the product (`wow` for
+//! retail, the default; `wowf` for WoW Forever): root (file data ID ->
 //! content key), encoding (content key -> encoding key) and the archive
 //! indices (encoding key -> archive, offset, size). The lock it writes holds
 //! only these keys and offsets; scripts/blizzard-art.py fetches the files.
@@ -24,7 +25,7 @@ use std::io::Cursor;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
-const PATCH: &str = "http://us.patch.battle.net:1119/wow/versions";
+const PATCH: &str = "http://us.patch.battle.net:1119";
 const CDN: &str = "https://us.cdn.blizzard.com/tpr/wow";
 
 type Error = Box<dyn std::error::Error + Send + Sync>;
@@ -32,7 +33,7 @@ type Error = Box<dyn std::error::Error + Send + Sync>;
 #[derive(Serialize)]
 struct Lock {
     schema: u32,
-    product: &'static str,
+    product: String,
     version: String,
     build_config: String,
     cdn_config: String,
@@ -57,6 +58,7 @@ struct Args {
     paths: PathBuf,
     out: PathBuf,
     cache: PathBuf,
+    product: String,
 }
 
 fn parse_args() -> Result<Args, Error> {
@@ -73,7 +75,10 @@ fn parse_args() -> Result<Args, Error> {
     let cache = map
         .remove("--cache")
         .unwrap_or_else(|| PathBuf::from(".tools/blizzard-cdn"));
-    Ok(Args { listfile, paths, out, cache })
+    let product = map
+        .remove("--product")
+        .map_or_else(|| "wow".to_string(), |p| p.to_string_lossy().into_owned());
+    Ok(Args { listfile, paths, out, cache, product })
 }
 
 fn main() -> Result<(), Error> {
@@ -83,7 +88,7 @@ fn main() -> Result<(), Error> {
         .build()?;
     std::fs::create_dir_all(&args.cache)?;
 
-    let (version, build_hash, cdn_hash) = current_build(&client)?;
+    let (version, build_hash, cdn_hash) = current_build(&client, &args.product)?;
     eprintln!("build {version} (build config {build_hash}, CDN config {cdn_hash})");
 
     let wanted = map_paths(&args.listfile, &args.paths)?;
@@ -155,7 +160,7 @@ fn main() -> Result<(), Error> {
 
     let lock = Lock {
         schema: 1,
-        product: "wow",
+        product: args.product.clone(),
         version,
         build_config: build_hash,
         cdn_config: cdn_hash,
@@ -166,8 +171,9 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn current_build(client: &Client) -> Result<(String, String, String), Error> {
-    let text = client.get(PATCH).send()?.error_for_status()?.text()?;
+fn current_build(client: &Client, product: &str) -> Result<(String, String, String), Error> {
+    let url = format!("{PATCH}/{product}/versions");
+    let text = client.get(url).send()?.error_for_status()?.text()?;
     let line = text
         .lines()
         .find(|l| l.starts_with("us|"))

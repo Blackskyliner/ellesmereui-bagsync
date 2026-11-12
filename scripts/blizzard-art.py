@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Blizzard UI textures for the visual tests, from Blizzard's CDN.
 
+  blizzard-art.py [--client=retail|forever] COMMAND
+
   blizzard-art.py fetch [DEST]   download the files of the lock into a
                                  minimal WoW install at DEST (default
                                  .tools/blizzard-art/<version>), skipping
@@ -9,18 +11,21 @@
                                  (D: held by their frame trees, S: named in our
                                  code, EllesmereUI's core and Bags, or the
                                  Blizzard templates and mixins they build on)
-  blizzard-art.py lock           re-pin against the current retail build until
+  blizzard-art.py lock           re-pin against the client's current build until
                                  the inventory and a run of every scenario
                                  find no texture missing; fails on anything it
                                  cannot pin or the simulator cannot decode
 
-The lock (sim/visual/blizzard-art.lock.json) holds keys and archive offsets
-only: Blizzard's art is not ours to redistribute, so the repository never
+Each client has its own lock (sim/visual/blizzard-art.lock.json for retail,
+blizzard-art-forever.lock.json for WoW Forever, CDN product wowf), built
+from its own simulator checkout and Blizzard UI source. A lock holds keys and
+archive offsets only: Blizzard's art is not ours to redistribute, so the repository never
 carries it. Each file is a byte range of a CDN archive, BLTE-encoded; it is
 decoded and checked against its content key (MD5) before it is written.
 DEST looks like a WoW install to the simulator: Data/data marks it as one
-(asset-resolver), and the textures sit in _retail_/BlizzardInterfaceArt,
-the extracted tree it reads besides CASC. With WOW_INSTALL_PATH=DEST and
+(asset-resolver), and the textures sit in the client's extracted art tree
+(_retail_/ or _classic_beta_/BlizzardInterfaceArt), which it reads besides
+CASC. With WOW_INSTALL_PATH=DEST and
 WOW_SIM_CASC=0 (no CASC archives exist) it reads only that tree.
 """
 import concurrent.futures
@@ -38,7 +43,31 @@ import xml.etree.ElementTree as ET
 import zlib
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LOCK = os.path.join(ROOT, "sim", "visual", "blizzard-art.lock.json")
+VENDOR = os.path.join(ROOT, ".tools", "vendor")
+# Per client: its lock, CDN product, simulator checkout (atlas table and
+# listfile), Blizzard UI source, and the install directory the simulator
+# reads extracted art from (wow-ui-sim paths::blizzard_interface_art_root_for_install_root).
+CLIENTS = {
+    "retail": {"lock": "blizzard-art.lock.json", "product": "wow", "sim": "wow-ui-sim",
+               "atlas": "atlas.rs", "ui": "wow-ui-source", "art": "_retail_"},
+    "forever": {"lock": "blizzard-art-forever.lock.json", "product": "wowf", "sim": "wow-ui-sim-forever",
+                "atlas": "atlas_wowforever.rs", "ui": "wow-ui-source-forever", "art": "_classic_beta_"},
+}
+CLIENT = "retail"
+LOCK = SIM = BLIZZARD_UI = ART_DIR = None
+
+
+def use_client(name):
+    global CLIENT, LOCK, SIM, BLIZZARD_UI, ART_DIR
+    c = CLIENTS[name]
+    CLIENT = name
+    LOCK = os.path.join(ROOT, "sim", "visual", c["lock"])
+    SIM = os.path.join(VENDOR, c["sim"])
+    BLIZZARD_UI = os.path.join(VENDOR, c["ui"], "Interface", "AddOns")
+    ART_DIR = os.path.join(c["art"], "BlizzardInterfaceArt")
+
+
+use_client("retail")
 CDN = "https://us.cdn.blizzard.com/tpr/wow/data"
 
 
@@ -108,9 +137,6 @@ def download(entry):
     raise AssertionError("unreachable")
 
 
-ART_DIR = os.path.join("_retail_", "BlizzardInterfaceArt")
-
-
 def fetch_one(entry, dest):
     # One case for the whole tree: the listfile spells a few paths with
     # capitals (Interface/Buttons/...), and on a case-sensitive file system
@@ -146,9 +172,6 @@ def fetch(dest):
     return 0
 
 
-VENDOR = os.path.join(ROOT, ".tools", "vendor")
-SIM = os.path.join(VENDOR, "wow-ui-sim")
-BLIZZARD_UI = os.path.join(VENDOR, "wow-ui-source", "Interface", "AddOns")
 EUI = os.path.join(VENDOR, "EllesmereUI")
 UI_NS = "{http://www.blizzard.com/wow/ui/}"
 LUA_STRING = re.compile(r'"((?:[^"\\\n]|\\.)*)"|' + r"'((?:[^'\\\n]|\\.)*)'")
@@ -159,7 +182,8 @@ class Catalog:
 
     def __init__(self):
         self.atlas = {}
-        with open(os.path.join(SIM, "crates", "sim-data-profile", "data", "atlas.rs"), encoding="utf-8") as fh:
+        atlas = os.path.join(SIM, "crates", "sim-data-profile", "data", CLIENTS[CLIENT]["atlas"])
+        with open(atlas, encoding="utf-8") as fh:
             for m in re.finditer(r'^\s*"([^"]+)" => AtlasInfo \{ file: r"([^"]+)"', fh.read(), re.M):
                 self.atlas[m.group(1).lower()] = m.group(2)
         self.paths, self.ids = {}, {}
@@ -323,10 +347,10 @@ def static_inventory(catalog):
 
 def dynamic_inventory(catalog):
     """Textures the frame trees of every surface hold (visual-test.sh --inventory)."""
-    subprocess.run([os.path.join(ROOT, "scripts", "visual-test.sh"), "--inventory"],
+    subprocess.run([os.path.join(ROOT, "scripts", "visual-test.sh"), "--client=" + CLIENT, "--inventory"],
                    check=True, stdout=sys.stderr)
     found = set()
-    with open(os.path.join(ROOT, ".tools", "visual-out", "inventory.log"), encoding="utf-8") as fh:
+    with open(os.path.join(ROOT, ".tools", "visual-out", CLIENT, "inventory.log"), encoding="utf-8") as fh:
         for line in fh:
             kind, _, value = line.rstrip("\n").partition(" ")
             if kind in ("atlas", "path", "fdid") and "addons" not in value.lower():
@@ -355,7 +379,7 @@ def texture_errors(log_dir):
 
 
 def write_lock(paths):
-    """Pins paths against the current retail build; -> the paths it could not pin."""
+    """Pins paths against the client's current build; -> the paths it could not pin."""
     tool = os.path.join(ROOT, "scripts", "blizzard-art")
     target = os.path.join(ROOT, ".tools", "blizzard-art-target")
     env = dict(os.environ, CARGO_HOME=os.path.join(ROOT, ".tools", "cargo"), CARGO_TARGET_DIR=target)
@@ -367,50 +391,88 @@ def write_lock(paths):
         os.path.join(target, "release", "blizzard-art"),
         "--listfile", os.path.join(SIM, "data", "wow-ui-sim-listfile.csv"),
         "--paths", listing, "--out", LOCK, "--cache", os.path.join(ROOT, ".tools", "blizzard-cdn"),
+        "--product", CLIENTS[CLIENT]["product"],
     ], check=True, stderr=subprocess.PIPE, text=True)
     sys.stderr.write(run.stderr)
     return [line for line in run.stderr.splitlines() if line.startswith("not in ")]
 
 
+def norm(path):
+    """A texture path as the simulator's misses and the listfile compare."""
+    return os.path.splitext(path.replace("\\", "/").lower())[0].removeprefix("interface/")
+
+
+ABSENT = re.compile(r"^not in (?:the listfile: (.+)|root: \d+ (.+))$")
+
+
+def record_absent(unpinned, absent):
+    """Adds the textures that cannot be pinned for this client to absent and
+    stores them in the lock; -> the lines that are another failure. Absent
+    are textures the build's root does not hold (e.g. retail talent icons the
+    simulator preloads on Forever) and names the simulator cannot map to a
+    file: no listfile entry, or an atlas missing from its table for the
+    client. They can never be pinned, and the simulator misses them the same
+    way in every run."""
+    other = []
+    for line in unpinned:
+        m = ABSENT.match(line)
+        if m:
+            absent.add(m.group(1) or m.group(2))
+        else:
+            other.append(line)
+    lock = load_lock()
+    lock["absent"] = sorted(absent, key=str.lower)
+    with open(LOCK, "w", encoding="utf-8") as fh:
+        json.dump(lock, fh, indent=2)
+        fh.write("\n")
+    return other
+
+
 def relock():
     """Pins until a full run finds nothing missing: each round fetches the
     lock, takes the inventory, renders every scenario, and pins whatever the
-    inventory names or the simulator did not find. Anything that cannot be
+    inventory names or the simulator did not find. A texture that cannot be
+    pinned for the client is recorded as absent (record_absent); anything else that cannot be
     pinned or decoded fails the run, so the lock covers every texture the
     simulator asks for."""
     catalog = Catalog()
     static = static_inventory(catalog)
-    logs = os.path.join(ROOT, ".tools", "visual-out")
+    logs = os.path.join(ROOT, ".tools", "visual-out", CLIENT)
+    absent = set(load_lock().get("absent", ())) if os.path.exists(LOCK) else set()
     if not os.path.exists(LOCK):
         # The renders need a lock to fetch; the static inventory seeds it.
-        unpinned = write_lock(static)
+        unpinned = record_absent(write_lock(static), absent)
         if unpinned:
             print("blizzard-art: cannot pin:\n  " + "\n  ".join(unpinned), file=sys.stderr)
             return 1
     for round_no in range(1, 6):
         locked = {e["path"] for e in load_lock()["files"]} if os.path.exists(LOCK) else set()
+        gone = {norm(p) for p in absent}
         if fetch(None):
             return 1
         dynamic = dynamic_inventory(catalog)
         missing, broken = texture_errors(logs)
-        subprocess.run([os.path.join(ROOT, "scripts", "visual-test.sh")], stdout=sys.stderr)
+        subprocess.run([os.path.join(ROOT, "scripts", "visual-test.sh"), "--client=" + CLIENT], stdout=sys.stderr)
         more_missing, more_broken = texture_errors(logs)
         missing |= more_missing
         broken |= more_broken
         if broken:
             print("blizzard-art: the simulator failed to decode:\n  " + "\n  ".join(sorted(broken)), file=sys.stderr)
             return 1
+        missing = {p for p in missing if norm(p) not in gone}
         wanted = {catalog.texture(p) or p for p in dynamic | static | missing}
+        wanted = {p for p in wanted if norm(p) not in gone}
         new = {p for p in wanted if p.lower() not in {l.lower() for l in locked}}
         print("blizzard-art: round %d: %d in the frame trees, %d named in code and templates, "
               "%d not found by the simulator, %d new" % (round_no, len(dynamic), len(static), len(missing), len(new)))
         if not new and not missing:
-            print("blizzard-art: %d textures pinned; no texture missing" % len(locked))
+            print("blizzard-art: %d textures pinned, %d absent (see the lock); no texture missing"
+                  % (len(locked), len(absent)))
             return 0
         if not new:
             print("blizzard-art: still not found although pinned:\n  " + "\n  ".join(sorted(missing)), file=sys.stderr)
             return 1
-        unpinned = write_lock(locked | wanted)
+        unpinned = record_absent(write_lock(locked | wanted), absent)
         if unpinned:
             print("blizzard-art: cannot pin:\n  " + "\n  ".join(unpinned), file=sys.stderr)
             return 1
@@ -426,6 +488,13 @@ def print_inventory():
 
 
 def main(argv):
+    if argv[:1] and argv[0].startswith("--client="):
+        name = argv[0].split("=", 1)[1]
+        if name not in CLIENTS:
+            print("blizzard-art: unknown client %s" % name, file=sys.stderr)
+            return 2
+        use_client(name)
+        argv = argv[1:]
     if argv[:1] == ["fetch"] and len(argv) <= 2:
         return fetch(argv[1] if len(argv) == 2 else None)
     if argv == ["lock"]:
