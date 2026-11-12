@@ -1,0 +1,2579 @@
+{
+  "schema": 1,
+  "product": "wow",
+  "version": "12.1.5.70783",
+  "build_config": "bc493ecb2898766c0f8947a99b4b3d65",
+  "cdn_config": "8ecf609471cb2ea16667be9cc2b7a555",
+  "files": [
+    {
+      "path": "Interface/Buttons/UI-Panel-Button-Up.blp",
+      "file_data_id": 130828,
+      "content_key": "1e10d08981d3341527035d76feee044c",
+      "content_size": 6676,
+      "encoding_key": "348b257d6a78435c5058d039f9dbbce8",
+      "archive": "45667eef39c3a75c79a9ec7b9fa44498",
+      "offset": 32750461,
+      "size": 947
+    },
+    {
+      "path": "interface/buttons/white8x8.blp",
+      "file_data_id": 130871,
+      "content_key": "0d15229cf2298aa9e1fd6df14d1ec5e2",
+      "content_size": 1228,
+      "encoding_key": "73629048e4488997afb78683a2b19c9c",
+      "archive": "04aa0ccce0376d4287a8fcfad3957d5a",
+      "offset": 268433332,
+      "size": 95
+    },
+    {
+      "path": "interface/chatframe/chatframebackground.blp",
+      "file_data_id": 130937,
+      "content_key": "9521db29b918d3f6077e95d9775dc4e2",
+      "content_size": 1356,
+      "encoding_key": "6e2373cb3d02da1129a9df139860ed01",
+      "archive": "5a8bb6c11b1a569dfa710c8f0bd70fa0",
+      "offset": 268435338,
+      "size": 99
+    },
+    {
+      "path": "interface/framegeneral/ui-background-marble.blp",
+      "file_data_id": 374154,
+      "content_key": "5eb5fdf3c1c753c1c4e1ae9de2575f04",
+      "content_size": 44876,
+      "encoding_key": "8a20aa3f5335bbb7b22615debff04ba8",
+      "archive": "5955972b860319bfa9ce736b34047ba3",
+      "offset": 57742731,
+      "size": 20981
+    },
+    {
+      "path": "interface/icons/ability_crown_of_the_heavens_icon.blp",
+      "file_data_id": 839106,
+      "content_key": "bbf56fbd361f5f4ec431ffde28f1327a",
+      "content_size": 6660,
+      "encoding_key": "b59e80dcebcebee461c02d31172ae81e",
+      "archive": "e7555eb1621015c84976ee81ed59a50e",
+      "offset": 207395310,
+      "size": 3182
+    },
+    {
+      "path": "interface/icons/ability_essence_reapingflames.blp",
+      "file_data_id": 3193844,
+      "content_key": "cf14eb53b1ca0f334e8f8af6177b49b5",
+      "content_size": 3220,
+      "encoding_key": "fc17e75efd19ec946d8b32c34f4fa854",
+      "archive": "65a51f9e23d4d911da59d664273b4a2b",
+      "offset": 84671683,
+      "size": 1947
+    },
+    {
+      "path": "interface/icons/ability_mage_flamecannon.blp",
+      "file_data_id": 1387353,
+      "content_key": "2ee2dd273d0e7f55992de1b626e11a3c",
+      "content_size": 6660,
+      "encoding_key": "dea678b1456a5e2defa5bdb6b2f45ab7",
+      "archive": "3f9d1d473710ed4aa4df7899065b1622",
+      "offset": 43564285,
+      "size": 3183
+    },
+    {
+      "path": "interface/icons/ability_malkorok_blightofyshaarj_yellow.blp",
+      "file_data_id": 876916,
+      "content_key": "2fed96ab3949724f531363516b5aff85",
+      "content_size": 6660,
+      "encoding_key": "c7870e67304a2e11c3654ade75851788",
+      "archive": "a8f99e5856123e94fe5b9d80a0f67d1c",
+      "offset": 263441280,
+      "size": 2910
+    },
+    {
+      "path": "interface/icons/ability_mount_alliancepvpmount.blp",
+      "file_data_id": 524049,
+      "content_key": "5ca82f84d7e1f35ec1e840e145f8c6fa",
+      "content_size": 6660,
+      "encoding_key": "722be875325e19d0b8b6b985ce9a2185",
+      "archive": "2d9463d332eb2a97d07d9db831a66743",
+      "offset": 110945130,
+      "size": 2975
+    },
+    {
+      "path": "interface/icons/ability_mount_charger.blp",
+      "file_data_id": 132226,
+      "content_key": "318f5ec7a39e44dda928e9f5c2247d34",
+      "content_size": 6660,
+      "encoding_key": "120d3071b7daca0511d6af55f9d22c76",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 46145495,
+      "size": 2752
+    },
+    {
+      "path": "interface/icons/ability_mount_goatmountwhite.blp",
+      "file_data_id": 656322,
+      "content_key": "78d26d4d5c1225b76c8800ae14b620e1",
+      "content_size": 6660,
+      "encoding_key": "4ef6a117ff507513b3bf89e698a9a90d",
+      "archive": "f91f219bbc4afba5d9efa5409a48003c",
+      "offset": 6614726,
+      "size": 3168
+    },
+    {
+      "path": "interface/icons/ability_mount_mawhorsespikes_yellow.blp",
+      "file_data_id": 3636572,
+      "content_key": "71d7cc6978fa12a77b6155cfcaddc85f",
+      "content_size": 3220,
+      "encoding_key": "aa9951afe22ab6fb12f1fdc8aff6dc1a",
+      "archive": "1da3ecbc2a95b347550a10f7fe200952",
+      "offset": 251594803,
+      "size": 1946
+    },
+    {
+      "path": "interface/icons/ability_paladin_artofwar.blp",
+      "file_data_id": 236246,
+      "content_key": "7bb1a6bda4512f48fcee3765bb03c9f0",
+      "content_size": 6660,
+      "encoding_key": "d5d0ec77dfda182d6c342a05a14a51b2",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 6139386,
+      "size": 3165
+    },
+    {
+      "path": "interface/icons/ability_paladin_beaconofinsight.blp",
+      "file_data_id": 1030094,
+      "content_key": "59816d57edd4fe52aed6631ea4ccea8a",
+      "content_size": 6660,
+      "encoding_key": "563a3d1eb1a4e945426e991c5ab8d43e",
+      "archive": "5d8e14c49ecda4d8dd28aa7fc19e78fd",
+      "offset": 145932059,
+      "size": 2970
+    },
+    {
+      "path": "interface/icons/ability_paladin_beaconoflight.blp",
+      "file_data_id": 236247,
+      "content_key": "e9e5364ef1b85adda2419a5e4f8c36a2",
+      "content_size": 6660,
+      "encoding_key": "4230d90096e29538da8ebf0aeeab67eb",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 6142551,
+      "size": 3017
+    },
+    {
+      "path": "interface/icons/ability_paladin_beaconsoflight.blp",
+      "file_data_id": 1030095,
+      "content_key": "bccdf07ef1ea34cc775fa78826c238a0",
+      "content_size": 6660,
+      "encoding_key": "7e7f14b33c482cb12210f8b5c298ffb5",
+      "archive": "5d8e14c49ecda4d8dd28aa7fc19e78fd",
+      "offset": 145935029,
+      "size": 3209
+    },
+    {
+      "path": "interface/icons/ability_paladin_bladeofjustice.blp",
+      "file_data_id": 1360757,
+      "content_key": "59a6e39252c1d64aae098aa0a5e02506",
+      "content_size": 6660,
+      "encoding_key": "3151ecaa504a006bb397f39874ef32ea",
+      "archive": "521add489d9ebe3932f5a4d484427492",
+      "offset": 108899755,
+      "size": 3096
+    },
+    {
+      "path": "interface/icons/ability_paladin_bladeofjusticeblue.blp",
+      "file_data_id": 1394971,
+      "content_key": "adcb3a2662f3a3cd9352833efdf7e197",
+      "content_size": 6660,
+      "encoding_key": "c086e4a3057a5c6eefbcd7c6dc17d9c0",
+      "archive": "43f12564d58a9b2ad22c09e5a9baf9b6",
+      "offset": 226208600,
+      "size": 2960
+    },
+    {
+      "path": "interface/icons/ability_paladin_blessedhands.blp",
+      "file_data_id": 236248,
+      "content_key": "c19151ec2cfa84045d7480a8b6ad3f8f",
+      "content_size": 6660,
+      "encoding_key": "76f867143abd0a408168ab4689246c0f",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 6145568,
+      "size": 2925
+    },
+    {
+      "path": "interface/icons/ability_paladin_blindinglight.blp",
+      "file_data_id": 571553,
+      "content_key": "dbe1443ad812c8006b88baafa1c6f7c0",
+      "content_size": 6660,
+      "encoding_key": "dbf691711ff8c1e9c6a7a1c06ec57a5e",
+      "archive": "30ceab0962df14c86bbaea5bd9d688bb",
+      "offset": 203036217,
+      "size": 3038
+    },
+    {
+      "path": "interface/icons/ability_paladin_blindinglight2.blp",
+      "file_data_id": 571554,
+      "content_key": "a3de66d024f95d4f924016f4a15ffada",
+      "content_size": 6660,
+      "encoding_key": "8cb664bc7bea580557bf56189a063744",
+      "archive": "30ceab0962df14c86bbaea5bd9d688bb",
+      "offset": 203039255,
+      "size": 3043
+    },
+    {
+      "path": "interface/icons/ability_paladin_conviction.blp",
+      "file_data_id": 460689,
+      "content_key": "33a5d25a81b21f6bd48ced4e9b031fda",
+      "content_size": 6660,
+      "encoding_key": "9113826b84ae8e0119b8e8f85fee7dce",
+      "archive": "df82ac239f62ec49d66b3ca8e8d72e7f",
+      "offset": 18239795,
+      "size": 3229
+    },
+    {
+      "path": "interface/icons/ability_paladin_divinesteed.blp",
+      "file_data_id": 1360759,
+      "content_key": "c798c2d751b42a7640a836428f6ae433",
+      "content_size": 6660,
+      "encoding_key": "3104e0c5b1208c9109a76b8ad4c09196",
+      "archive": "521add489d9ebe3932f5a4d484427492",
+      "offset": 108902851,
+      "size": 3117
+    },
+    {
+      "path": "interface/icons/ability_paladin_divinestorm.blp",
+      "file_data_id": 236250,
+      "content_key": "1509d48742864db2dd49ccaf1857b8d1",
+      "content_size": 6660,
+      "encoding_key": "8ef8e04b6669d1029e75da478affc9d5",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 6151293,
+      "size": 2925
+    },
+    {
+      "path": "interface/icons/ability_paladin_empoweredsealsrighteous.blp",
+      "file_data_id": 1030099,
+      "content_key": "a238ee5211558bf3778406c04bf9d4d7",
+      "content_size": 6660,
+      "encoding_key": "4b5a9096512b48865297684a53a2eabe",
+      "archive": "5d8e14c49ecda4d8dd28aa7fc19e78fd",
+      "offset": 145947553,
+      "size": 2979
+    },
+    {
+      "path": "interface/icons/ability_paladin_enlightenedjudgements.blp",
+      "file_data_id": 236251,
+      "content_key": "72b178d00e1f21cd7dd4fdeb3604866a",
+      "content_size": 6660,
+      "encoding_key": "5cdbe940d4469c1c5c1466624497b1a4",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 6154218,
+      "size": 3097
+    },
+    {
+      "path": "interface/icons/ability_paladin_gaurdedbythelight.blp",
+      "file_data_id": 236252,
+      "content_key": "f74d6a1f7bd577a45b6d297bdb8dde90",
+      "content_size": 6660,
+      "encoding_key": "b4945bfbe5fefb7bcbf1be132abba143",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 6157315,
+      "size": 2948
+    },
+    {
+      "path": "interface/icons/ability_paladin_hammeroftherighteous.blp",
+      "file_data_id": 236253,
+      "content_key": "b3976913fe81e650adedefba1d030d9c",
+      "content_size": 6660,
+      "encoding_key": "304ca49064d2b466df0fb30c1d2a8099",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 6160263,
+      "size": 3072
+    },
+    {
+      "path": "interface/icons/ability_paladin_handoflight.blp",
+      "file_data_id": 1360761,
+      "content_key": "8c423eedc971874833c69bffa34243b4",
+      "content_size": 3916,
+      "encoding_key": "d329d413bed9bb2de615e3953cd3da94",
+      "archive": "521add489d9ebe3932f5a4d484427492",
+      "offset": 108909127,
+      "size": 2470
+    },
+    {
+      "path": "interface/icons/ability_paladin_holyavenger.blp",
+      "file_data_id": 571555,
+      "content_key": "b3681949bb9af6f8389c6836e99492fc",
+      "content_size": 6660,
+      "encoding_key": "1c61eecb27c72005d385d81d94f621bb",
+      "archive": "30ceab0962df14c86bbaea5bd9d688bb",
+      "offset": 203042298,
+      "size": 3011
+    },
+    {
+      "path": "interface/icons/ability_paladin_infusionoflight.blp",
+      "file_data_id": 236254,
+      "content_key": "43ab23268cff10d4ebc574e3538b4e3d",
+      "content_size": 6660,
+      "encoding_key": "371e55eb783e3effb6f3e2ee99dc73aa",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 6163335,
+      "size": 3053
+    },
+    {
+      "path": "interface/icons/ability_paladin_intercession.blp",
+      "file_data_id": 4726195,
+      "content_key": "603256ec661531bbb35dd07c0398c369",
+      "content_size": 3220,
+      "encoding_key": "07c02ae6ffd4719bad26196b9466b8c2",
+      "archive": "6024e0180795c9d2af51cd98b5b69947",
+      "offset": 46887217,
+      "size": 1781
+    },
+    {
+      "path": "interface/icons/ability_paladin_judgementblue.blp",
+      "file_data_id": 236255,
+      "content_key": "a056ce651123cf12464006de7b5342f9",
+      "content_size": 6660,
+      "encoding_key": "782b3a7f273e8c05be4f12e4559d9d3a",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 6166388,
+      "size": 3004
+    },
+    {
+      "path": "interface/icons/ability_paladin_judgementofthepure.blp",
+      "file_data_id": 236256,
+      "content_key": "8a94a31fd5dbb45a0720a539503abdd4",
+      "content_size": 6660,
+      "encoding_key": "0ca51fe10393bd0efeeeb861d4e33ea7",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 6169392,
+      "size": 3095
+    },
+    {
+      "path": "interface/icons/ability_paladin_judgementofthewise.blp",
+      "file_data_id": 236257,
+      "content_key": "1201316e19bc94714a32c2dbd4aa6f23",
+      "content_size": 6660,
+      "encoding_key": "dc5ca0845f51d0018ed9e39b271c3c34",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 6172487,
+      "size": 3064
+    },
+    {
+      "path": "interface/icons/ability_paladin_judgementred.blp",
+      "file_data_id": 236258,
+      "content_key": "343400f445eb5717a1c6cf04c345fd6a",
+      "content_size": 6660,
+      "encoding_key": "fa84983fcd557c2a3568f121e56e544a",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 6175551,
+      "size": 3039
+    },
+    {
+      "path": "interface/icons/ability_paladin_judgementsofthejust.blp",
+      "file_data_id": 236259,
+      "content_key": "69ec4f0e926448d6710ad173517d237d",
+      "content_size": 6660,
+      "encoding_key": "ef18a32bc98bf84041e501c8a15d6b66",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 6178590,
+      "size": 3053
+    },
+    {
+      "path": "interface/icons/ability_paladin_lightofthemartyr.blp",
+      "file_data_id": 1360762,
+      "content_key": "d7bbd46f07dfb410bee84773bd35de4b",
+      "content_size": 6660,
+      "encoding_key": "4181e26fc13d7652abe9ea1c952de226",
+      "archive": "521add489d9ebe3932f5a4d484427492",
+      "offset": 108911597,
+      "size": 3086
+    },
+    {
+      "path": "interface/icons/ability_paladin_lightoftheprotector.blp",
+      "file_data_id": 1360763,
+      "content_key": "0902036031cb27dc9c25d046bc034407",
+      "content_size": 6660,
+      "encoding_key": "30c7f9b3774ef4c35213503b5fbad6d5",
+      "archive": "521add489d9ebe3932f5a4d484427492",
+      "offset": 108914683,
+      "size": 2961
+    },
+    {
+      "path": "interface/icons/ability_paladin_longarmofthelaw.blp",
+      "file_data_id": 571556,
+      "content_key": "afa4d0c0c21fc7868e2ea77d9f7459dd",
+      "content_size": 6660,
+      "encoding_key": "ee917851d7af4ea36825d2b6b9f0a604",
+      "archive": "30ceab0962df14c86bbaea5bd9d688bb",
+      "offset": 203045309,
+      "size": 3052
+    },
+    {
+      "path": "interface/icons/ability_paladin_protectoroftheinnocent.blp",
+      "file_data_id": 460690,
+      "content_key": "3dd8ef52bfdd42d27ddf559ce462b73c",
+      "content_size": 6660,
+      "encoding_key": "ed3bee6123ecb4b01093bdf174266b2f",
+      "archive": "df82ac239f62ec49d66b3ca8e8d72e7f",
+      "offset": 18243024,
+      "size": 3096
+    },
+    {
+      "path": "interface/icons/ability_paladin_righteousvengeance.blp",
+      "file_data_id": 236260,
+      "content_key": "ed4a0d2250a6a9a9ce1f1c2adb877642",
+      "content_size": 6660,
+      "encoding_key": "49d86caf256a72ecba37676e0282fe46",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 6181643,
+      "size": 2998
+    },
+    {
+      "path": "interface/icons/ability_paladin_sanctifiedwrath.blp",
+      "file_data_id": 236262,
+      "content_key": "94a87330942a5b0988611ca50467fc00",
+      "content_size": 6660,
+      "encoding_key": "584e67cd964c8532ba69c9459c1214f3",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 6187717,
+      "size": 3105
+    },
+    {
+      "path": "interface/icons/ability_paladin_savedbythelight.blp",
+      "file_data_id": 1030102,
+      "content_key": "8bab4f6bd00b21d02eedb31683bcdebb",
+      "content_size": 6660,
+      "encoding_key": "99834bbaf928a4820970c95abf6bf56b",
+      "archive": "5d8e14c49ecda4d8dd28aa7fc19e78fd",
+      "offset": 145956642,
+      "size": 3138
+    },
+    {
+      "path": "interface/icons/ability_paladin_sheathoflight.blp",
+      "file_data_id": 236263,
+      "content_key": "197d1694af67a6ee0aef0dfe3301c6b9",
+      "content_size": 6660,
+      "encoding_key": "8c241c01b8b1792f4571a0da8a2600e0",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 6190822,
+      "size": 3031
+    },
+    {
+      "path": "interface/icons/ability_paladin_shieldofthetemplar.blp",
+      "file_data_id": 236264,
+      "content_key": "8d15ecdffad585e96125e11d417ae1c8",
+      "content_size": 6660,
+      "encoding_key": "b6236fdbc53c6a8167d4ae6c748f84f6",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 6193853,
+      "size": 2997
+    },
+    {
+      "path": "interface/icons/ability_paladin_speedoflight.blp",
+      "file_data_id": 571558,
+      "content_key": "f2ce6135a06c8e70e93b894137043697",
+      "content_size": 6660,
+      "encoding_key": "6366a7c9e8ddab163c93f16b9d0911aa",
+      "archive": "30ceab0962df14c86bbaea5bd9d688bb",
+      "offset": 203051621,
+      "size": 3031
+    },
+    {
+      "path": "interface/icons/ability_paladin_swiftretribution.blp",
+      "file_data_id": 236266,
+      "content_key": "0e50bdb0415bc9074b8b33f2fa97bf02",
+      "content_size": 6660,
+      "encoding_key": "e880915d7c1c6d7018a5e8b5f0aa5caa",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 6199953,
+      "size": 3163
+    },
+    {
+      "path": "interface/icons/ability_paladin_touchedbylight.blp",
+      "file_data_id": 236267,
+      "content_key": "cae0e9a6bcc21d70fc06b4405724208f",
+      "content_size": 6660,
+      "encoding_key": "1c4d8a55a4969f637ba145e721764f18",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 6203116,
+      "size": 3171
+    },
+    {
+      "path": "interface/icons/ability_paladin_toweroflight.blp",
+      "file_data_id": 1360764,
+      "content_key": "aadbd365046958feaeb2e782b34e11e6",
+      "content_size": 6660,
+      "encoding_key": "57efa5fb9fe52717907d3aaabc9f1f00",
+      "archive": "521add489d9ebe3932f5a4d484427492",
+      "offset": 108917644,
+      "size": 2779
+    },
+    {
+      "path": "interface/icons/ability_paladin_turnevil.blp",
+      "file_data_id": 571559,
+      "content_key": "e9eda41388245b264e1ce617503202e0",
+      "content_size": 6660,
+      "encoding_key": "15984162c167b4905459f1d7ffcebc17",
+      "archive": "30ceab0962df14c86bbaea5bd9d688bb",
+      "offset": 203054652,
+      "size": 3320
+    },
+    {
+      "path": "interface/icons/ability_paladin_veneration.blp",
+      "file_data_id": 589117,
+      "content_key": "f233ee3bfbfe52a3e38d5a4ded4d180c",
+      "content_size": 6660,
+      "encoding_key": "e49888fe12ff35b7c305c93106a73fcd",
+      "archive": "85a3053adc77929b2b56cea8be6d79bd",
+      "offset": 136252228,
+      "size": 3055
+    },
+    {
+      "path": "interface/icons/ability_priest_angelicbulwark.blp",
+      "file_data_id": 633042,
+      "content_key": "60b015c6135b0ccb671c72caa318bb89",
+      "content_size": 6660,
+      "encoding_key": "1ecc0e51b3bc0a9124c092825c58064a",
+      "archive": "0bb172b5b5c967777631c866925c5beb",
+      "offset": 54623058,
+      "size": 3308
+    },
+    {
+      "path": "interface/icons/ability_priest_archangel.blp",
+      "file_data_id": 458225,
+      "content_key": "ae6fd921dae63f5b7026fe80bc4a9d09",
+      "content_size": 6660,
+      "encoding_key": "eeae7187d9c31d9a29b30379a794f15b",
+      "archive": "df82ac239f62ec49d66b3ca8e8d72e7f",
+      "offset": 5134568,
+      "size": 2812
+    },
+    {
+      "path": "interface/icons/ability_priest_cascade.blp",
+      "file_data_id": 612098,
+      "content_key": "ca7cb0fd72a88a0485f4cc6b7e090c9f",
+      "content_size": 6660,
+      "encoding_key": "927ae70d11e82c30cb7f1a1f4e7258e3",
+      "archive": "bc9d29d7076a16309df34901c9ee7db6",
+      "offset": 142596827,
+      "size": 3027
+    },
+    {
+      "path": "interface/icons/ability_priest_flashoflight.blp",
+      "file_data_id": 612968,
+      "content_key": "ace03bec315c54929ed48cd53d6d27cd",
+      "content_size": 6660,
+      "encoding_key": "f18333a10e036582f73abddccb392804",
+      "archive": "bc9d29d7076a16309df34901c9ee7db6",
+      "offset": 146610346,
+      "size": 2945
+    },
+    {
+      "path": "interface/icons/ability_priest_halo.blp",
+      "file_data_id": 632352,
+      "content_key": "c08540dc395a0b3c41fba3f0841a2e7c",
+      "content_size": 6660,
+      "encoding_key": "5307443d0a13342e41824195b2aac9b0",
+      "archive": "0bb172b5b5c967777631c866925c5beb",
+      "offset": 52826647,
+      "size": 3070
+    },
+    {
+      "path": "interface/icons/ability_priest_holybolts01.blp",
+      "file_data_id": 1022948,
+      "content_key": "ca7fb43c7d8d41b6800e46c729bd256b",
+      "content_size": 6660,
+      "encoding_key": "579964cada1ded5722d98df5b9b4a327",
+      "archive": "48c2e3e35d0d504f0c5a184b15b8bf27",
+      "offset": 233859307,
+      "size": 2979
+    },
+    {
+      "path": "interface/icons/ability_priest_voidshift.blp",
+      "file_data_id": 612099,
+      "content_key": "81ea87b721245f6263d86d2eb9896282",
+      "content_size": 6660,
+      "encoding_key": "89feca211e1772ca32303ee398e6f391",
+      "archive": "bc9d29d7076a16309df34901c9ee7db6",
+      "offset": 142599854,
+      "size": 2913
+    },
+    {
+      "path": "interface/icons/ability_racial_foregedinflames.blp",
+      "file_data_id": 1786407,
+      "content_key": "7c1bae61941f409287998629b9fc7ec6",
+      "content_size": 5268,
+      "encoding_key": "de6db654fd0f0052d38d29d8c6e61177",
+      "archive": "94f7b1b92c4301d8c3de03bff8c0b79b",
+      "offset": 156343264,
+      "size": 2093
+    },
+    {
+      "path": "interface/icons/ability_racial_orbitalstrike.blp",
+      "file_data_id": 1724000,
+      "content_key": "4ca2a00326165c7ef003e85e305aa167",
+      "content_size": 5268,
+      "encoding_key": "0a68e684fe59a6b17bd14a55693f5112",
+      "archive": "94f7b1b92c4301d8c3de03bff8c0b79b",
+      "offset": 111480320,
+      "size": 2104
+    },
+    {
+      "path": "interface/icons/ability_warlock_inferno.blp",
+      "file_data_id": 460698,
+      "content_key": "9a04e71140780cf38edf6608f934394a",
+      "content_size": 6660,
+      "encoding_key": "eb7b8415412c8e0a22a25ed4db29c718",
+      "archive": "df82ac239f62ec49d66b3ca8e8d72e7f",
+      "offset": 18267924,
+      "size": 3198
+    },
+    {
+      "path": "interface/icons/ability_warrior_shieldguard.blp",
+      "file_data_id": 132359,
+      "content_key": "2a0b96bb15725f2bc55372557cce856c",
+      "content_size": 6660,
+      "encoding_key": "d11325a2f8c4ff09edbf9d4f578fec72",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 46507921,
+      "size": 3044
+    },
+    {
+      "path": "interface/icons/achievement_arena_3v3_7.blp",
+      "file_data_id": 236336,
+      "content_key": "f26e3d22d3261bbe5386a5e25e61dedb",
+      "content_size": 6660,
+      "encoding_key": "41f5e67c0b3cfdf284ca1788469dea4d",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 6406425,
+      "size": 2926
+    },
+    {
+      "path": "interface/icons/achievement_bg_trueavshutout.blp",
+      "file_data_id": 236380,
+      "content_key": "3db0fccb5df14c1bb5799e60bc5f010d",
+      "content_size": 3916,
+      "encoding_key": "92625448e7232aacd4f0bb31f0342ee7",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 6524077,
+      "size": 2490
+    },
+    {
+      "path": "interface/icons/achievement_dungeon_gloryoftheraider.blp",
+      "file_data_id": 255346,
+      "content_key": "3c675642caa510dc6e1ca5b711ba2760",
+      "content_size": 6660,
+      "encoding_key": "5e2f93734f7a26a7b78fda360f42a281",
+      "archive": "4c2d33be724eac8336368f6a04dd43e4",
+      "offset": 55818589,
+      "size": 2989
+    },
+    {
+      "path": "interface/icons/achievement_dungeon_heroic_gloryoftheraider.blp",
+      "file_data_id": 255347,
+      "content_key": "b9728d8b5938c53b9cf3d0feca314441",
+      "content_size": 6660,
+      "encoding_key": "794a4b640f4e6b216a9609edf8de593b",
+      "archive": "4c2d33be724eac8336368f6a04dd43e4",
+      "offset": 55821578,
+      "size": 2971
+    },
+    {
+      "path": "interface/icons/achievement_zone_firelands.blp",
+      "file_data_id": 514278,
+      "content_key": "6f387d01bea7b2bd12603a539dfc8c6d",
+      "content_size": 6660,
+      "encoding_key": "77cd30b242a80cc4fc3140a03f237e9c",
+      "archive": "2d9463d332eb2a97d07d9db831a66743",
+      "offset": 24410152,
+      "size": 3023
+    },
+    {
+      "path": "interface/icons/achievement_zone_newshadowmoonvalley.blp",
+      "file_data_id": 1048304,
+      "content_key": "1bbf68cce007505569a96a090ae2befb",
+      "content_size": 3916,
+      "encoding_key": "b1e2e06302868eb2bdbb4ecd2426b5dd",
+      "archive": "79d1badf49120029a18c4f00b2277f61",
+      "offset": 234525741,
+      "size": 2625
+    },
+    {
+      "path": "interface/icons/achievement_zone_valeofeternalblossoms.blp",
+      "file_data_id": 618798,
+      "content_key": "0213fdc66ec2245e7fd7d92961487b6f",
+      "content_size": 3916,
+      "encoding_key": "9a8d507c87e4f837db24bdb7178153f9",
+      "archive": "bc9d29d7076a16309df34901c9ee7db6",
+      "offset": 206177651,
+      "size": 2563
+    },
+    {
+      "path": "interface/icons/classicon_paladin.blp",
+      "file_data_id": 626003,
+      "content_key": "bada413372556337b425f34a49e58012",
+      "content_size": 3916,
+      "encoding_key": "062691d07b7bad1acd5788ceca11bc0c",
+      "archive": "bc9d29d7076a16309df34901c9ee7db6",
+      "offset": 251447018,
+      "size": 2377
+    },
+    {
+      "path": "interface/icons/inv12_ability_paladin_hammerofwrath.blp",
+      "file_data_id": 7439209,
+      "content_key": "ef777966c8300929d78e3234fdfaaef0",
+      "content_size": 5268,
+      "encoding_key": "ff85a126eb7bd29511affb6ac2b5e5a2",
+      "archive": "431d3797c76df782e43a8ddb22c78e43",
+      "offset": 56069159,
+      "size": 2251
+    },
+    {
+      "path": "interface/icons/inv12_ability_paladin_sentinel.blp",
+      "file_data_id": 7439210,
+      "content_key": "219eb6ae857b511f44f6ea5f2d7c6313",
+      "content_size": 5268,
+      "encoding_key": "2e2f4c17911430c0e1ea0cd464a95b07",
+      "archive": "431d3797c76df782e43a8ddb22c78e43",
+      "offset": 56071410,
+      "size": 2248
+    },
+    {
+      "path": "interface/icons/inv12_apextalent_paladin_beaconofthesavior.blp",
+      "file_data_id": 7514188,
+      "content_key": "e7c9741ced08da0960fb8090ac26c686",
+      "content_size": 5268,
+      "encoding_key": "82027b65ad10def36f9fdeabb5fa5403",
+      "archive": "c05176de49733b560c46b068afaea5d0",
+      "offset": 132338560,
+      "size": 2157
+    },
+    {
+      "path": "interface/icons/inv12_apextalent_paladin_gloryofthevanguard.blp",
+      "file_data_id": 7636559,
+      "content_key": "24b84b081c101239d2a14ac8bb77a733",
+      "content_size": 5268,
+      "encoding_key": "5a11a7b02a34da09f531538523e1c2b8",
+      "archive": "f6d0ed0ba10e19cdc43e4fc6fbe3cca1",
+      "offset": 99217088,
+      "size": 2317
+    },
+    {
+      "path": "interface/icons/inv12_apextalent_paladin_lightwithin.blp",
+      "file_data_id": 7514189,
+      "content_key": "936d9f14997e182a6b916399ddf73d5b",
+      "content_size": 5268,
+      "encoding_key": "feae9525512cebd4f8c7ff7132145d6e",
+      "archive": "c05176de49733b560c46b068afaea5d0",
+      "offset": 132340717,
+      "size": 2287
+    },
+    {
+      "path": "interface/icons/inv_10_blacksmithing_consumable_key_color1.blp",
+      "file_data_id": 4622270,
+      "content_key": "b0edf79ef4e815ef51d9ce0ebdc06c20",
+      "content_size": 3220,
+      "encoding_key": "9b2ae762f9987849adf2363d30514685",
+      "archive": "e4a307ef6e8313bc8961d0857920c4cd",
+      "offset": 161842945,
+      "size": 1275
+    },
+    {
+      "path": "interface/icons/inv_10_blacksmithing_consumable_repairhammer_color1.blp",
+      "file_data_id": 4622272,
+      "content_key": "c4789b04fb2d47a4e933a65f48012395",
+      "content_size": 3220,
+      "encoding_key": "ddeac9510bb9d5e990bf3e87222fd197",
+      "archive": "e4a307ef6e8313bc8961d0857920c4cd",
+      "offset": 161845484,
+      "size": 1834
+    },
+    {
+      "path": "interface/icons/inv_11_0_arathordungeon_bell_color1.blp",
+      "file_data_id": 6012000,
+      "content_key": "9efcb256440191fa76858a84adc6a135",
+      "content_size": 5268,
+      "encoding_key": "20ec1ab023c95f6945988150f44d31fa",
+      "archive": "969b2b657fd6e7129e463be21b68bab9",
+      "offset": 248602668,
+      "size": 2277
+    },
+    {
+      "path": "interface/icons/inv_ability_heraldofthesunpaladin_dawnlight.blp",
+      "file_data_id": 5927633,
+      "content_key": "3721ed09f90a08d23d79570b17036b63",
+      "content_size": 5268,
+      "encoding_key": "ea028a70a6f843f22b57aa3d63ae8ace",
+      "archive": "fc38aa47b0a35784d64ca2dda722ad7a",
+      "offset": 90128284,
+      "size": 2292
+    },
+    {
+      "path": "interface/icons/inv_ability_holyfire_buff.blp",
+      "file_data_id": 5764903,
+      "content_key": "dab545a9df510e5a47e718b3f9684d87",
+      "content_size": 5268,
+      "encoding_key": "0ad939d2119b65b06d3806c5fceee078",
+      "archive": "88461ab86eff13c19e16d857c4fa48e6",
+      "offset": 105318278,
+      "size": 2309
+    },
+    {
+      "path": "interface/icons/inv_ability_holyfire_orb.blp",
+      "file_data_id": 5764908,
+      "content_key": "6672c505a076c7ebbf3e4069e619781a",
+      "content_size": 5268,
+      "encoding_key": "0a392d64cbbbc7f1ffeb1c0e30a0c384",
+      "archive": "88461ab86eff13c19e16d857c4fa48e6",
+      "offset": 105329568,
+      "size": 2260
+    },
+    {
+      "path": "interface/icons/inv_ability_lightsmithpaladin_holybulwark.blp",
+      "file_data_id": 5927636,
+      "content_key": "2ddb530d01c76063dfa1a78305cfad14",
+      "content_size": 5268,
+      "encoding_key": "72118417f39cc3caacfba4b397682b51",
+      "archive": "fc38aa47b0a35784d64ca2dda722ad7a",
+      "offset": 90135109,
+      "size": 2115
+    },
+    {
+      "path": "interface/icons/inv_ability_lightsmithpaladin_sacredweapon.blp",
+      "file_data_id": 5927637,
+      "content_key": "abfe6b4651ea0153c587b7dac515f90b",
+      "content_size": 5268,
+      "encoding_key": "1bd9b07d156200dd7da5ff1fc86a71ea",
+      "archive": "fc38aa47b0a35784d64ca2dda722ad7a",
+      "offset": 90137224,
+      "size": 2007
+    },
+    {
+      "path": "interface/icons/inv_ability_paladin_divinetoll.blp",
+      "file_data_id": 6035315,
+      "content_key": "8a85195b7530261d531c74b18da52182",
+      "content_size": 5268,
+      "encoding_key": "1805580239e929bf5d4a5c182fcba921",
+      "archive": "d31b5b078ba4dc077b141b4e096c27da",
+      "offset": 175452294,
+      "size": 2155
+    },
+    {
+      "path": "interface/icons/inv_achievement_dungeon_darkflamecleft.blp",
+      "file_data_id": 5899329,
+      "content_key": "da0a5bc6f7c7608f437f8a24dd029603",
+      "content_size": 5268,
+      "encoding_key": "3be43c18f5c15ba8e6d5e63ecde08e64",
+      "archive": "344aad8c95dd3bc1f79ebbef92ae5d0a",
+      "offset": 133662736,
+      "size": 2192
+    },
+    {
+      "path": "interface/icons/inv_alchemy_70_red.blp",
+      "file_data_id": 1385333,
+      "content_key": "ebb3f3985a80f34eb7c21cfd787756c5",
+      "content_size": 6660,
+      "encoding_key": "abc9c4f111081c043a5338b2fd7c0838",
+      "archive": "afcffb5ffb65856c8777382169d64a68",
+      "offset": 175725902,
+      "size": 2947
+    },
+    {
+      "path": "interface/icons/inv_artifact_bulwarkoforder.blp",
+      "file_data_id": 1394888,
+      "content_key": "83f486dfcc313d636a76f5cbf4b2ef11",
+      "content_size": 6660,
+      "encoding_key": "e0072db58989eb2979e54169716e834a",
+      "archive": "43f12564d58a9b2ad22c09e5a9baf9b6",
+      "offset": 225985341,
+      "size": 3150
+    },
+    {
+      "path": "interface/icons/inv_bracer_plate_raidpaladin_r_01mythic.blp",
+      "file_data_id": 1581158,
+      "content_key": "8bf356c1fbc4984bf341bb328bd7e322",
+      "content_size": 5268,
+      "encoding_key": "b7b0867868a32b6304e5ce2930df99be",
+      "archive": "c8d382bee9327dad2e50e225ea513291",
+      "offset": 245043953,
+      "size": 2254
+    },
+    {
+      "path": "interface/icons/inv_chest_plate_raidpaladin_s_01.blp",
+      "file_data_id": 1605807,
+      "content_key": "1c8ec88954e4887e4deaeb1f56ab816c",
+      "content_size": 5268,
+      "encoding_key": "4f99f854305b3a482b8d3ca251ab39f2",
+      "archive": "aa4220c9290405c34041885fab60c4ad",
+      "offset": 84593188,
+      "size": 2366
+    },
+    {
+      "path": "interface/icons/inv_drink_01.blp",
+      "file_data_id": 132788,
+      "content_key": "7929dbf81ec3f409fa28682e4bfdaa77",
+      "content_size": 3916,
+      "encoding_key": "eee80306799960ae4feb363388fdc0b0",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 47597103,
+      "size": 1979
+    },
+    {
+      "path": "interface/icons/inv_enchanting_70_pet_torch.blp",
+      "file_data_id": 1379180,
+      "content_key": "0a6c3f2bca542a25f0cfa8e15310867f",
+      "content_size": 3916,
+      "encoding_key": "066fd437ea08632740aae45019400a85",
+      "archive": "afcffb5ffb65856c8777382169d64a68",
+      "offset": 70397904,
+      "size": 2490
+    },
+    {
+      "path": "interface/icons/inv_everburningforge_yellow.blp",
+      "file_data_id": 5931163,
+      "content_key": "1393e910290a25804183bde17a2d5a4a",
+      "content_size": 5268,
+      "encoding_key": "083aa87ad971d5cb4976c9eda7af3601",
+      "archive": "fc38aa47b0a35784d64ca2dda722ad7a",
+      "offset": 90675531,
+      "size": 2239
+    },
+    {
+      "path": "interface/icons/inv_everburningignition_yellow.blp",
+      "file_data_id": 5931165,
+      "content_key": "30db30758ad18ac3553cee36a03c3712",
+      "content_size": 5268,
+      "encoding_key": "ce360b89ceee7188abbce0ad5c6003ce",
+      "archive": "fc38aa47b0a35784d64ca2dda722ad7a",
+      "offset": 90679545,
+      "size": 1864
+    },
+    {
+      "path": "interface/icons/inv_fabric_linen_01.blp",
+      "file_data_id": 132889,
+      "content_key": "83fba98269e880209379a5c1e2243d59",
+      "content_size": 3916,
+      "encoding_key": "bc545bd5614150e96f0f0e92e226c029",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 47846400,
+      "size": 2415
+    },
+    {
+      "path": "interface/icons/inv_fabric_wool_01.blp",
+      "file_data_id": 132911,
+      "content_key": "c53b584c295bd945abb3942f5acba87f",
+      "content_size": 6660,
+      "encoding_key": "c3553553bd640199f58d86a2e70fdbd6",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 47906468,
+      "size": 2907
+    },
+    {
+      "path": "interface/icons/inv_glove_plate_raidpaladinmythic_q_01.blp",
+      "file_data_id": 1316218,
+      "content_key": "c2a378f302672026d149ecde8a30ffc9",
+      "content_size": 6660,
+      "encoding_key": "b33a90ba3de1a102e18a3530d98a97f0",
+      "archive": "23b1ab3a5d6bb8c87b5a6979e8b03147",
+      "offset": 200382621,
+      "size": 3167
+    },
+    {
+      "path": "interface/icons/inv_helm_plate_raidpaladin_n_01.blp",
+      "file_data_id": 898454,
+      "content_key": "a8701a848d7c6b0be22bc1f9bcc1eb4b",
+      "content_size": 3916,
+      "encoding_key": "1476ae6841cdf38fbbfc428f392b7c35",
+      "archive": "89be2129d089b002941ddda6b3477adb",
+      "offset": 161213421,
+      "size": 2532
+    },
+    {
+      "path": "interface/icons/inv_helm_plate_raidpaladin_r_01mythic.blp",
+      "file_data_id": 1581161,
+      "content_key": "ca79339bbb5f7fc9d9bcfe1f1c3ca625",
+      "content_size": 5268,
+      "encoding_key": "ec8bf0999d74c5e9431e272958e11631",
+      "archive": "c8d382bee9327dad2e50e225ea513291",
+      "offset": 245050966,
+      "size": 2220
+    },
+    {
+      "path": "interface/icons/inv_helm_plate_raidpaladindragon_d_01.blp",
+      "file_data_id": 4869739,
+      "content_key": "7e975aab88cc0efef148b66afcea495f",
+      "content_size": 5268,
+      "encoding_key": "e19d9c6e1ebb782b67b353e04d046b51",
+      "archive": "1db35a1eebbeea466e1e0b33ce6fa361",
+      "offset": 40865268,
+      "size": 2340
+    },
+    {
+      "path": "interface/icons/inv_helmet_74.blp",
+      "file_data_id": 133176,
+      "content_key": "3df978c914ad9669a22ff41b20782af2",
+      "content_size": 6660,
+      "encoding_key": "cebed25fe4afa96c59fa7bf31b65a228",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 48568413,
+      "size": 2936
+    },
+    {
+      "path": "interface/icons/inv_inscription_armorscroll02.blp",
+      "file_data_id": 237051,
+      "content_key": "b00ca9350ff088d6c8d1d6692a27f29d",
+      "content_size": 6660,
+      "encoding_key": "0c9b6804abd3c8b2b153cc1d5fcc6448",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 8381300,
+      "size": 3010
+    },
+    {
+      "path": "interface/icons/inv_inscription_weaponscroll01.blp",
+      "file_data_id": 237172,
+      "content_key": "302c0a9bb2088a293ddb26807c511417",
+      "content_size": 6660,
+      "encoding_key": "60a223f54ce90635e1ee1d7a21a2a8bf",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 8720293,
+      "size": 2988
+    },
+    {
+      "path": "interface/icons/inv_mace_1h_blacksmithing_b_01_black.blp",
+      "file_data_id": 4374708,
+      "content_key": "0058bd0cd6e4439500ccfcf024180178",
+      "content_size": 3916,
+      "encoding_key": "30436c1142e303ca9e56b88b724bf29a",
+      "archive": "697720bf8aba1f880cfd19f7e3ec0940",
+      "offset": 220597250,
+      "size": 2444
+    },
+    {
+      "path": "interface/icons/inv_mace_2h_artifactsilverhand_d_01.blp",
+      "file_data_id": 1122562,
+      "content_key": "4f70f7051da75ec6d7caf1d43cb13061",
+      "content_size": 6660,
+      "encoding_key": "2ab3d90268a5ccd307932afe2b61ef31",
+      "archive": "e3ee67f9477390c9909af26b634b2240",
+      "offset": 101160992,
+      "size": 3297
+    },
+    {
+      "path": "interface/icons/inv_mace_2h_draenorraid_d_03.blp",
+      "file_data_id": 1006574,
+      "content_key": "b39bfa491f1368a978e77bdfb0b2c9c4",
+      "content_size": 6660,
+      "encoding_key": "d4a2760e201588daf91be1e59f79d853",
+      "archive": "a7adc61eb6e7cee3093773e865fc0e8d",
+      "offset": 177990571,
+      "size": 3181
+    },
+    {
+      "path": "interface/icons/inv_mace_2h_earthendungeon_c_02.blp",
+      "file_data_id": 5367208,
+      "content_key": "0d79f6d4338da6ae2e5122fe2bfdefd4",
+      "content_size": 5268,
+      "encoding_key": "9fbf0f6ca614c794f4d715bb6c46baff",
+      "archive": "88461ab86eff13c19e16d857c4fa48e6",
+      "offset": 100478221,
+      "size": 2056
+    },
+    {
+      "path": "interface/icons/inv_mace_47.blp",
+      "file_data_id": 133527,
+      "content_key": "d9f9f53f5809ad49e14c1d78b98e8bf5",
+      "content_size": 6660,
+      "encoding_key": "69d1ab2bbae59b26c535cfa4f08c2b7c",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 49484949,
+      "size": 2180
+    },
+    {
+      "path": "interface/icons/inv_misc_food_11.blp",
+      "file_data_id": 133964,
+      "content_key": "620a96f57429ae0b6c4dd902b6d56b13",
+      "content_size": 3916,
+      "encoding_key": "e95eca207aad60ccb29a267ac7a95e3a",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 50566372,
+      "size": 1914
+    },
+    {
+      "path": "interface/icons/inv_misc_questionmark.blp",
+      "file_data_id": 134400,
+      "content_key": "0b2976326e4a3ddd13e3f33005c15f2f",
+      "content_size": 3916,
+      "encoding_key": "5beea65cbad371c0484059fbaad5dac0",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 51651272,
+      "size": 1385
+    },
+    {
+      "path": "interface/icons/inv_misc_rune_01.blp",
+      "file_data_id": 134414,
+      "content_key": "aa060341f869337c678ddf8b165fb6ed",
+      "content_size": 3916,
+      "encoding_key": "3827909a366bafc6c6d8a983fcebf908",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 51683923,
+      "size": 2102
+    },
+    {
+      "path": "interface/icons/inv_misc_symbolofkings_01.blp",
+      "file_data_id": 134471,
+      "content_key": "4cba9d4eca56d9ed427dc9097aa4e722",
+      "content_size": 6660,
+      "encoding_key": "0499f39ca7161224b94e2fa8af63c9d5",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 51817740,
+      "size": 2257
+    },
+    {
+      "path": "interface/icons/inv_offhand_1h_ulduarraid_d_01.blp",
+      "file_data_id": 237432,
+      "content_key": "3f6b7db0c5523a194fb05024c96e8907",
+      "content_size": 3916,
+      "encoding_key": "566dc81ec7b6acca0fcc467754825790",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 9367758,
+      "size": 2629
+    },
+    {
+      "path": "interface/icons/inv_ore_draconium.blp",
+      "file_data_id": 4581144,
+      "content_key": "de63043f63076a8686693d2d3824f442",
+      "content_size": 3220,
+      "encoding_key": "0c40a0aca279568a18e2f9dbba655825",
+      "archive": "697720bf8aba1f880cfd19f7e3ec0940",
+      "offset": 228264600,
+      "size": 1846
+    },
+    {
+      "path": "interface/icons/inv_plate_raidpaladinnerubian_d_01_belt.blp",
+      "file_data_id": 5567630,
+      "content_key": "5d71db10ca88eeaa521d0036f5d1f4b4",
+      "content_size": 3916,
+      "encoding_key": "207fb91c263def7915861b55f19582ac",
+      "archive": "88461ab86eff13c19e16d857c4fa48e6",
+      "offset": 101320820,
+      "size": 2608
+    },
+    {
+      "path": "interface/icons/inv_plate_raidpaladinnerubian_d_01_boot.blp",
+      "file_data_id": 5567632,
+      "content_key": "ca690821c12cd6bc3da1e3b464ab78b4",
+      "content_size": 3916,
+      "encoding_key": "d12e00843309c62460b2d7fc6a113f73",
+      "archive": "88461ab86eff13c19e16d857c4fa48e6",
+      "offset": 101323428,
+      "size": 2662
+    },
+    {
+      "path": "interface/icons/inv_plate_raidpaladinnerubian_d_01_bracer.blp",
+      "file_data_id": 5567633,
+      "content_key": "c53db44ba3c0d283683e15f110d5838e",
+      "content_size": 3916,
+      "encoding_key": "cf5e39548974bddedd1388ad00a3b394",
+      "archive": "88461ab86eff13c19e16d857c4fa48e6",
+      "offset": 101326090,
+      "size": 2484
+    },
+    {
+      "path": "interface/icons/inv_plate_raidpaladinnerubian_d_01_cape.blp",
+      "file_data_id": 5567634,
+      "content_key": "b931d458e73e4ba0f0452b6cf7c6e324",
+      "content_size": 3916,
+      "encoding_key": "fda43818eea62e30b41f9b6b1f352305",
+      "archive": "88461ab86eff13c19e16d857c4fa48e6",
+      "offset": 101328574,
+      "size": 2665
+    },
+    {
+      "path": "interface/icons/inv_plate_raidpaladinnerubian_d_01_chest.blp",
+      "file_data_id": 5567635,
+      "content_key": "a805a6c054d57357edbfa44e6e10b8b6",
+      "content_size": 3916,
+      "encoding_key": "e103bebbf59072432b8c44038192852a",
+      "archive": "88461ab86eff13c19e16d857c4fa48e6",
+      "offset": 101331239,
+      "size": 2686
+    },
+    {
+      "path": "interface/icons/inv_plate_raidpaladinnerubian_d_01_glove.blp",
+      "file_data_id": 5567636,
+      "content_key": "fb6f0d8dd90ce967b61a888b842def6a",
+      "content_size": 3916,
+      "encoding_key": "b79edd4c715037e567a1c20d9c06a3eb",
+      "archive": "88461ab86eff13c19e16d857c4fa48e6",
+      "offset": 101333925,
+      "size": 2618
+    },
+    {
+      "path": "interface/icons/inv_plate_raidpaladinnerubian_d_01_helm.blp",
+      "file_data_id": 5567638,
+      "content_key": "f5c3d1a93746b1c2380f54bf428cbf63",
+      "content_size": 3916,
+      "encoding_key": "76a2f73479e50c18f544b8d6db078425",
+      "archive": "88461ab86eff13c19e16d857c4fa48e6",
+      "offset": 101336543,
+      "size": 2656
+    },
+    {
+      "path": "interface/icons/inv_plate_raidpaladinnerubian_d_01_pant.blp",
+      "file_data_id": 5567639,
+      "content_key": "761c7b3b14e2fdcf4c377307673a964c",
+      "content_size": 3916,
+      "encoding_key": "0224947f737f4aa5e7b89e7f15f6b862",
+      "archive": "88461ab86eff13c19e16d857c4fa48e6",
+      "offset": 101339199,
+      "size": 2673
+    },
+    {
+      "path": "interface/icons/inv_plate_raidpaladinnerubian_d_01_shoulder.blp",
+      "file_data_id": 5567640,
+      "content_key": "4271a5a52b8a16e41d86dad4fad07d98",
+      "content_size": 3916,
+      "encoding_key": "911db697b96ee3514067f462ad28f143",
+      "archive": "88461ab86eff13c19e16d857c4fa48e6",
+      "offset": 101341872,
+      "size": 2690
+    },
+    {
+      "path": "interface/icons/inv_plate_raidpaladinprimalist_d_01_cape.blp",
+      "file_data_id": 4558042,
+      "content_key": "a837b89e5eda4c2644e8142faddf938c",
+      "content_size": 3220,
+      "encoding_key": "63cb68b63e1ac1d123af924ade294e0f",
+      "archive": "697720bf8aba1f880cfd19f7e3ec0940",
+      "offset": 224902596,
+      "size": 1906
+    },
+    {
+      "path": "interface/icons/inv_qirajidol_sun.blp",
+      "file_data_id": 134909,
+      "content_key": "49f664fc1a861e1aebc3b1aae8ed36b8",
+      "content_size": 6660,
+      "encoding_key": "d26236e5ced765fce0dd35bef5d7a225",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 53009549,
+      "size": 2307
+    },
+    {
+      "path": "interface/icons/inv_relics_libramoftruth.blp",
+      "file_data_id": 134917,
+      "content_key": "390661e09b0823d995ea2696002122d8",
+      "content_size": 6660,
+      "encoding_key": "d50d4544b9033bff598541958a7a0450",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 53032852,
+      "size": 3114
+    },
+    {
+      "path": "interface/icons/inv_shield_1h_newplayer_a_01.blp",
+      "file_data_id": 3736878,
+      "content_key": "b60a0323dc18b510a7f3b9dec89ed673",
+      "content_size": 3220,
+      "encoding_key": "108271fc20abcd526aed2e1dac24a1c0",
+      "archive": "9855fbdfe58e3e58dd1cd5caee3568ce",
+      "offset": 187082285,
+      "size": 1943
+    },
+    {
+      "path": "interface/icons/inv_shoulder_raidpaladindragon_d_01.blp",
+      "file_data_id": 4869742,
+      "content_key": "48128e5ce271423be66183a41ecb6664",
+      "content_size": 5268,
+      "encoding_key": "292e33f23e4c262d6f1ad2a13dca4929",
+      "archive": "1db35a1eebbeea466e1e0b33ce6fa361",
+      "offset": 40869855,
+      "size": 2403
+    },
+    {
+      "path": "interface/icons/inv_sword_08.blp",
+      "file_data_id": 135278,
+      "content_key": "90d510db1acd5f15d4c69618fd9741e2",
+      "content_size": 3916,
+      "encoding_key": "04f99ed2bdd469578049114d16bc4b13",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 53956277,
+      "size": 2406
+    },
+    {
+      "path": "interface/icons/inv_sword_133.blp",
+      "file_data_id": 237483,
+      "content_key": "26f139eaa3f60488bab8718166e9fcc1",
+      "content_size": 6660,
+      "encoding_key": "63f18798336da22382a7c9e74c475b81",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 9510936,
+      "size": 3001
+    },
+    {
+      "path": "interface/icons/inv_sword_2h_artifactashbringer_d_01.blp",
+      "file_data_id": 1109508,
+      "content_key": "8ca1385598fa1ad299b84013c2ba8846",
+      "content_size": 6660,
+      "encoding_key": "c721ccf76e03b239f56aa765a514b20f",
+      "archive": "4defc1c1c474f5fee09ca7fd580334a6",
+      "offset": 236553304,
+      "size": 3098
+    },
+    {
+      "path": "interface/icons/inv_sword_2h_artifactashbringerfire_d_03.blp",
+      "file_data_id": 1112939,
+      "content_key": "3e5f7206a8b080e912a3f660e9d43f2b",
+      "content_size": 6660,
+      "encoding_key": "a85a061694ec5148e2eba1edb52f742f",
+      "archive": "089d2b83820ce140f406d81e725f2d4c",
+      "offset": 167386427,
+      "size": 3002
+    },
+    {
+      "path": "interface/icons/inv_sword_39.blp",
+      "file_data_id": 135349,
+      "content_key": "e86d6626a813a724322bbf635ce8d385",
+      "content_size": 6660,
+      "encoding_key": "93c0b6aa8ef44e4a7a2dc63bf5782624",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 54126626,
+      "size": 2911
+    },
+    {
+      "path": "interface/icons/inv_torch_thrown.blp",
+      "file_data_id": 135433,
+      "content_key": "591364c2e7a5685471fa741f21867657",
+      "content_size": 6660,
+      "encoding_key": "aeadc4df712624259021d46bad7f4321",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 54325250,
+      "size": 3121
+    },
+    {
+      "path": "interface/icons/inv_valkiergoldpet.blp",
+      "file_data_id": 1349535,
+      "content_key": "8240cbff7d5bc6ff64e322afbbe7ee4b",
+      "content_size": 6660,
+      "encoding_key": "f331efa508fd6c4fd9925b79271cfa10",
+      "archive": "ee302df809e478a5c1f687a70b0a095d",
+      "offset": 152574948,
+      "size": 2855
+    },
+    {
+      "path": "interface/icons/inv_valorstone_base.blp",
+      "file_data_id": 5868902,
+      "content_key": "ac742057ff53612c064fb611ff03cbe8",
+      "content_size": 5268,
+      "encoding_key": "d973982cc515b2e3fe01527a275612eb",
+      "archive": "7c3f827f756b07fc2a8225985d253d25",
+      "offset": 94529588,
+      "size": 2281
+    },
+    {
+      "path": "interface/icons/inv_weapon_shortblade_01.blp",
+      "file_data_id": 135637,
+      "content_key": "0bd9f8686c049ab9d09623dbd8ba37f6",
+      "content_size": 3916,
+      "encoding_key": "06a3dc05ad40a32722cd0682243172c3",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 54814819,
+      "size": 1449
+    },
+    {
+      "path": "interface/icons/item_holyspark.blp",
+      "file_data_id": 1519263,
+      "content_key": "fea68527fa55701beec5bf6704486bda",
+      "content_size": 6660,
+      "encoding_key": "59c29b8b90675bc9f8a4197d6a02849d",
+      "archive": "2dc8bc24354ec3972b16a53a940f074f",
+      "offset": 129541573,
+      "size": 3133
+    },
+    {
+      "path": "interface/icons/paladin_holy.blp",
+      "file_data_id": 535593,
+      "content_key": "d4ee5092a22d3e8efc37ee732f0ebb89",
+      "content_size": 6660,
+      "encoding_key": "fdc0e0b2e3adf85a2f414ccb252cd500",
+      "archive": "30ceab0962df14c86bbaea5bd9d688bb",
+      "offset": 85821689,
+      "size": 3068
+    },
+    {
+      "path": "interface/icons/paladin_protection.blp",
+      "file_data_id": 535594,
+      "content_key": "794ac58500e01c6b9e00304fe85a58b3",
+      "content_size": 6660,
+      "encoding_key": "384106677d7f92079f0f7868c29fd7d0",
+      "archive": "8a64ae207e9055db61732314f333cae6",
+      "offset": 68730004,
+      "size": 2953
+    },
+    {
+      "path": "interface/icons/paladin_retribution.blp",
+      "file_data_id": 535595,
+      "content_key": "455bc50a1eb353549a6058ccd9360c72",
+      "content_size": 6660,
+      "encoding_key": "28018b9cf91bdf64c888ad24f8c47475",
+      "archive": "8a64ae207e9055db61732314f333cae6",
+      "offset": 68732957,
+      "size": 3180
+    },
+    {
+      "path": "interface/icons/spell_azerite_essence14.blp",
+      "file_data_id": 2967113,
+      "content_key": "51cb5ade8a9ab42a405cfb8888a7a846",
+      "content_size": 3220,
+      "encoding_key": "1303bb26f4aea0a41aaf3874adae3421",
+      "archive": "01794f476dce0d0adeb975eaff4ff850",
+      "offset": 92649277,
+      "size": 1759
+    },
+    {
+      "path": "interface/icons/spell_brokenheart.blp",
+      "file_data_id": 135767,
+      "content_key": "6fb02f4a2b11036379b7b44f3f1824eb",
+      "content_size": 3916,
+      "encoding_key": "083b1d463a4d30b298913264e6fb6faa",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55122377,
+      "size": 2560
+    },
+    {
+      "path": "interface/icons/spell_burningbladeshaman_lavaslash.blp",
+      "file_data_id": 1032476,
+      "content_key": "e0dd9d766ad0f37856dd8691ffe8dc10",
+      "content_size": 6660,
+      "encoding_key": "a0ad323d855ee1c5831e20d5c8377c55",
+      "archive": "5d8e14c49ecda4d8dd28aa7fc19e78fd",
+      "offset": 181724714,
+      "size": 2728
+    },
+    {
+      "path": "interface/icons/spell_burningsoul.blp",
+      "file_data_id": 429590,
+      "content_key": "37c273154eeadcd44a753e0de6cf9ccb",
+      "content_size": 3916,
+      "encoding_key": "759fd476b6aa9f0c249c32113d2dd2c0",
+      "archive": "0105f03cb8b8faceda8ea099c2f2f476",
+      "offset": 88852721,
+      "size": 2406
+    },
+    {
+      "path": "interface/icons/spell_fire_sealoffire.blp",
+      "file_data_id": 135824,
+      "content_key": "020194ad5e0a4c0917a8679fdf4bf27c",
+      "content_size": 5268,
+      "encoding_key": "d915a4b2b934f5c7d82e348c7cfc0cd6",
+      "archive": "1db35a1eebbeea466e1e0b33ce6fa361",
+      "offset": 35795653,
+      "size": 2134
+    },
+    {
+      "path": "interface/icons/spell_holy_absolution.blp",
+      "file_data_id": 135868,
+      "content_key": "7bf809600589b4892a9704d0d9011f22",
+      "content_size": 6660,
+      "encoding_key": "8689f2815df58af872a982b2997885fc",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55409659,
+      "size": 3196
+    },
+    {
+      "path": "interface/icons/spell_holy_ardentdefender.blp",
+      "file_data_id": 135870,
+      "content_key": "ff7c2ec90ad8feb2bb161e7405fb7a87",
+      "content_size": 6660,
+      "encoding_key": "999db5146d8d5359a0f22013200880f6",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55416030,
+      "size": 3190
+    },
+    {
+      "path": "interface/icons/spell_holy_aspiration.blp",
+      "file_data_id": 237537,
+      "content_key": "4341ad27382101fcf08fc51d972b0d39",
+      "content_size": 6660,
+      "encoding_key": "fa97c2597f51d8d76d620d17cad9c96f",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 9662286,
+      "size": 3087
+    },
+    {
+      "path": "interface/icons/spell_holy_auramastery.blp",
+      "file_data_id": 135872,
+      "content_key": "c86e82dfe5791de3d2e4e2f059546dba",
+      "content_size": 6660,
+      "encoding_key": "3a46eed61bfe8179f1513864cfced34f",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55422102,
+      "size": 3232
+    },
+    {
+      "path": "interface/icons/spell_holy_avengersshield.blp",
+      "file_data_id": 135874,
+      "content_key": "c942d41c09b684ac51afe24cc552f88c",
+      "content_size": 6660,
+      "encoding_key": "bc0830afb32e082572fab748d335e40d",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55427889,
+      "size": 3141
+    },
+    {
+      "path": "interface/icons/spell_holy_avenginewrath.blp",
+      "file_data_id": 135875,
+      "content_key": "0aa5e72e35a1d5413013ab543bd187c6",
+      "content_size": 6660,
+      "encoding_key": "09f98b45a02c346f61da81e07ca56962",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55431030,
+      "size": 3237
+    },
+    {
+      "path": "interface/icons/spell_holy_blessedlife.blp",
+      "file_data_id": 135876,
+      "content_key": "908a02b2fe22daee7a3e24c0812cf941",
+      "content_size": 6660,
+      "encoding_key": "c16b1d2a58b4b378b4c7326590b8d218",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55434267,
+      "size": 3153
+    },
+    {
+      "path": "interface/icons/spell_holy_blessedresillience.blp",
+      "file_data_id": 135878,
+      "content_key": "8236bd1eaf6a75a68c27face0296c380",
+      "content_size": 6660,
+      "encoding_key": "8e1d80150b577c39a7be37a73ff45353",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55440509,
+      "size": 3189
+    },
+    {
+      "path": "interface/icons/spell_holy_blessingofprotection.blp",
+      "file_data_id": 135880,
+      "content_key": "f7e08de471de6ce5c19443e76ec1a976",
+      "content_size": 3916,
+      "encoding_key": "501593b09ffedde58dce536fda4750e1",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55446056,
+      "size": 2408
+    },
+    {
+      "path": "interface/icons/spell_holy_blindingheal.blp",
+      "file_data_id": 135883,
+      "content_key": "6785b5f7063806a11d95347b2488d3a2",
+      "content_size": 6660,
+      "encoding_key": "1dc4552b98c428dbe15273e52233b2d6",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55453225,
+      "size": 3054
+    },
+    {
+      "path": "interface/icons/spell_holy_borrowedtime.blp",
+      "file_data_id": 237538,
+      "content_key": "17e81eed86cf0358a89d02a00667689f",
+      "content_size": 3916,
+      "encoding_key": "69492048e1947fe3286d5ff109cc0774",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 9665373,
+      "size": 2472
+    },
+    {
+      "path": "interface/icons/spell_holy_circleofrenewal.blp",
+      "file_data_id": 135887,
+      "content_key": "5d4014c9018da8d6eea74004225a28c8",
+      "content_size": 6660,
+      "encoding_key": "814d7a6009d0986d585c3e3b839cf7fd",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55465180,
+      "size": 3031
+    },
+    {
+      "path": "interface/icons/spell_holy_crusade.blp",
+      "file_data_id": 135889,
+      "content_key": "7eb19253b2296830ecbe18dc6e36bf29",
+      "content_size": 6660,
+      "encoding_key": "b51d25d1c13dae3419b7d1af9f893a84",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55471213,
+      "size": 2902
+    },
+    {
+      "path": "interface/icons/spell_holy_crusaderaura.blp",
+      "file_data_id": 135890,
+      "content_key": "3f0aa27d1921a8ed0379fd8835e625f4",
+      "content_size": 6660,
+      "encoding_key": "0890608a8fc1833f5e68b037abc06ca3",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55474115,
+      "size": 3090
+    },
+    {
+      "path": "interface/icons/spell_holy_devotionaura.blp",
+      "file_data_id": 135893,
+      "content_key": "85e8e4df36efe850bf448b27046466fa",
+      "content_size": 3916,
+      "encoding_key": "0fbf5d3287ab96d2acc13b5eaf92a376",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55482909,
+      "size": 2573
+    },
+    {
+      "path": "interface/icons/spell_holy_divineillumination.blp",
+      "file_data_id": 135895,
+      "content_key": "3c6228db6c4fce660e7d66d290f124ad",
+      "content_size": 6660,
+      "encoding_key": "463c7bc091d2d8ca895dc28c321f7884",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55488286,
+      "size": 3113
+    },
+    {
+      "path": "interface/icons/spell_holy_divineprotection.blp",
+      "file_data_id": 524353,
+      "content_key": "65999f842c019e47723f6f2137b98bb1",
+      "content_size": 6660,
+      "encoding_key": "4fbca875677ba866771ce62b7b70d574",
+      "archive": "2d9463d332eb2a97d07d9db831a66743",
+      "offset": 117634523,
+      "size": 3250
+    },
+    {
+      "path": "interface/icons/spell_holy_divineprovidence.blp",
+      "file_data_id": 237541,
+      "content_key": "f1b7beaae6ff74525e4cee2e401a7289",
+      "content_size": 6660,
+      "encoding_key": "6ccef2135abcdb6a60a98cc9bb022fa0",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 9673708,
+      "size": 3111
+    },
+    {
+      "path": "interface/icons/spell_holy_divinepurpose.blp",
+      "file_data_id": 135897,
+      "content_key": "2157bc69cb950278c282a7a57f9cf614",
+      "content_size": 6660,
+      "encoding_key": "52b6d5c9a0e4ca2a533ee6427165da07",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55494331,
+      "size": 3006
+    },
+    {
+      "path": "interface/icons/spell_holy_divineshield.blp",
+      "file_data_id": 524354,
+      "content_key": "d304ef04d6f45607ddd6cee36e28ef71",
+      "content_size": 6660,
+      "encoding_key": "12cf50582f8a2b0d2aab519c8cacc541",
+      "archive": "2d9463d332eb2a97d07d9db831a66743",
+      "offset": 117637773,
+      "size": 3281
+    },
+    {
+      "path": "interface/icons/spell_holy_excorcism.blp",
+      "file_data_id": 135902,
+      "content_key": "9196d5418b674c4dcfcfcef457a0a7d9",
+      "content_size": 6660,
+      "encoding_key": "33c25be2fddcb25b4996a9338949fa1b",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55508411,
+      "size": 2912
+    },
+    {
+      "path": "interface/icons/spell_holy_eyeforaneye.blp",
+      "file_data_id": 135904,
+      "content_key": "295b783b5e502e4deeb0b595aec7f9db",
+      "content_size": 6660,
+      "encoding_key": "f4c7a94fefd88a6686079c498ce64fa7",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55513498,
+      "size": 2744
+    },
+    {
+      "path": "interface/icons/spell_holy_fanaticism.blp",
+      "file_data_id": 135905,
+      "content_key": "f1bf28f53cd4f1a8b39ffe4081649ccc",
+      "content_size": 6660,
+      "encoding_key": "274596caa81900b6df9fad8ad5103b9a",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55516242,
+      "size": 3029
+    },
+    {
+      "path": "interface/icons/spell_holy_fistofjustice.blp",
+      "file_data_id": 135906,
+      "content_key": "faf4f52350593f6e0a2746ae4fce5902",
+      "content_size": 3916,
+      "encoding_key": "fefb0c6be196659abb018574dbf92843",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55519271,
+      "size": 2577
+    },
+    {
+      "path": "interface/icons/spell_holy_flashheal.blp",
+      "file_data_id": 135907,
+      "content_key": "611255fcce978b1c66f8d9acddf099f6",
+      "content_size": 3916,
+      "encoding_key": "85e1fcbf7afee6ca35deae058fb96e59",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55521848,
+      "size": 2323
+    },
+    {
+      "path": "interface/icons/spell_holy_greaterblessingofkings.blp",
+      "file_data_id": 135908,
+      "content_key": "e2d07306d9c926c6aa7aa330100d1593",
+      "content_size": 6660,
+      "encoding_key": "3e8b3905b0e54b003bcff979226811b1",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55524171,
+      "size": 2962
+    },
+    {
+      "path": "interface/icons/spell_holy_greaterblessingofsalvation.blp",
+      "file_data_id": 135910,
+      "content_key": "c10df0c91353e49d88eea4691a3ae6b7",
+      "content_size": 6660,
+      "encoding_key": "31b7a4a4dc61e52ccf04665eba34af99",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55530127,
+      "size": 3095
+    },
+    {
+      "path": "interface/icons/spell_holy_heal.blp",
+      "file_data_id": 135915,
+      "content_key": "7954b87a01663808922a452be14c4bbe",
+      "content_size": 6660,
+      "encoding_key": "385ec264a1df8277c9500f66e2eb79e3",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55544353,
+      "size": 2788
+    },
+    {
+      "path": "interface/icons/spell_holy_healingaura.blp",
+      "file_data_id": 135917,
+      "content_key": "a28a5ef00817c548ce7cefdd7dcd4840",
+      "content_size": 3916,
+      "encoding_key": "81ff488de1fd71d58815fd473873c81a",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55549498,
+      "size": 2563
+    },
+    {
+      "path": "interface/icons/spell_holy_heroism.blp",
+      "file_data_id": 135919,
+      "content_key": "e249259d23af498b8755b2378927fce7",
+      "content_size": 6660,
+      "encoding_key": "f7be67980030c9272472990a9d90d3d3",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55554938,
+      "size": 2654
+    },
+    {
+      "path": "interface/icons/spell_holy_holybolt.blp",
+      "file_data_id": 135920,
+      "content_key": "e0230971701334edaa22945ba0c98554",
+      "content_size": 6660,
+      "encoding_key": "d8cddd2497856f1c93f835eea952f813",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55557592,
+      "size": 2817
+    },
+    {
+      "path": "interface/icons/spell_holy_holyguidance.blp",
+      "file_data_id": 135921,
+      "content_key": "0c015beca7372933cafe0f7240dd97c8",
+      "content_size": 6660,
+      "encoding_key": "0ae67dcbc982beb91716ee3706ec1abb",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55560409,
+      "size": 3050
+    },
+    {
+      "path": "interface/icons/spell_holy_holynova.blp",
+      "file_data_id": 135922,
+      "content_key": "ae5114b12bb8101e70cb88d803c57772",
+      "content_size": 6660,
+      "encoding_key": "04598e46e8ce8cce383ddffc9a850883",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55563459,
+      "size": 2984
+    },
+    {
+      "path": "interface/icons/spell_holy_innerfire.blp",
+      "file_data_id": 135926,
+      "content_key": "bfd72fcd47f2e0b9ecee29cd207c3555",
+      "content_size": 6660,
+      "encoding_key": "42e3f784903b55df1932cbd3f6c159c5",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55574407,
+      "size": 2712
+    },
+    {
+      "path": "interface/icons/spell_holy_layonhands.blp",
+      "file_data_id": 135928,
+      "content_key": "e3a79117ca7ce9c0fc9decbc855239c7",
+      "content_size": 6660,
+      "encoding_key": "e4bdbf5f5fc342c229a58d889a34365c",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55580148,
+      "size": 2830
+    },
+    {
+      "path": "interface/icons/spell_holy_lightsgrace.blp",
+      "file_data_id": 135931,
+      "content_key": "a330023fbd565fbd1a3707cb528c0958",
+      "content_size": 6660,
+      "encoding_key": "bbf5ff61621ed2877fca15900f6c6514",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55587666,
+      "size": 3034
+    },
+    {
+      "path": "interface/icons/spell_holy_mindvision.blp",
+      "file_data_id": 135934,
+      "content_key": "94635f8cf51067b570a1b01cd6cd6ac0",
+      "content_size": 6660,
+      "encoding_key": "e63b465aa19e62c882f14c3feb158731",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55595785,
+      "size": 2823
+    },
+    {
+      "path": "interface/icons/spell_holy_persecution.blp",
+      "file_data_id": 237546,
+      "content_key": "99ef6107a7a37ea04c8f6ad26523a32a",
+      "content_size": 6660,
+      "encoding_key": "25423867bb068efcaaf24f108fe0a096",
+      "archive": "a2cee407000b5ccd6f9ca6b9ba2222d0",
+      "offset": 9722940,
+      "size": 2859
+    },
+    {
+      "path": "interface/icons/spell_holy_prayerofmendingtga.blp",
+      "file_data_id": 135944,
+      "content_key": "95ab695a6b64f9d2170a6671819cefd3",
+      "content_size": 6660,
+      "encoding_key": "e50cf292faa9d25d1f59877f0d40260d",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55624199,
+      "size": 3095
+    },
+    {
+      "path": "interface/icons/spell_holy_pureofheart.blp",
+      "file_data_id": 135948,
+      "content_key": "9a97bed34dcfd45be445514ca96e6241",
+      "content_size": 6660,
+      "encoding_key": "7a16065dca1245bf3093457f12f8b8f6",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55636041,
+      "size": 3210
+    },
+    {
+      "path": "interface/icons/spell_holy_purify.blp",
+      "file_data_id": 135949,
+      "content_key": "7545c55164144eeee8dfc1fca27ff585",
+      "content_size": 3916,
+      "encoding_key": "5b06956a1d76c798f05f87b0ed52f961",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55639251,
+      "size": 2334
+    },
+    {
+      "path": "interface/icons/spell_holy_rebuke.blp",
+      "file_data_id": 523893,
+      "content_key": "4a3da66c149e08249ede5b54b903fbb9",
+      "content_size": 6660,
+      "encoding_key": "2a13e820c576f21cc213582dcd7ac819",
+      "archive": "2d9463d332eb2a97d07d9db831a66743",
+      "offset": 110643079,
+      "size": 3153
+    },
+    {
+      "path": "interface/icons/spell_holy_renew.blp",
+      "file_data_id": 135953,
+      "content_key": "40b3d4bbd71187b162a3d9494c296450",
+      "content_size": 3916,
+      "encoding_key": "223e224e01a846a643b85e65e2b3ef6a",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55649807,
+      "size": 2379
+    },
+    {
+      "path": "interface/icons/spell_holy_revivechampion.blp",
+      "file_data_id": 135958,
+      "content_key": "39a1fa462cc74a8a64de766ce7de0fa4",
+      "content_size": 6660,
+      "encoding_key": "6454d6951426575807dfcc15bfa14898",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55663213,
+      "size": 2895
+    },
+    {
+      "path": "interface/icons/spell_holy_righteousfury.blp",
+      "file_data_id": 135959,
+      "content_key": "5f30f2f8d14dd64fabe80ebc7ac0665e",
+      "content_size": 3916,
+      "encoding_key": "94082c10f1a2e18808307f6318139ccc",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55666108,
+      "size": 2501
+    },
+    {
+      "path": "interface/icons/spell_holy_righteousnessaura.blp",
+      "file_data_id": 135960,
+      "content_key": "803976c6513f75a15ccf34194b8e4e81",
+      "content_size": 3916,
+      "encoding_key": "a1d157947f1a69c712960e4ca185642b",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55668609,
+      "size": 2493
+    },
+    {
+      "path": "interface/icons/spell_holy_rune.blp",
+      "file_data_id": 252269,
+      "content_key": "0a2785fed2905a9359ef1ebcd398e0c4",
+      "content_size": 6660,
+      "encoding_key": "bcc2aeebd0012a25967b31ecd52eee12",
+      "archive": "4c2d33be724eac8336368f6a04dd43e4",
+      "offset": 20704799,
+      "size": 2862
+    },
+    {
+      "path": "interface/icons/spell_holy_sealofblood.blp",
+      "file_data_id": 135961,
+      "content_key": "c782b45a1f9f8e14742e2389aa844a89",
+      "content_size": 6660,
+      "encoding_key": "9a44ecac593ff8f4660ebef48896fbd9",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55671102,
+      "size": 3033
+    },
+    {
+      "path": "interface/icons/spell_holy_sealoffury.blp",
+      "file_data_id": 135962,
+      "content_key": "a71a1fab37f79e05b3705d0a83fb7e9b",
+      "content_size": 3916,
+      "encoding_key": "ffce739ce04f03fa62f7c8b2b53c8f36",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55674135,
+      "size": 2551
+    },
+    {
+      "path": "interface/icons/spell_holy_sealofprotection.blp",
+      "file_data_id": 135964,
+      "content_key": "c3b92e3be94e6bf89912a94fabad2c7d",
+      "content_size": 6660,
+      "encoding_key": "dc8885db65ea140db673e680b5ae7bd6",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55679253,
+      "size": 2984
+    },
+    {
+      "path": "interface/icons/spell_holy_sealofrighteousness.blp",
+      "file_data_id": 135965,
+      "content_key": "ac8a1c7e7da24be6d4e3b3a6b2f1a5ed",
+      "content_size": 3916,
+      "encoding_key": "4b57b2600476e9e2f79c91dad26d3125",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55682237,
+      "size": 2585
+    },
+    {
+      "path": "interface/icons/spell_holy_sealofsacrifice.blp",
+      "file_data_id": 135966,
+      "content_key": "cb2cf6d9fed5022984a02be01e0a34e8",
+      "content_size": 6660,
+      "encoding_key": "94d54540379db12e93727f7b45ad39d8",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55684822,
+      "size": 2906
+    },
+    {
+      "path": "interface/icons/spell_holy_sealofsalvation.blp",
+      "file_data_id": 135967,
+      "content_key": "a0fef08bcbbed4213794f3bcaa12dbc6",
+      "content_size": 3916,
+      "encoding_key": "8cc15fb8745aa86c868e096e939c712e",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55687728,
+      "size": 2553
+    },
+    {
+      "path": "interface/icons/spell_holy_sealofvalor.blp",
+      "file_data_id": 135968,
+      "content_key": "e5dce027e7d8dcdeec301436e5de0a8a",
+      "content_size": 6660,
+      "encoding_key": "d8afad0c527c4a4595abe64ee2539667",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55690281,
+      "size": 2880
+    },
+    {
+      "path": "interface/icons/spell_holy_sealofwrath.blp",
+      "file_data_id": 135971,
+      "content_key": "02efb0fbf63b38e3898f6d363e7d546b",
+      "content_size": 6660,
+      "encoding_key": "6ace1324c1fee3f2fdd42f0986bbe998",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55698779,
+      "size": 2925
+    },
+    {
+      "path": "interface/icons/spell_holy_searinglight.blp",
+      "file_data_id": 135972,
+      "content_key": "86920a00a5185b719e6223438cfc6206",
+      "content_size": 6660,
+      "encoding_key": "ffe47f76263ad9ba8e6954ce5703ed41",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55701704,
+      "size": 2915
+    },
+    {
+      "path": "interface/icons/spell_holy_spiritualguidence.blp",
+      "file_data_id": 135977,
+      "content_key": "48aa3ac12ce1b8f4b5083e3f9e90aaf1",
+      "content_size": 6660,
+      "encoding_key": "ad0489252fa847f1288a217990214949",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55715591,
+      "size": 2795
+    },
+    {
+      "path": "interface/icons/spell_holy_surgeoflight.blp",
+      "file_data_id": 135981,
+      "content_key": "939454e469254851ac779a682a15f877",
+      "content_size": 6660,
+      "encoding_key": "bb015324adc9e2c6c277e8bde3f5ef56",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55727278,
+      "size": 2498
+    },
+    {
+      "path": "interface/icons/spell_holy_vindication.blp",
+      "file_data_id": 135985,
+      "content_key": "5e46ec078c22ec720661a8a29f54617e",
+      "content_size": 6660,
+      "encoding_key": "48d2c8266804e666023cf1a9ba647c02",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55738351,
+      "size": 2976
+    },
+    {
+      "path": "interface/icons/spell_holy_weaponmastery.blp",
+      "file_data_id": 135986,
+      "content_key": "62190b4da782388969b403e389674d4c",
+      "content_size": 6660,
+      "encoding_key": "03b6976c8dcf531b2f355a88db5271ba",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55741327,
+      "size": 3169
+    },
+    {
+      "path": "interface/icons/spell_lfieblood.blp",
+      "file_data_id": 348566,
+      "content_key": "28c412c45a766c64aa27e2995bcb3513",
+      "content_size": 3916,
+      "encoding_key": "36bddee961fb0b68bcc9a5c769c9c310",
+      "archive": "3448e41e21d3724195efe6ef688e81d6",
+      "offset": 138082301,
+      "size": 2567
+    },
+    {
+      "path": "interface/icons/spell_magic_magearmor.blp",
+      "file_data_id": 135995,
+      "content_key": "5be69381ecffb54379e70ac21739494a",
+      "content_size": 3916,
+      "encoding_key": "2b3d26f525db62a460d458b9a9203fc4",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 55765793,
+      "size": 2549
+    },
+    {
+      "path": "interface/icons/spell_paladin_clarityofpurpose.blp",
+      "file_data_id": 461857,
+      "content_key": "481031a0d0f59f1a80a4a29fa74faf97",
+      "content_size": 6660,
+      "encoding_key": "60ccaec5cf524c84febd8652a50cebc1",
+      "archive": "df82ac239f62ec49d66b3ca8e8d72e7f",
+      "offset": 35334184,
+      "size": 2876
+    },
+    {
+      "path": "interface/icons/spell_paladin_divinecircle.blp",
+      "file_data_id": 457654,
+      "content_key": "36d3797810de9f45d7c09161d6518c1a",
+      "content_size": 6660,
+      "encoding_key": "11c1536a5fc2180866d4dbe11ea7f5de",
+      "archive": "df82ac239f62ec49d66b3ca8e8d72e7f",
+      "offset": 897240,
+      "size": 3265
+    },
+    {
+      "path": "interface/icons/spell_paladin_executionsentence.blp",
+      "file_data_id": 613954,
+      "content_key": "8bdbc597ce3ea892d0db7f543aa4b053",
+      "content_size": 3916,
+      "encoding_key": "387c71f660a18989a1e292b3a5c160b5",
+      "archive": "bc9d29d7076a16309df34901c9ee7db6",
+      "offset": 160370580,
+      "size": 2573
+    },
+    {
+      "path": "interface/icons/spell_paladin_hammerofwrath.blp",
+      "file_data_id": 613533,
+      "content_key": "928ce49fd6cbd81c7aa464d0ddaa941e",
+      "content_size": 6660,
+      "encoding_key": "07dadef47e61a6f2b3d6432cdc0a4867",
+      "archive": "bc9d29d7076a16309df34901c9ee7db6",
+      "offset": 152674904,
+      "size": 3214
+    },
+    {
+      "path": "interface/icons/spell_paladin_holyprism.blp",
+      "file_data_id": 613408,
+      "content_key": "c714d6dde32aafaacb2d19c4ffcccbea",
+      "content_size": 3916,
+      "encoding_key": "40592ce08d4f53c9e348548b58ad5f99",
+      "archive": "bc9d29d7076a16309df34901c9ee7db6",
+      "offset": 152164044,
+      "size": 2280
+    },
+    {
+      "path": "interface/icons/spell_paladin_inquisition.blp",
+      "file_data_id": 461858,
+      "content_key": "381fa8be244196dcc811cfd722782d03",
+      "content_size": 6660,
+      "encoding_key": "66f445a3cd0b99785aaeba2838ad0ba1",
+      "archive": "df82ac239f62ec49d66b3ca8e8d72e7f",
+      "offset": 35337060,
+      "size": 2911
+    },
+    {
+      "path": "interface/icons/spell_paladin_lightofdawn.blp",
+      "file_data_id": 461859,
+      "content_key": "9c39260a8b1ef16c920ead264b708e40",
+      "content_size": 6660,
+      "encoding_key": "1469307f34a4803528b79d0dd80993a8",
+      "archive": "df82ac239f62ec49d66b3ca8e8d72e7f",
+      "offset": 35339971,
+      "size": 2768
+    },
+    {
+      "path": "interface/icons/spell_paladin_lightshammer.blp",
+      "file_data_id": 613955,
+      "content_key": "69b0721a34fca30f1656ac0c3326680d",
+      "content_size": 3916,
+      "encoding_key": "62d0eb8749595a5ae0972bfbf4eed90e",
+      "archive": "bc9d29d7076a16309df34901c9ee7db6",
+      "offset": 160373153,
+      "size": 2545
+    },
+    {
+      "path": "interface/icons/spell_paladin_templarsverdict.blp",
+      "file_data_id": 461860,
+      "content_key": "8fcf4999fa161697cf5d5d2e8e50cbd1",
+      "content_size": 6660,
+      "encoding_key": "943af92eb75876ec31798cee55398314",
+      "archive": "df82ac239f62ec49d66b3ca8e8d72e7f",
+      "offset": 35342739,
+      "size": 3090
+    },
+    {
+      "path": "interface/icons/spell_priest_burningwill.blp",
+      "file_data_id": 537078,
+      "content_key": "db2349699a30a5d56bb7089ee29d0519",
+      "content_size": 6660,
+      "encoding_key": "25e87cf990fc4340ca6e34629fdbb0a8",
+      "archive": "30ceab0962df14c86bbaea5bd9d688bb",
+      "offset": 130840495,
+      "size": 3087
+    },
+    {
+      "path": "interface/icons/spell_priest_divinestar_holy.blp",
+      "file_data_id": 608954,
+      "content_key": "682f4706df0fc920962beade2c71f6b2",
+      "content_size": 3916,
+      "encoding_key": "c976197e61a08ab1d2c2b1f444c73b37",
+      "archive": "bc9d29d7076a16309df34901c9ee7db6",
+      "offset": 111197441,
+      "size": 2404
+    },
+    {
+      "path": "interface/icons/spell_priest_power word.blp",
+      "file_data_id": 1386546,
+      "content_key": "0c247a1968d524b89e1ab2e86f066ee2",
+      "content_size": 6660,
+      "encoding_key": "0e77b7efb4ce6f5a56e982c9e3deea30",
+      "archive": "afcffb5ffb65856c8777382169d64a68",
+      "offset": 188990563,
+      "size": 3083
+    },
+    {
+      "path": "interface/icons/tradingpostcurrency.blp",
+      "file_data_id": 4696085,
+      "content_key": "70ceb2203db5a0d09997e77dcbe1260c",
+      "content_size": 3220,
+      "encoding_key": "0ad2ad7346741a5918c0b171a0da09de",
+      "archive": "50cb2cc8f39fc911d586d97c9e31c481",
+      "offset": 186098875,
+      "size": 1923
+    },
+    {
+      "path": "interface/talentframe/talents.blp",
+      "file_data_id": 4556093,
+      "content_key": "ca0c660f6d33f9ace821765524a24658",
+      "content_size": 8389780,
+      "encoding_key": "d609c948c7fb6ad4a1748f892226c80d",
+      "archive": "9071c6225c436d0bfca046bfb5212497",
+      "offset": 26976098,
+      "size": 884290
+    },
+    {
+      "path": "interface/talentframe/talentsanimationmasknodesheenlargesquare.blp",
+      "file_data_id": 7532037,
+      "content_key": "710c8d8d7599ccf8b621fd7515179c9b",
+      "content_size": 66708,
+      "encoding_key": "74d44ab60a2fe37ff916401c67d70481",
+      "archive": "0efba5b71a422e69abf19533f077cf54",
+      "offset": 147369966,
+      "size": 364
+    },
+    {
+      "path": "interface/talentframe/talentsanimationmasknodesheensmallcircle.blp",
+      "file_data_id": 7532039,
+      "content_key": "4a0490244aa18b8a4e468b53c4caea62",
+      "content_size": 5268,
+      "encoding_key": "d3aa2fcd26f38d4341046f4d6e6f7031",
+      "archive": "0efba5b71a422e69abf19533f077cf54",
+      "offset": 147370330,
+      "size": 377
+    },
+    {
+      "path": "interface/talentframe/talentsanimations2.blp",
+      "file_data_id": 4732064,
+      "content_key": "4f1fbe4d774e2ef1cd331e262db7cf41",
+      "content_size": 16778388,
+      "encoding_key": "9684cf16810d9aefd66450e4d065d7e1",
+      "archive": "8027d78ece6cfd27b490b03c4bdfea77",
+      "offset": 120424721,
+      "size": 517001
+    },
+    {
+      "path": "interface/talentframe/talentsanimations3.blp",
+      "file_data_id": 4734301,
+      "content_key": "dc55074b10a0f3d8877bdccb36713e94",
+      "content_size": 16778388,
+      "encoding_key": "14504c6253af9bfc0263913350939b0d",
+      "archive": null,
+      "offset": 0,
+      "size": 3446683
+    },
+    {
+      "path": "interface/talentframe/talentsanimations4.blp",
+      "file_data_id": 4741460,
+      "content_key": "4fbbba99e6ce524054d07afe97715f3d",
+      "content_size": 16778388,
+      "encoding_key": "af6b59094ac1895a518702b98dd23719",
+      "archive": "0efba5b71a422e69abf19533f077cf54",
+      "offset": 142458669,
+      "size": 1740899
+    },
+    {
+      "path": "interface/talentframe/talentsanimationsmaskfiligree.blp",
+      "file_data_id": 4726163,
+      "content_key": "38cfbec72314c36ceb2de43b1757e627",
+      "content_size": 8389780,
+      "encoding_key": "1f0ce7f49847cc7c837bad64ea441d1e",
+      "archive": "da482af684e8819bbf332386952ff288",
+      "offset": 103740853,
+      "size": 16211
+    },
+    {
+      "path": "interface/talentframe/talentsanimationsmaskfiligreeactivate.blp",
+      "file_data_id": 4734349,
+      "content_key": "d8628aad0de6543b1ccf44f226807200",
+      "content_size": 8389780,
+      "encoding_key": "48a5ef45d91521784fb37dbd38e68e87",
+      "archive": null,
+      "offset": 0,
+      "size": 2658071
+    },
+    {
+      "path": "interface/talentframe/talentsanimationsmaskfull.blp",
+      "file_data_id": 4722778,
+      "content_key": "57b518d22b33e26df1b8d9cc35ad3614",
+      "content_size": 4195476,
+      "encoding_key": "7c1b6008147074152d083fe0fb8882d7",
+      "archive": "fb7e72629af7f8bd05470dbf9f10d9bf",
+      "offset": 208277830,
+      "size": 4917
+    },
+    {
+      "path": "interface/talentframe/talentsanimationsmasknodesheenchoice.blp",
+      "file_data_id": 4731582,
+      "content_key": "bb7f1f6c3c47e5b234b6b3a02bdcb793",
+      "content_size": 66708,
+      "encoding_key": "ddc3111462151074259efe3a5b9261fd",
+      "archive": "50cb2cc8f39fc911d586d97c9e31c481",
+      "offset": 186100798,
+      "size": 1481
+    },
+    {
+      "path": "interface/talentframe/talentsanimationsmasknodesheenchoiceflyoutcircle.blp",
+      "file_data_id": 4731585,
+      "content_key": "ac7e5b5dcd5161ec7ad1aada3293b2a1",
+      "content_size": 17556,
+      "encoding_key": "9da55d28831227be9796dfa71705e65e",
+      "archive": "6024e0180795c9d2af51cd98b5b69947",
+      "offset": 47262757,
+      "size": 940
+    },
+    {
+      "path": "interface/talentframe/talentsanimationsmasknodesheenchoiceflyoutsquare.blp",
+      "file_data_id": 4731588,
+      "content_key": "a321578feef570e990199c439d435ee8",
+      "content_size": 66708,
+      "encoding_key": "5cb899fb181c2f423200a0abd297b357",
+      "archive": "6024e0180795c9d2af51cd98b5b69947",
+      "offset": 47263697,
+      "size": 790
+    },
+    {
+      "path": "interface/talentframe/talentsanimationsmasknodesheencircle.blp",
+      "file_data_id": 4731579,
+      "content_key": "a0a0e6aa30225308eafc55f9f26e502f",
+      "content_size": 17556,
+      "encoding_key": "ae312248a08b249488fa62bb211ac5ac",
+      "archive": "6024e0180795c9d2af51cd98b5b69947",
+      "offset": 47260789,
+      "size": 732
+    },
+    {
+      "path": "interface/talentframe/talentsanimationsmasknodesheenheroclassbackplatefull.blp",
+      "file_data_id": 5907428,
+      "content_key": "47ecb9cff2f86ad2e569df57bfc2d598",
+      "content_size": 525460,
+      "encoding_key": "4d14e52e4cd8080631b5e83e331aaa0e",
+      "archive": "88461ab86eff13c19e16d857c4fa48e6",
+      "offset": 76338163,
+      "size": 2215
+    },
+    {
+      "path": "interface/talentframe/talentsanimationsmasknodesheenheroclassbackplatefullexpanded.blp",
+      "file_data_id": 7531969,
+      "content_key": "e7786e5c654ac9813831c1d7891ade22",
+      "content_size": 2098324,
+      "encoding_key": "b3134db5180508abac4442199b61d9f1",
+      "archive": "0efba5b71a422e69abf19533f077cf54",
+      "offset": 147363607,
+      "size": 5381
+    },
+    {
+      "path": "interface/talentframe/talentsanimationsmasknodesheenheroclassmainpanering.blp",
+      "file_data_id": 5790026,
+      "content_key": "5c50e4163273b0f5b7238c205670f63b",
+      "content_size": 66708,
+      "encoding_key": "34c0472db3b8b05cc33336b6dd2a3e68",
+      "archive": "88461ab86eff13c19e16d857c4fa48e6",
+      "offset": 105740093,
+      "size": 2126
+    },
+    {
+      "path": "interface/talentframe/talentsanimationsmasknodesheenlargecircle.blp",
+      "file_data_id": 7532035,
+      "content_key": "1884606de99aa8005f26755440ad0a97",
+      "content_size": 66708,
+      "encoding_key": "bd4348ae724569431881887d523d9cd3",
+      "archive": "0efba5b71a422e69abf19533f077cf54",
+      "offset": 147368988,
+      "size": 978
+    },
+    {
+      "path": "interface/talentframe/talentsanimationsmasknodesheensquare.blp",
+      "file_data_id": 4731572,
+      "content_key": "f98262496492856f67f760c4971b43d3",
+      "content_size": 66708,
+      "encoding_key": "cbc87c0727de20bfced1a35c3b49caa6",
+      "archive": "6024e0180795c9d2af51cd98b5b69947",
+      "offset": 47260103,
+      "size": 686
+    },
+    {
+      "path": "interface/talentframe/talentsanimationsmaskspecart.blp",
+      "file_data_id": 4726182,
+      "content_key": "af7fa37149f0f6f10d1fa5100276f3cd",
+      "content_size": 8389780,
+      "encoding_key": "8424c03458c089e378343d87fbe042b2",
+      "archive": "6024e0180795c9d2af51cd98b5b69947",
+      "offset": 46681584,
+      "size": 205633
+    },
+    {
+      "path": "interface/talentframe/talentsanimationsmaskspecartmid.blp",
+      "file_data_id": 4732062,
+      "content_key": "303db4dd20a726cc72766a28fdcf5e90",
+      "content_size": 8389780,
+      "encoding_key": "0170d979403abdcfce064304144ba45e",
+      "archive": "6024e0180795c9d2af51cd98b5b69947",
+      "offset": 48842568,
+      "size": 214698
+    },
+    {
+      "path": "interface/talentframe/talentsanimationssheen.blp",
+      "file_data_id": 4723109,
+      "content_key": "5335218eb452f58c8b61eb994cfb7f2e",
+      "content_size": 16778388,
+      "encoding_key": "6bc8cdfbfca559dbd4dbe02794e466bf",
+      "archive": "6024e0180795c9d2af51cd98b5b69947",
+      "offset": 37790846,
+      "size": 712497
+    },
+    {
+      "path": "interface/talentframe/talentsarrowline.blp",
+      "file_data_id": 4636998,
+      "content_key": "3437894436a9c340deb3c8643d9b57ac",
+      "content_size": 9364,
+      "encoding_key": "994a3b7043da1cfc70f72f9cd3f5b202",
+      "archive": "8e0af4b65b96eab9a728babb2b68ee82",
+      "offset": 268435158,
+      "size": 189
+    },
+    {
+      "path": "interface/talentframe/talentsclassbackgroundpaladin1.blp",
+      "file_data_id": 4631337,
+      "content_key": "2d324c116236d20853e44ffd65ed3d76",
+      "content_size": 16778388,
+      "encoding_key": "ee5b38f186da951781e87df28122ac52",
+      "archive": null,
+      "offset": 0,
+      "size": 3074861
+    },
+    {
+      "path": "interface/talentframe/talentsclassbackgroundpaladin2.blp",
+      "file_data_id": 4631340,
+      "content_key": "75267a8bcb30dfa656ef5b1c08482ca0",
+      "content_size": 8389780,
+      "encoding_key": "2f13adb3e05254287c0f6d3b5fd97d54",
+      "archive": "8027d78ece6cfd27b490b03c4bdfea77",
+      "offset": 110994318,
+      "size": 1647085
+    },
+    {
+      "path": "interface/talentframe/talentsheroclass.blp",
+      "file_data_id": 5740409,
+      "content_key": "3c5ae8ab2802f88cb80f1d6c55d42e42",
+      "content_size": 8389780,
+      "encoding_key": "8c2eedddaf48e46b75a74497581199f0",
+      "archive": "0efba5b71a422e69abf19533f077cf54",
+      "offset": 144297715,
+      "size": 510107
+    },
+    {
+      "path": "interface/talentframe/talentsheroclassicons.blp",
+      "file_data_id": 5740021,
+      "content_key": "171a3eb5007401bf7f08d9ebfea579b0",
+      "content_size": 8389780,
+      "encoding_key": "e96c8ad5233a9a99537b66df2684f2c0",
+      "archive": null,
+      "offset": 0,
+      "size": 4119542
+    },
+    {
+      "path": "interface/talentframe/talentsmaskapexnodelargecircle.blp",
+      "file_data_id": 7532041,
+      "content_key": "73c40716c1afed5975eb635cb84c0763",
+      "content_size": 66708,
+      "encoding_key": "ea86c1557eda6435044b39d68135ba44",
+      "archive": "0efba5b71a422e69abf19533f077cf54",
+      "offset": 147370707,
+      "size": 719
+    },
+    {
+      "path": "interface/talentframe/talentsmaskapexnodelargesquare.blp",
+      "file_data_id": 7532043,
+      "content_key": "7ae6dbe05f92ec6036304b4f32a438a5",
+      "content_size": 66708,
+      "encoding_key": "77d9dee3d25ea422dab3eecd3f038727",
+      "archive": "0efba5b71a422e69abf19533f077cf54",
+      "offset": 147371426,
+      "size": 348
+    },
+    {
+      "path": "interface/talentframe/talentsmaskapexnodesmallcircle.blp",
+      "file_data_id": 7532046,
+      "content_key": "fe7b64ab0fbe91f1a78afb2451ab4395",
+      "content_size": 5268,
+      "encoding_key": "80be8178bd1f0590ab9ed52a6238f712",
+      "archive": "0efba5b71a422e69abf19533f077cf54",
+      "offset": 147371774,
+      "size": 285
+    },
+    {
+      "path": "interface/talentframe/talentsmasknodechoice.blp",
+      "file_data_id": 4633071,
+      "content_key": "1843c3fd4add766ee27bb3a504b291f9",
+      "content_size": 17556,
+      "encoding_key": "d30771691bcdaa0193794dd9f871a5e0",
+      "archive": "697720bf8aba1f880cfd19f7e3ec0940",
+      "offset": 237056245,
+      "size": 443
+    },
+    {
+      "path": "interface/talentframe/talentsmasknodechoiceflyout.blp",
+      "file_data_id": 4638369,
+      "content_key": "938e8ff252e8de1b8bab6ab7b7da8b4c",
+      "content_size": 17556,
+      "encoding_key": "ba413e69f63fb33c4170d1b989447f4e",
+      "archive": "697720bf8aba1f880cfd19f7e3ec0940",
+      "offset": 239201282,
+      "size": 275
+    },
+    {
+      "path": "interface/talentframe/talentsmasknodechoicehalf.blp",
+      "file_data_id": 4641164,
+      "content_key": "72aacea9e9e3404f98f83812ab3c3f80",
+      "content_size": 17556,
+      "encoding_key": "a4adb56bbcbcf3b611ae2e6a2da94a25",
+      "archive": "697720bf8aba1f880cfd19f7e3ec0940",
+      "offset": 239708295,
+      "size": 351
+    },
+    {
+      "path": "interface/talentframe/talentsmasknodecircle.blp",
+      "file_data_id": 4633068,
+      "content_key": "821e3c6d5f53a991d031c9d82b7de6ef",
+      "content_size": 17556,
+      "encoding_key": "7adbe2061660926d3c4e4d0788d6da7f",
+      "archive": "697720bf8aba1f880cfd19f7e3ec0940",
+      "offset": 237055627,
+      "size": 618
+    },
+    {
+      "path": "interface/talentframe/talentsprogress.blp",
+      "file_data_id": 7532048,
+      "content_key": "134a0b0751aaba76e42797566407c06d",
+      "content_size": 33940,
+      "encoding_key": "4aa0de3cdc9b1ec0396e3c988677b6f3",
+      "archive": "0efba5b71a422e69abf19533f077cf54",
+      "offset": 147372059,
+      "size": 1172
+    },
+    {
+      "path": "interface/talentframe/talentsprogressactive.blp",
+      "file_data_id": 7532050,
+      "content_key": "a941107335ce2e116fd55508e36b4811",
+      "content_size": 5268,
+      "encoding_key": "3688f82e0b5cfc81377df86e63df9bb8",
+      "archive": "0efba5b71a422e69abf19533f077cf54",
+      "offset": 147373231,
+      "size": 130
+    },
+    {
+      "path": "interface/tooltips/uiframetooltipbackground.blp",
+      "file_data_id": 4185455,
+      "content_key": "dddbab2ac190ca0a6e7e98ead35c19d7",
+      "content_size": 5268,
+      "encoding_key": "d84fdf4673a77ad5d814fc4c022f042a",
+      "archive": "1575be7f9cdd6b0d06214e2740396839",
+      "offset": 95617002,
+      "size": 114
+    }
+  ]
+}

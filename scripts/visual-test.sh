@@ -49,6 +49,12 @@ export WOW_SIM_NO_SOUND=1
 # font without a WoW install, a different one per operating system; EUI's
 # default font stands in for them on every machine (scripts/patches/wow-ui-sim).
 export WOW_SIM_FALLBACK_FONT="$EUI/media/fonts/Expressway.TTF"
+# Blizzard's textures (icons, atlases, frame art) without a WoW install: the
+# files pinned in sim/visual/blizzard-art.lock.json, fetched from Blizzard's
+# CDN into .tools (scripts/blizzard-art.py).
+ART="$("$PY" "$ROOT/scripts/blizzard-art.py" fetch | sed -n 's/^blizzard-art: [0-9]* files in \(.*\) ([0-9]* fetched)$/\1/p')"
+[ -d "$ART" ] || { echo "Blizzard textures missing; see scripts/blizzard-art.py" >&2; exit 2; }
+export WOW_SIM_INTERFACE_ART_PATH="$ART"
 # The binary also looks next to the sources it was built from; naming the
 # directory keeps a cached or copied binary on this checkout's addons.
 export WOW_SIM_ADDONS_PATH="$SIM/Interface/AddOns"
