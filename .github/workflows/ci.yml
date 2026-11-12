@@ -1,9 +1,10 @@
 # Checks on every push to main and every pull request; the release workflow
-# runs the same job before it packages anything. Both jobs start on every pull
-# request: they are required checks of main (ruleset "Protect main"), and a
-# required check that never starts keeps a pull request from being merged.
-# Their first step decides whether the change touches anything the checks
-# read; if not, the job skips its other steps and passes in seconds.
+# runs the same jobs before it packages anything. Every job starts on every
+# pull request: they are, or may become, required checks of main (ruleset
+# "Protect main"), and a required check that never starts keeps a pull request
+# from being merged. Their first step decides whether the change touches
+# anything the job reads; if not, the job skips its other steps and passes in
+# seconds.
 name: CI
 
 on:
@@ -183,7 +184,7 @@ jobs:
 
       # Blizzard's sources, the annotations and the GlobalStrings are fetched
       # fresh, so the API check reports Blizzard changes on the next run.
-      # No GPU build: the visual regression tests need a display and stay local.
+      # No GPU build here: the visual job below builds and runs that one.
       - name: Set up toolchain, reference sources and simulator
         if: steps.scope.outputs.run == 'true'
         run: scripts/setup-tools.sh --no-gui --client=${{ matrix.client }}
@@ -191,3 +192,137 @@ jobs:
       - name: Run checks
         if: steps.scope.outputs.run == 'true'
         run: scripts/test.sh --require-sim --client=${{ matrix.client }}
+
+
+  visual:
+    name: Visual regression (retail)
+    # The scenarios of sim/visual rendered by the GUI build of wow-ui-sim and
+    # compared with the baselines. Always on GitHub's runners: the self-hosted
+    # one (CI_RUNNER) lacks the GUI libraries and has no sudo to add them.
+    # The runner has no GPU: Mesa's CPU Vulkan driver (lavapipe) renders, as
+    # WOW_SIM_SOFTWARE_RENDER asks wgpu for its fallback adapter. Text and
+    # textures match the macOS renders the baselines come from: EUI's font
+    # stands in for Blizzard's, and the Blizzard textures pinned in
+    # sim/visual/blizzard-art.lock.json come from Blizzard's CDN
+    # (scripts/blizzard-art.py).
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      ELLESMEREUI_REV: ${{ inputs.ellesmereui-rev }}
+      RUSTFLAGS: -C link-arg=-fuse-ld=mold
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # As in the checks job, with the visual test scripts and the texture
+      # tool in place of the lint, API and busted files.
+      - name: Changes the visual tests cover
+        id: scope
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          relevant='^(EllesmereUIBags_Alts/|sim/|scripts/(setup-tools\.sh|visual-test\.sh|visual-compare\.py|blizzard-art\.py|blizzard-art/.*)$|scripts/patches/|\.github/workflows/ci\.yml$)'
+          run=true reason="$EVENT on $GITHUB_REF: always tested"
+          case "$EVENT:$GITHUB_REF" in pull_request:*) range="$BASE_SHA...$HEAD_SHA" ;; push:refs/heads/main) range="$BASE_SHA..$HEAD_SHA" ;; *) range= ;; esac
+          if [ -n "$range" ] && [ -n "${BASE_SHA//0/}" ] && files="$(git diff --name-only "$range")"; then
+            if hits="$(grep -E "$relevant" <<<"$files")"; then
+              reason="changes the visual tests cover:"$'\n'"$hits"
+            else
+              run=false reason="no change the visual tests cover:"$'\n'"$files"
+            fi
+          fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+          printf '%s\n' "$reason"
+          { echo '```'; printf '%s\n' "run=$run, $reason"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      # The checks job's build dependencies, what iced, winit and wgpu link or
+      # load, and lavapipe as the only Vulkan adapter.
+      - name: Install build dependencies
+        if: steps.scope.outputs.run == 'true'
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q libreadline-dev clang mold pkg-config libicu-dev fonts-dejavu-core libssl-dev \
+            libxkbcommon-dev libwayland-dev libx11-dev libxcursor-dev libxrandr-dev libxi-dev libasound2-dev \
+            libvulkan1 mesa-vulkan-drivers
+
+      # The checks job's cache key parts for the retail simulator.
+      - name: Pinned revisions
+        if: steps.scope.outputs.run == 'true'
+        id: pins
+        run: |
+          echo "sim=$(sed -n 's/^WOW_UI_SIM_REV=//p' scripts/setup-tools.sh)" >> "$GITHUB_OUTPUT"
+          echo "features=$(sed -n 's/^ *SIM_FEATURES=//p' scripts/setup-tools.sh | tr , +)" >> "$GITHUB_OUTPUT"
+          if ls scripts/patches/wow-ui-sim/*.patch >/dev/null 2>&1; then
+            echo "patches=-patches$(cat scripts/patches/wow-ui-sim/*.patch | sha256sum | cut -c1-12)" >> "$GITHUB_OUTPUT"
+          fi
+          echo "icu=$(pkg-config --modversion icu-i18n)" >> "$GITHUB_OUTPUT"
+          echo "system=$(. /etc/os-release && echo "$ID$VERSION_ID")-$RUNNER_ARCH" >> "$GITHUB_OUTPUT"
+          echo "workspace=$(printf %s "$GITHUB_WORKSPACE" | sha256sum | cut -c1-8)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Lua toolchain
+        if: steps.scope.outputs.run == 'true'
+        uses: actions/cache@v6
+        with:
+          path: |
+            .tools/lua
+            .tools/luarocks
+            .tools/rocks
+          key: lua-${{ runner.os }}-${{ steps.pins.outputs.system }}-ws${{ steps.pins.outputs.workspace }}-${{ hashFiles('scripts/setup-tools.sh') }}
+
+      # setup-tools.sh builds the headless binary as well; the key is the
+      # checks job's, so both share it.
+      - name: Cache simulator binary
+        if: steps.scope.outputs.run == 'true'
+        id: sim-cache
+        uses: actions/cache@v6
+        with:
+          path: |
+            .tools/vendor/wow-ui-sim/target/release/wow-sim
+            .tools/vendor/wow-ui-sim/target/release/wow-sim.rev
+          key: wow-sim-${{ runner.os }}-${{ steps.pins.outputs.system }}-ws${{ steps.pins.outputs.workspace }}-icu${{ steps.pins.outputs.icu }}-${{ steps.pins.outputs.sim }}${{ steps.pins.outputs.patches }}-${{ steps.pins.outputs.features }}-headless
+
+      - name: Cache simulator GUI binary
+        if: steps.scope.outputs.run == 'true'
+        id: gui-cache
+        uses: actions/cache@v6
+        with:
+          path: |
+            .tools/vendor/wow-ui-sim/target-gui/release/wow-sim
+            .tools/vendor/wow-ui-sim/target-gui/release/wow-sim.rev
+          key: wow-sim-${{ runner.os }}-${{ steps.pins.outputs.system }}-ws${{ steps.pins.outputs.workspace }}-icu${{ steps.pins.outputs.icu }}-${{ steps.pins.outputs.sim }}${{ steps.pins.outputs.patches }}-${{ steps.pins.outputs.features }}-gui
+
+      # Blizzard's art stays out of the repository; the runner fetches the
+      # pinned files once per lock and keeps them in its cache.
+      - name: Cache Blizzard textures
+        if: steps.scope.outputs.run == 'true'
+        uses: actions/cache@v6
+        with:
+          path: .tools/blizzard-art
+          key: blizzard-art-${{ hashFiles('sim/visual/blizzard-art.lock.json') }}
+
+      - name: Rust toolchain
+        if: steps.scope.outputs.run == 'true'
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Set up toolchain and simulator (with GUI build)
+        if: steps.scope.outputs.run == 'true'
+        run: scripts/setup-tools.sh --client=retail
+
+      - name: Run visual tests
+        if: steps.scope.outputs.run == 'true'
+        env:
+          WOW_SIM_SOFTWARE_RENDER: "1"
+        run: scripts/visual-test.sh
+
+      # Renders, diffs and the HTML report of a failed comparison.
+      - name: Upload renders on failure
+        if: failure() && steps.scope.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-out
+          retention-days: 7
+          path: .tools/visual-out

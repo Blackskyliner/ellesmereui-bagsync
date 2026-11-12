@@ -281,11 +281,24 @@ fails without the fix, then make it pass.
      baseline before committing, and commit the baselines with the change.
    - A new UI surface gets a scenario (a few lines in `sim/visual/scenarios/`,
      using `VisualScene` / `VisualHover` from `sim/visual/prelude.lua`).
+   - Text renders in EllesmereUI's font, also where Blizzard's fonts are asked
+     for, so macOS and Linux measure it alike (`WOW_SIM_FALLBACK_FONT`).
+   - Blizzard's textures (item icons, atlases, frame art) come from Blizzard's
+     CDN, never from the repository: `sim/visual/blizzard-art.lock.json` pins
+     each file to a byte range of the current retail build, and
+     `scripts/blizzard-art.py fetch` (run by `visual-test.sh`) downloads and
+     verifies them into `.tools/blizzard-art/`. A scenario that shows a new
+     texture logs `[TexMgr] Not found` in `.tools/visual-out/`; after a full
+     `visual-test.sh` run, `scripts/blizzard-art.py lock` pins those too
+     (Rust tool in `scripts/blizzard-art/`; it caches about 350 MB of build
+     manifests and archive indices in `.tools/blizzard-cdn/`).
 
 ### Known limits of the simulator
 
-- Without a local WoW installation Blizzard's textures (item icons, atlases) are
-  missing; the renders show layout, EllesmereUI Bags' slot look and our texts.
+- Without a local WoW installation Blizzard's textures are missing except those
+  the visual tests pin (see above). Its item table knows few items; the
+  fixture gives its own items their icons, while unknown items of the
+  simulator's character show the question mark.
 - It creates no native tooltip lines, `EditBox:SetText` does not fire
   `OnTextChanged`, and runtime taint that spreads from event handlers into
   Blizzard's secure code is not tracked.
@@ -325,6 +338,14 @@ a pin builds once (about ten minutes on a runner) and caches the result. The CI 
 `RUSTFLAGS`, because wow-ui-sim's own Linux flags compile for the runner's CPU
 (`target-cpu=native`) and a cached binary could then fail on the next runner.
 The sources and references are fetched on every run (a minute or so).
+
+A third job runs the visual regression tests (retail) with the GPU build: the
+runner has no GPU, so Mesa's CPU Vulkan driver renders
+(`WOW_SIM_SOFTWARE_RENDER=1`). Its renders differ from the macOS baselines
+only in a few glyph edge pixels, which the comparison's per-channel tolerance
+absorbs. It caches the GUI binary like the headless one and the Blizzard
+textures keyed on their lock; on a failure the renders and `report.html` are
+uploaded as the `visual-out` artifact.
 
 ### Self-hosted runner
 
@@ -373,7 +394,7 @@ scripts start with the absolute path of `lua`, and wow-sim looks for its
 bundled addons in the source directory it was built in. A self-hosted runner
 therefore builds the simulator once per pin itself.
 
-The visual regression tests need a display and stay local. Blizzard's sources,
+Blizzard's sources,
 the annotations and the GlobalStrings are fetched fresh on every run, so the API
 check reports Blizzard changes there first. `.github/workflows/upstream.yml`
 runs the simulator job every Monday against EllesmereUI's newest commit; when it
