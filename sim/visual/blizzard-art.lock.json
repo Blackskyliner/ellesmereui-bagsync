@@ -276,6 +276,26 @@
       "size": 91175
     },
     {
+      "path": "interface/containerframe/bagsitemslot2x.blp",
+      "file_data_id": 4701874,
+      "content_key": "4569947fbdb62b64ffc1746d543bac83",
+      "content_size": 5268,
+      "encoding_key": "795f7690a11d7367602c5911d708090d",
+      "archive": "bca3619228acef52b8c00a4265ebc9af",
+      "offset": 170802076,
+      "size": 1680
+    },
+    {
+      "path": "interface/containerframe/bagslots2x.blp",
+      "file_data_id": 4691255,
+      "content_key": "37bb411431d6da8e3e121332d44f324c",
+      "content_size": 263316,
+      "encoding_key": "e36262b0c725990923cd7d5129247506",
+      "archive": "a18d3656254ae0cdee63d7fd532542c7",
+      "offset": 190572589,
+      "size": 56587
+    },
+    {
       "path": "interface/containerframe/ui-bag-components.blp",
       "file_data_id": 131003,
       "content_key": "2ac26d593e8cf89a10f4a3bc0f64a66b",
@@ -996,6 +1016,16 @@
       "size": 3198
     },
     {
+      "path": "interface/icons/ability_warrior_endlessrage.blp",
+      "file_data_id": 132344,
+      "content_key": "0120d10986f735ef3176ad1b3480325f",
+      "content_size": 6660,
+      "encoding_key": "2a52ef9ad5cd6938245139e896a506ac",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 46465569,
+      "size": 3055
+    },
+    {
       "path": "interface/icons/ability_warrior_shieldguard.blp",
       "file_data_id": 132359,
       "content_key": "2a0b96bb15725f2bc55372557cce856c",
@@ -1156,6 +1186,16 @@
       "size": 1834
     },
     {
+      "path": "interface/icons/inv_11_0_arathor_necklace_01_color2.blp",
+      "file_data_id": 6011981,
+      "content_key": "325a302e21cffee2cdf50db15ba410bb",
+      "content_size": 5268,
+      "encoding_key": "87cfcb7ccf675048791d6d90d4a17f7d",
+      "archive": "969b2b657fd6e7129e463be21b68bab9",
+      "offset": 248560437,
+      "size": 2194
+    },
+    {
       "path": "interface/icons/inv_11_0_arathordungeon_bell_color1.blp",
       "file_data_id": 6012000,
       "content_key": "9efcb256440191fa76858a84adc6a135",
@@ -1164,6 +1204,16 @@
       "archive": "969b2b657fd6e7129e463be21b68bab9",
       "offset": 248602668,
       "size": 2277
+    },
+    {
+      "path": "interface/icons/inv_11_0_earthen_earthenring_color1.blp",
+      "file_data_id": 6012024,
+      "content_key": "f1d9c40b8b1be7e1f3e4024a0a482271",
+      "content_size": 5268,
+      "encoding_key": "4e22a2f9680bdc03e4ba01d79d32f1b5",
+      "archive": "969b2b657fd6e7129e463be21b68bab9",
+      "offset": 248656309,
+      "size": 2149
     },
     {
       "path": "interface/icons/inv_ability_heraldofthesunpaladin_dawnlight.blp",
@@ -1284,6 +1334,16 @@
       "archive": "1918c90d70d27694ba7738c258d907e1",
       "offset": 47597103,
       "size": 1979
+    },
+    {
+      "path": "interface/icons/inv_earthen_earthenring_color1.blp",
+      "file_data_id": 5948056,
+      "content_key": "f1d9c40b8b1be7e1f3e4024a0a482271",
+      "content_size": 5268,
+      "encoding_key": "4e22a2f9680bdc03e4ba01d79d32f1b5",
+      "archive": "969b2b657fd6e7129e463be21b68bab9",
+      "offset": 248656309,
+      "size": 2149
     },
     {
       "path": "interface/icons/inv_enchanting_70_pet_torch.blp",
@@ -1536,6 +1596,16 @@
       "size": 2102
     },
     {
+      "path": "interface/icons/inv_misc_rune_05.blp",
+      "file_data_id": 134418,
+      "content_key": "5544bfda24f46c4ba0e355eec8c16abd",
+      "content_size": 3916,
+      "encoding_key": "95651878e9efa52f282324c930e04264",
+      "archive": "1918c90d70d27694ba7738c258d907e1",
+      "offset": 51692596,
+      "size": 2203
+    },
+    {
       "path": "interface/icons/inv_misc_symbolofkings_01.blp",
       "file_data_id": 134471,
       "content_key": "4cba9d4eca56d9ed427dc9097aa4e722",
@@ -1786,6 +1856,46 @@
       "size": 2281
     },
     {
+      "path": "interface/icons/inv_valorstone_green.blp",
+      "file_data_id": 5868904,
+      "content_key": "07da0643d2d34e38647b3fb89827c221",
+      "content_size": 5268,
+      "encoding_key": "33f00bcf530e974ebedb49bf0d6ade9b",
+      "archive": "7c3f827f756b07fc2a8225985d253d25",
+      "offset": 94534176,
+      "size": 2296
+    },
+    {
+      "path": "interface/icons/inv_valorstone_orange.blp",
+      "file_data_id": 5868905,
+      "content_key": "b19955af4aa1a13e91f3e58ba63ec8b5",
+      "content_size": 5268,
+      "encoding_key": "7516b3c68314dff0e35d8b0e4d0a2ea1",
+      "archive": "7c3f827f756b07fc2a8225985d253d25",
+      "offset": 94536472,
+      "size": 2248
+    },
+    {
+      "path": "interface/icons/inv_valorstone_red.blp",
+      "file_data_id": 5868906,
+      "content_key": "6938527af381ecf3a5a8fb17ec732e15",
+      "content_size": 5268,
+      "encoding_key": "8ea641d8bc84d178333d444bc063d12c",
+      "archive": "7c3f827f756b07fc2a8225985d253d25",
+      "offset": 94538720,
+      "size": 2291
+    },
+    {
+      "path": "interface/icons/inv_valorstone_violet.blp",
+      "file_data_id": 5868907,
+      "content_key": "62e2afde022301d88ff879627b4f63a6",
+      "content_size": 5268,
+      "encoding_key": "26637fd60a73ed88668df5d9695c21b5",
+      "archive": "7c3f827f756b07fc2a8225985d253d25",
+      "offset": 94541011,
+      "size": 2330
+    },
+    {
       "path": "interface/icons/inv_weapon_shortblade_01.blp",
       "file_data_id": 135637,
       "content_key": "0bd9f8686c049ab9d09623dbd8ba37f6",
@@ -1834,6 +1944,16 @@
       "archive": "8a64ae207e9055db61732314f333cae6",
       "offset": 68732957,
       "size": 3180
+    },
+    {
+      "path": "interface/icons/spell_animabastion_nova.blp",
+      "file_data_id": 3528287,
+      "content_key": "2935bdb99241eaf778f7ec57f50b0f5f",
+      "content_size": 3220,
+      "encoding_key": "5d2f27fb214e4b2427316900c6002de9",
+      "archive": "8fbdb817bfa9b5e6c2b5436fe434a7d5",
+      "offset": 2583110,
+      "size": 1920
     },
     {
       "path": "interface/icons/spell_azerite_essence14.blp",
@@ -2656,6 +2776,16 @@
       "size": 1345237
     },
     {
+      "path": "interface/moneyframe/moneyframe.blp",
+      "file_data_id": 1667824,
+      "content_key": "dbf3f481f2c0bbef16bc834243b1f44e",
+      "content_size": 33940,
+      "encoding_key": "f30185d682d946147ffd75e32e93791c",
+      "archive": "d62ebd09a38d015a4233f271b6cfe4e7",
+      "offset": 200026055,
+      "size": 7152
+    },
+    {
       "path": "interface/paperdoll/ui-paperdoll-slot-bag.blp",
       "file_data_id": 136511,
       "content_key": "cb3c5f8ef00bdbb0fc300796f6fe5c9a",
@@ -2684,6 +2814,26 @@
       "archive": "344aad8c95dd3bc1f79ebbef92ae5d0a",
       "offset": 131728888,
       "size": 480307
+    },
+    {
+      "path": "interface/pvpframe/pvpcurrency-conquest-neutral.blp",
+      "file_data_id": 1140616,
+      "content_key": "e46730fee51a831a1d3b128b07f1078b",
+      "content_size": 6660,
+      "encoding_key": "88ab9ab5357a6757506d42550f86394e",
+      "archive": "46eaf064e003b97acdf10e7d3a50303f",
+      "offset": 170752037,
+      "size": 2291
+    },
+    {
+      "path": "interface/pvpframe/pvpcurrency-honor-neutral.blp",
+      "file_data_id": 1140617,
+      "content_key": "eb8d5eac714331168566df7b383cfda7",
+      "content_size": 6660,
+      "encoding_key": "7d16298466521a8ea007ffb26d01c927",
+      "archive": "46eaf064e003b97acdf10e7d3a50303f",
+      "offset": 170754328,
+      "size": 2280
     },
     {
       "path": "interface/runecarving/runecarvingui.blp",

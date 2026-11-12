@@ -159,7 +159,7 @@ class Catalog:
 
     def __init__(self):
         self.atlas = {}
-        with open(os.path.join(SIM, "data", "atlas.rs"), encoding="utf-8") as fh:
+        with open(os.path.join(SIM, "crates", "sim-data-profile", "data", "atlas.rs"), encoding="utf-8") as fh:
             for m in re.finditer(r'^\s*"([^"]+)" => AtlasInfo \{ file: r"([^"]+)"', fh.read(), re.M):
                 self.atlas[m.group(1).lower()] = m.group(2)
         self.paths, self.ids = {}, {}
