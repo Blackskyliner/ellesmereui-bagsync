@@ -28,7 +28,8 @@ describe("Options", function()
         local env, ns = wow.boot(wow.defaultState())
         local cat = env.__settingsRegistered
         assert.is_table(cat)
-        local expected = { "tooltip_enabled", "tooltip_modifier", "tooltip_realmScope", "tooltip_showTotal",
+        local expected = { "tooltip_enabled", "tooltip_modifier", "tooltip_realmScope", "tooltip_otherRealms",
+            "tooltip_detail", "tooltip_showTabs", "tooltip_sort", "tooltip_maxChars", "tooltip_showTotal",
             "tooltip_hideCurrent", "tooltip_showWarband", "tooltip_showGuild", "ui_headerButton",
             "ui_useEUICategories", "collect_bags", "collect_equipped", "collect_bank", "collect_mail",
             "collect_currency", "collect_guildbank", "collect_auctions", "collect_auctionsQuery" }
@@ -52,7 +53,10 @@ describe("Options", function()
             end
         end
         assert.are.equal("none,shift,ctrl,alt", values.EUIALTS_tooltip_modifier)
-        assert.are.equal("connected,realm,all", values.EUIALTS_tooltip_realmScope)
+        assert.are.equal("connected,realm", values.EUIALTS_tooltip_realmScope)
+        assert.are.equal("never,shift,ctrl,alt,always", values.EUIALTS_tooltip_otherRealms)
+        assert.are.equal("total,text,icons,compact", values.EUIALTS_tooltip_detail)
+        assert.are.equal("count,recent,name", values.EUIALTS_tooltip_sort)
     end)
 
     it("handles slash commands", function()
@@ -107,6 +111,55 @@ describe("Options", function()
         assert.is_false(ns.db.settings.tooltip.enabled)
         assert.is_false(ns.db.settings.ui.headerButton)
         assert.is_true(ns.db.settings.firstRunAsked)
+    end)
+end)
+
+describe("Options: NEW labels and preview", function()
+    local NEW_VARS = { "EUIALTS_tooltip_otherRealms", "EUIALTS_tooltip_detail", "EUIALTS_tooltip_showTabs",
+        "EUIALTS_tooltip_sort", "EUIALTS_tooltip_maxChars" }
+
+    it("marks the new settings' rows NEW until the settings panel closes after showing them", function()
+        local env, ns = wow.boot(wow.defaultState(), { settings = { firstRunAsked = true } })
+        for _, var in ipairs(NEW_VARS) do
+            assert.is_true(env.__initSettingsRow(var).NewFeature:IsShown(), var)
+        end
+        assert.is_false(env.__initSettingsRow("EUIALTS_tooltip_enabled").NewFeature:IsShown())
+        -- reused rows within the same visit keep it
+        assert.is_true(env.__initSettingsRow("EUIALTS_tooltip_detail").NewFeature:IsShown())
+        env.EventRegistry:TriggerEvent("SettingsPanel.OnHide")
+        for _, var in ipairs(NEW_VARS) do
+            assert.is_true(ns.db.settings.seenNew[var], var)
+            assert.is_false(env.__initSettingsRow(var).NewFeature:IsShown(), var)
+        end
+    end)
+
+    it("shows nothing as NEW on a first run: every setting is new then", function()
+        local env = wow.boot(wow.defaultState())
+        for _, var in ipairs(NEW_VARS) do
+            assert.is_false(env.__initSettingsRow(var).NewFeature:IsShown(), var)
+        end
+    end)
+
+    it("previews a detail choice on hover as a real item tooltip with the stored data", function()
+        local s = wow.defaultState()
+        wow.putItem(s, 0, 1, 2589, 20)
+        local env, ns = wow.boot(s)
+        local detail
+        for _, c in ipairs(env.__settingsCategory.controls) do
+            if c.setting.variable == "EUIALTS_tooltip_detail" then detail = c end
+        end
+        local icons
+        for _, o in ipairs(detail.options) do if o.value == "icons" then icons = o end end
+        env.__mouseFocus = env.CreateFrame("Button")
+        icons.onEnter(icons)
+        local tt = env.EllesmereUIBagsAltsTooltip
+        assert.are.equal(2589, tt.processingInfo.euiAltsOwners)
+        assert.are.equal("icons", tt.processingInfo.euiAltsDetail)
+        local text = {}
+        for _, l in ipairs(tt.lines) do text[#text + 1] = table.concat(l, " | ") end
+        assert.truthy(table.concat(text, "\n"):find("|A:hud-backpack:14:14|a 20", 1, true))
+        assert.are.equal("text", ns.db.settings.tooltip.detail)   -- hovering changes nothing
+        assert.are.same({}, env.__errors)
     end)
 end)
 

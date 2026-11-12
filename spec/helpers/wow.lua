@@ -303,6 +303,7 @@ function FrameMethods:ProcessInfo(info)
             table.insert(data.lines, { type = 20, leftText = BIND_TEXT[item.bindType],
                                        leftColor = { r = 1, g = 1, b = 1 } })
         end
+        info.tooltipData = data   -- Blizzard keeps the getter's result in the info table
     end
     for _, line in ipairs(data.lines) do
         local consumed = info.linePreCall and info.linePreCall(self, line)
@@ -900,14 +901,58 @@ function M.newEnv(state, savedVariables)
         CreateDropdown = function(cat, setting, options)
             table.insert(cat.controls, { kind = "dropdown", setting = setting, options = options() })
         end,
+        CreateSlider = function(cat, setting, options)
+            table.insert(cat.controls, { kind = "slider", setting = setting, options = options })
+        end,
+        CreateSliderOptions = function(minValue, maxValue, rate)
+            return { minValue = minValue, maxValue = maxValue, rate = rate,
+                     SetLabelFormatter = function(self, labelType) self.labelType = labelType end }
+        end,
         CreateControlTextContainer = function()
             local data = {}
-            return { Add = function(_, value, label) table.insert(data, { value = value, label = label }) end,
+            return { Add = function(_, value, label, tooltip)
+                         table.insert(data, { value = value, label = label, tooltip = tooltip })
+                     end,
                      GetData = function() return data end }
         end,
         RegisterAddOnCategory = function(cat) env.__settingsRegistered = cat end,
         OpenToCategory = function(id) env.__settingsOpened = id end,
     }
+    env.MinimalSliderWithSteppersMixin = { Label = { Right = 3 } }
+    -- The settings list's ScrollBox with Blizzard's initialized-frame callbacks:
+    -- env.__initSettingsRow(variable) runs them for a fresh row of that setting.
+    env.__rowCallbacks = {}
+    local scrollBox = {}
+    env.SettingsPanel = { GetSettingsList = function() return { ScrollBox = scrollBox } end }
+    env.ScrollUtil = {
+        AddInitializedFrameCallback = function(box, callback, owner)
+            assert(box == scrollBox, "callback on the settings list's ScrollBox")
+            table.insert(env.__rowCallbacks, { callback, owner })
+        end,
+    }
+    function env.__initSettingsRow(variable)
+        local shown = false
+        local frame = {
+            NewFeature = { Show = function() shown = true end, IsShown = function() return shown end },
+            GetElementData = function()
+                return { GetSetting = function() return { GetVariable = function() return variable end } end }
+            end,
+        }
+        for _, cb in ipairs(env.__rowCallbacks) do cb[1](cb[2], frame) end
+        return frame
+    end
+    env.__registryCallbacks = {}
+    env.EventRegistry = {
+        RegisterCallback = function(_, event, fn, owner)
+            env.__registryCallbacks[event] = env.__registryCallbacks[event] or {}
+            table.insert(env.__registryCallbacks[event], { fn, owner })
+        end,
+        TriggerEvent = function(_, event, ...)
+            for _, cb in ipairs(env.__registryCallbacks[event] or {}) do cb[1](cb[2], ...) end
+        end,
+    }
+    env.__mouseFocus = nil
+    env.GetMouseFoci = function() return { env.__mouseFocus } end
     env.CreateSettingsListSectionHeaderInitializer = function(name) return { header = name } end
     env.CreateSettingsButtonInitializer = function(name, text, click) return { button = name, text = text, click = click } end
 

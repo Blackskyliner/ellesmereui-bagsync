@@ -115,6 +115,18 @@ describe("Currency search", function()
         assert.are.equal(0, env.EllesmereUIBagsAltsTooltip.processingInfo.tooltipData.type)
     end)
 
+    it("an item result says where it lies, in the row and in its tooltip", function()
+        local env, ns = world()
+        ns.Browser:OpenSearch("linen")
+        local r = rows(env.EllesmereUIBagsAltsBrowser)
+        assert.truthy(r[1].detail:find("Alice|r 20 |A:hud-backpack:12:12|a", 1, true))
+        r[1].row:RunScript("OnEnter")
+        local text = {}
+        for _, l in ipairs(env.EllesmereUIBagsAltsTooltip.lines) do text[#text + 1] = table.concat(l, " | ") end
+        assert.truthy(table.concat(text, "\n"):find("Bags: 20", 1, true))
+        assert.are.same({}, env.__errors)
+    end)
+
     it("reports nothing found for neither currencies nor items", function()
         local env, ns = world()
         ns.Browser:OpenSearch("zzzz")

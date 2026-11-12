@@ -34,16 +34,121 @@ local function Checkbox(category, variable, path, name, tooltip)
     return setting
 end
 
-local function Dropdown(category, variable, path, name, tooltip, choices)
+-- choices: { { value, label, tooltip? }, ... }; onEnter(value): hovering an
+-- entry of the open menu.
+local function Dropdown(category, variable, path, name, tooltip, choices, onEnter)
     local setting = Proxy(category, variable, path, name, Settings.VarType.String)
     local function GetOptions()
         local container = Settings.CreateControlTextContainer()
-        for _, choice in ipairs(choices) do container:Add(choice[1], choice[2]) end
-        return container:GetData()
+        for _, choice in ipairs(choices) do container:Add(choice[1], choice[2], choice[3]) end
+        local data = container:GetData()
+        if onEnter then
+            for _, option in ipairs(data) do
+                option.onEnter = function(o) onEnter(o.value) end
+            end
+        end
+        return data
     end
     Settings.CreateDropdown(category, setting, GetOptions, tooltip)
     return setting
 end
+
+local function Slider(category, variable, path, name, tooltip, minValue, maxValue)
+    local setting = Proxy(category, variable, path, name, Settings.VarType.Number)
+    local options = Settings.CreateSliderOptions(minValue, maxValue, 1)
+    options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right)
+    Settings.CreateSlider(category, setting, options, tooltip)
+    return setting
+end
+
+-------------------------------------------------------------------------------
+--  NEW labels: the settings rows Blizzard marks as new carry a NewFeature
+--  label (NEW_CAPS). Our rows show it through the ScrollBox's initialized-
+--  frame callback, the extension point Blizzard documents for addons (its
+--  callbacks run through secureexecuterange, Blizzard's own row Init stays
+--  untouched). A label shows until the settings panel closes after it was
+--  seen; settings.seenNew remembers that per variable.
+-------------------------------------------------------------------------------
+-- Variables of the settings added in this version.
+local NEW_SETTINGS = {
+    EUIALTS_tooltip_otherRealms = true,
+    EUIALTS_tooltip_detail = true,
+    EUIALTS_tooltip_showTabs = true,
+    EUIALTS_tooltip_sort = true,
+    EUIALTS_tooltip_maxChars = true,
+}
+Options.NEW_SETTINGS = NEW_SETTINGS
+local shownNew = {}
+
+local function VariableOf(frame)
+    local init = frame.GetElementData and frame:GetElementData()
+    local setting = init and init.GetSetting and init:GetSetting()
+    return setting and setting.GetVariable and setting:GetVariable()
+end
+
+local function MarkNewRow(_, frame)
+    local var = VariableOf(frame)
+    if var and NEW_SETTINGS[var] and frame.NewFeature and not ns.db.settings.seenNew[var] then
+        frame.NewFeature:Show()
+        shownNew[var] = true
+    end
+end
+
+local function RememberSeen()
+    for var in pairs(shownNew) do ns.db.settings.seenNew[var] = true end
+    wipe(shownNew)
+end
+
+local function InstallNewLabels()
+    local list = SettingsPanel and SettingsPanel.GetSettingsList and SettingsPanel:GetSettingsList()
+    if not (list and list.ScrollBox and ScrollUtil and ScrollUtil.AddInitializedFrameCallback) then return end
+    -- A first run sees every setting for the first time: nothing is new.
+    if not ns.db.settings.firstRunAsked then
+        for var in pairs(NEW_SETTINGS) do ns.db.settings.seenNew[var] = true end
+    end
+    ScrollUtil.AddInitializedFrameCallback(list.ScrollBox, MarkNewRow, Options, true)
+    EventRegistry:RegisterCallback("SettingsPanel.OnHide", RememberSeen, Options)
+end
+
+-------------------------------------------------------------------------------
+--  Preview: hovering a choice of the detail dropdown shows a real item
+--  tooltip in that style, built from the stored data.
+-------------------------------------------------------------------------------
+-- The item with the most owners, then the most locations: it shows the most.
+local function PreviewItem()
+    local best, bestOwners, bestLocs
+    for itemID, byOwner in ns.Index:AllItemIDs() do
+        local owners, locs = 0, 0
+        for _, byLoc in pairs(byOwner) do
+            owners = owners + 1
+            for _ in pairs(byLoc) do locs = locs + 1 end
+        end
+        if not best or owners > bestOwners or (owners == bestOwners and (locs > bestLocs
+            or (locs == bestLocs and itemID < best))) then
+            best, bestOwners, bestLocs = itemID, owners, locs
+        end
+    end
+    return best
+end
+Options.PreviewItem = PreviewItem
+
+local function ShowPreview(detail)
+    local itemID = PreviewItem()
+    if not itemID then return end
+    -- The hovered menu entry owns the tooltip: it goes when the menu closes.
+    local foci = GetMouseFoci and GetMouseFoci()
+    local owner = (foci and foci[1]) or SettingsPanel
+    local tooltip = ns.W.GetTooltip()
+    tooltip:SetOwner(owner, "ANCHOR_RIGHT")
+    tooltip:ProcessInfo({
+        getterName = "GetHyperlink",
+        getterArgs = { "item:" .. itemID },
+        tooltipPostCall = ns.AddOwnerLines,
+        euiAltsOwners = itemID,
+        euiAltsDetail = detail,
+    })
+end
+Options.ShowPreview = ShowPreview
 
 function Options:Register()
     if self.category then return end
@@ -58,8 +163,26 @@ function Options:Register()
         { "ctrl", L["While Ctrl is held"] }, { "alt", L["While Alt is held"] },
     })
     Dropdown(category, "tooltip_realmScope", { "tooltip", "realmScope" }, L["Characters"], nil, {
-        { "connected", L["Connected realms"] }, { "realm", L["This realm only"] }, { "all", L["All realms"] },
+        { "connected", L["Connected realms"] }, { "realm", L["This realm only"] },
     })
+    Dropdown(category, "tooltip_otherRealms", { "tooltip", "otherRealms" }, L["Other realms"],
+        L["Characters and guilds outside the realms chosen above."], {
+        { "never", L["Never"] }, { "shift", L["While Shift is held"] }, { "ctrl", L["While Ctrl is held"] },
+        { "alt", L["While Alt is held"] }, { "always", L["Always"] },
+    })
+    Dropdown(category, "tooltip_detail", { "tooltip", "detail" }, L["Detail"],
+        L["How each character's line reads. Hover a choice for a preview with your own items. The browser's tooltips look the same."], {
+        { "total", L["Total only"] }, { "text", L["Locations as text"] },
+        { "icons", L["Location icons, two lines"] }, { "compact", L["Location icons, one line"] },
+    }, ShowPreview)
+    Checkbox(category, "tooltip_showTabs", { "tooltip", "showTabs" }, L["Show bank tabs"],
+        L["Names the tabs of the banks that hold the item."])
+    Dropdown(category, "tooltip_sort", { "tooltip", "sort" }, L["Sort characters by"],
+        L["The current character is always listed first."], {
+        { "count", L["Amount"] }, { "recent", L["Last played"] }, { "name", L["Character name"] },
+    })
+    Slider(category, "tooltip_maxChars", { "tooltip", "maxChars" }, L["Characters listed"],
+        L["More characters are summed up in one line."], 1, ns.MAX_CHARS_LIMIT)
     Checkbox(category, "tooltip_showTotal", { "tooltip", "showTotal" }, L["Show total"])
     Checkbox(category, "tooltip_hideCurrent", { "tooltip", "hideCurrent" }, L["Hide the current character"])
     if ns.Compat.HAS_WARBAND_BANK then
@@ -97,6 +220,7 @@ function Options:Register()
     end, L["Opens the cross-character browser (/alts)."], true))
 
     Settings.RegisterAddOnCategory(category)
+    InstallNewLabels()
 end
 
 function Options:Open()
