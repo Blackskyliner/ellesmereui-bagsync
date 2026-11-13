@@ -153,3 +153,5 @@ L["Quality (name or number)"] = "Качество (название или чи�
 L["Item type or subtype"] = "Тип или подтип предмета"
 L["All terms must match"] = "Должны совпасть все условия"
 L["Currencies match words and numbers only."] = "Валюты ищутся только по словам и числам."
+L["Right-click for options"] = "ПКМ — параметры"
+L["Several characters are named %s. Right-click the one to delete in the browser (/alts)."] = "Несколько персонажей носят имя %s. Щёлкните правой кнопкой мыши по нужному в обозревателе (/alts), чтобы удалить его."
