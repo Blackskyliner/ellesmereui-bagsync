@@ -64,8 +64,9 @@ GETHE_FOREVER_REV=aff0d8cd53bf4d9ef1c1dd2786b94461a276fb16 # 1.60.1.70707
 # inset) and centered its text, where the client starts it at the left
 # (https://github.com/Osso/wow-ui-sim/pull/61). 0004: text dropped inline
 # |T and |A escapes and measured without them; the icons are drawn in the
-# line and their widths counted, so tooltip location icons render (not yet
-# offered upstream).
+# line, their widths counted and a line of icons alone is one line high, so
+# tooltip location icons and separators render
+# (https://github.com/Osso/wow-ui-sim/pull/62).
 # The Forever profile reads selected spell data of client build 1.60.1.70685,
 # which wow-cli generates from Blizzard's CDN (wow-ui-sim
 # docs/specs/forever-spell-data.md gives this checksum for it).
