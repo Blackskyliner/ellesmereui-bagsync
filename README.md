@@ -135,14 +135,15 @@ installs EllesmereUI as the dependency. By hand:
 | `/alts status` | Version, stored characters, whether and by what the addon was activated, active features, registered events |
 | `/alts debug` | Diagnostic chat output on/off (e.g. auction events with IDs, the guild bank walk). Useful for bug reports. |
 | `/alts selftest` | Compares this character's stored data with the game (see the test plan) |
-| `/alts delete Name-Realm` | Delete another character's data (asks first). On WoW Forever use the full name, e.g. `Brånn Ashford-Normal`. |
+| `/alts delete Name-Realm` | Delete another character's data (asks first). On WoW Forever use the full name, e.g. `Brånn Ashford-Normal`. When two stored characters share the name, right-click the right one in the browser instead. |
 
 **Browser.** On the left the characters grouped by realm, then the warband bank
 and the guild banks. At the top the tabs Everything, Bags, Bank, Equipped, Mail,
 Auctions and Currency. Hover shows the item tooltip, shift-click links an item
-in chat, ctrl-click opens the dressing room. "Delete data" at the bottom removes
-another character or a guild bank (asks first); the current character and the
-warband bank cannot be deleted. The option "Money display in the browser" picks
+in chat, ctrl-click opens the dressing room. Right-click a character or a guild
+bank in the list and choose "Delete data" to remove its stored data (asks
+first); the current character cannot be deleted. Two characters with the same
+name show when each was last seen. The option "Money display in the browser" picks
 the parts of a balance: whole gold (retail default), gold and silver, or gold,
 silver and copper (WoW Forever default). "Money symbols" picks coloured
 letters (g, s, c) or coin icons after each part.

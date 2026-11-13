@@ -214,6 +214,114 @@ function W.Tab(parent, text, onClick)
     return b
 end
 
+-- Context menu in the browser's look. Blizzard's menus differ by client
+-- (MenuUtil on retail, UIDropDownMenu on WoW Forever) and neither takes the
+-- EUI skin, so the browser draws its own. One menu frame, created on first
+-- use. W.ShowMenu(owner, title, entries) opens it at the cursor; owner is the
+-- window it belongs to (the menu takes its scale and hides with it), entries
+-- = { { text, onClick, disabled, tooltip } }. A click on an entry or anywhere
+-- outside the menu closes it.
+local MENU_ROW_H, MENU_PAD, MENU_MIN_W = 20, 4, 140
+local menu
+
+local function MenuEntry_OnEnter(self)
+    local tip = self.entry and self.entry.tooltip
+    if not tip then return end
+    local tooltip = W.GetTooltip()
+    tooltip:SetOwner(self, "ANCHOR_RIGHT")
+    tooltip:AddLine(tip, 1, 1, 1, true)
+    tooltip:Show()
+end
+
+local function CreateMenuEntry(parent)
+    local b = CreateFrame("Button", nil, parent)
+    b:SetHeight(MENU_ROW_H)
+    b.label = W.Text(b, 12)
+    b.label:SetPoint("LEFT", 8, 0)
+    b.hl = b:CreateTexture(nil, "HIGHLIGHT")
+    b.hl:SetAllPoints()
+    b.hl:SetColorTexture(1, 1, 1, 0.08)
+    b:SetScript("OnClick", function(self)
+        local entry = self.entry
+        if not entry or entry.disabled then return end
+        W.HideMenu()
+        entry.onClick()
+    end)
+    b:SetScript("OnEnter", MenuEntry_OnEnter)
+    b:SetScript("OnLeave", function() W.GetTooltip():Hide() end)
+    return b
+end
+
+local function CreateMenu(owner)
+    local m = CreateFrame("Frame", "EllesmereUIBagsAltsMenu", owner, "BackdropTemplate")
+    m:SetFrameStrata("FULLSCREEN_DIALOG")
+    m:SetClampedToScreen(true)
+    m:EnableMouse(true)
+    if skin then skin.Panel(m) else W.ApplyFlatBackdrop(m) end
+    m.title = W.Text(m, 11, nil, 0.6, 0.6, 0.6)
+    m.title:SetPoint("TOPLEFT", 8, -MENU_PAD - 3)
+    m.entries = {}
+    -- Below the menu and over the whole screen: the click that closes the
+    -- menu goes nowhere else, as with Blizzard's menus.
+    m.catcher = CreateFrame("Button", nil, m)
+    m.catcher:SetFrameStrata("DIALOG")
+    m.catcher:SetAllPoints(UIParent)
+    m.catcher:RegisterForClicks("AnyUp")
+    m.catcher:SetScript("OnClick", function() W.HideMenu() end)
+    m:SetScript("OnHide", function() W.GetTooltip():Hide() end)
+    return m
+end
+
+function W.ShowMenu(owner, title, entries)
+    menu = menu or CreateMenu(owner)
+    if menu:GetParent() ~= owner then menu:SetParent(owner) end
+    menu:SetFrameStrata("FULLSCREEN_DIALOG")
+    menu.title:SetText(title or "")
+    local y = MENU_PAD
+    local width = MENU_MIN_W
+    if title then
+        menu.title:Show()
+        y = y + MENU_ROW_H
+        width = math.max(width, menu.title:GetStringWidth() + 16)
+    else
+        menu.title:Hide()
+    end
+    for i, entry in ipairs(entries) do
+        local b = menu.entries[i] or CreateMenuEntry(menu)
+        menu.entries[i] = b
+        b.entry = entry
+        b.label:SetText(entry.text)
+        if entry.disabled then
+            b.label:SetTextColor(0.5, 0.5, 0.5)
+            b.hl:SetAlpha(0)
+        else
+            b.label:SetTextColor(1, 1, 1)
+            b.hl:SetAlpha(1)
+        end
+        b:ClearAllPoints()
+        b:SetPoint("TOPLEFT", 1, -y)
+        b:SetPoint("TOPRIGHT", -1, -y)
+        b:Show()
+        width = math.max(width, b.label:GetStringWidth() + 16)
+        y = y + MENU_ROW_H
+    end
+    for i = #entries + 1, #menu.entries do
+        menu.entries[i].entry = nil
+        menu.entries[i]:Hide()
+    end
+    menu:SetSize(width, y + MENU_PAD)
+    local x, cy = GetCursorPosition()
+    local scale = menu:GetEffectiveScale()
+    menu:ClearAllPoints()
+    menu:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x / scale, cy / scale)
+    menu:Show()
+    return menu
+end
+
+function W.HideMenu()
+    if menu then menu:Hide() end
+end
+
 -- The browser's own item tooltip. Showing items through Blizzard's shared
 -- GameTooltip from addon code makes its TooltipDataHandler write its state
 -- (waitingForData, suppressAutomaticCompareItem, ...) in our execution

@@ -249,6 +249,15 @@ function FrameMethods:SetText(t)
 end
 function FrameMethods:GetText() return self.text or "" end
 function FrameMethods:SetScale(s) self.scale = s end
+function FrameMethods:GetScale() return self.scale or 1 end
+function FrameMethods:GetEffectiveScale()
+    local scale, f = 1, self
+    while f do
+        scale = scale * (f.scale or 1)
+        f = f.parent
+    end
+    return scale
+end
 function FrameMethods:SetScrollChild(c) self.scrollChild = c end
 function FrameMethods:CreateTexture(_, layer)
     local t = NewRegion("Texture", self)
@@ -461,6 +470,7 @@ function M.newEnv(state, savedVariables)
         end
     end
     env.InCombatLockdown = function() return S.inCombat end
+    env.GetCursorPosition = function() return S.cursorX or 0, S.cursorY or 0 end
     env.GetLocale = function() return S.locale end
 
     local function maybeSecret(v) if S.secret then return Secret(v) end return v end

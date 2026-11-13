@@ -319,19 +319,114 @@ describe("Browser", function()
         assert.are.equal(1, #env.__clicks)
     end)
 
-    it("deletes another character after confirmation, never the current one", function()
+    local function sideRow(f, owner)
+        for i = 1, f.sideRows.used do
+            local row = f.sideRows.items[i]
+            if row.ownerKey == owner then return row end
+        end
+    end
+
+    it("deletes another character from the sidebar's context menu after confirmation", function()
         local env, ns, rec = world()
         ns.Browser:Open()
         local f = env.EllesmereUIBagsAltsBrowser
-        assert.is_false(f.delete:IsShown())           -- current character
-        ns.Browser:Select("Player-1-Bob")
-        assert.is_true(f.delete:IsShown())
-        f.delete:Click()
-        rec.popups[#rec.popups].onConfirm()
+        assert.is_nil(f.delete)                       -- the menu replaces the footer button
+        sideRow(f, "Player-1-Bob"):Click("RightButton")
+        local menu = env.EllesmereUIBagsAltsMenu
+        assert.is_true(menu:IsShown())
+        assert.truthy(menu.title.text:find("Bob", 1, true))
+        assert.are.equal("Player-1-Alice", ns.Browser:GetState().owner)   -- right-click does not select
+        -- a click outside closes the menu and deletes nothing
+        menu.catcher:Click()
+        assert.is_false(menu:IsShown())
+        assert.are.equal(0, #rec.popups)
+
+        sideRow(f, "Player-1-Bob"):Click("RightButton")
+        local entry = menu.entries[1]
+        assert.are.equal("Delete data", entry.label.text)
+        entry:Click()
+        assert.is_false(menu:IsShown())
+        local popup = rec.popups[#rec.popups]
+        assert.truthy(popup.message:find("Bob-Blackhand", 1, true))
+        assert.truthy(popup.message:find("Last seen", 1, true))
+        popup.onConfirm()
         assert.is_nil(ns.db.chars["Player-1-Bob"])
-        assert.are.equal("Player-1-Alice", ns.Browser:GetState().owner)
+        env.RunOnUpdates()
+        assert.is_nil(sideRow(f, "Player-1-Bob"))
         ns.Index:EnsureBuilt()
         assert.are.equal(20, ns.Index:GetTotal(2589))
+        assert.are.same({}, env.__errors)
+    end)
+
+    it("offers the current character's entry greyed out, with the reason", function()
+        local env, ns, rec = world()
+        ns.Browser:Open()
+        local f = env.EllesmereUIBagsAltsBrowser
+        sideRow(f, "Player-1-Alice"):Click("RightButton")
+        local entry = env.EllesmereUIBagsAltsMenu.entries[1]
+        entry:Click()
+        assert.are.equal(0, #rec.popups)
+        assert.is_not_nil(ns.db.chars["Player-1-Alice"])
+        entry:RunScript("OnEnter")
+        local tooltip = env.EllesmereUIBagsAltsTooltip
+        assert.truthy(tooltip.lines[1][1]:find("cannot be deleted", 1, true))
+        -- even when asked directly, as /alts delete does
+        ns.Browser:ConfirmDelete("Player-1-Alice")
+        assert.are.equal(0, #rec.popups)
+    end)
+
+    it("has no menu for the aggregated views and the warband bank", function()
+        local env, ns = world()
+        ns.Browser:Open()
+        local f = env.EllesmereUIBagsAltsBrowser
+        sideRow(f, ns.Browser.ALL_OWNER):Click("RightButton")
+        sideRow(f, ns.Browser.RealmOwner("Blackhand")):Click("RightButton")
+        sideRow(f, ns.WARBAND_OWNER):Click("RightButton")
+        assert.is_nil(env.EllesmereUIBagsAltsMenu)
+        sideRow(f, ns.WARBAND_OWNER):RunScript("OnEnter")
+        assert.is_nil(env.EllesmereUIBagsAltsTooltip and env.EllesmereUIBagsAltsTooltip.owner)
+        -- characters explain the right-click
+        sideRow(f, "Player-1-Bob"):RunScript("OnEnter")
+        local tooltip = env.EllesmereUIBagsAltsTooltip
+        assert.truthy(tooltip.lines[#tooltip.lines][1]:find("Right-click", 1, true))
+    end)
+
+    it("closes the menu with the browser", function()
+        local env, ns = world()
+        ns.Browser:Open()
+        local f = env.EllesmereUIBagsAltsBrowser
+        sideRow(f, "Player-1-Bob"):Click("RightButton")
+        ns.Browser:Close()
+        ns.Browser:Open()
+        assert.is_false(env.EllesmereUIBagsAltsMenu:IsShown())
+    end)
+
+    it("tells records of the same name apart and deletes the one right-clicked", function()
+        local env, ns, rec = world()
+        -- left over under a key the legacy move does not know
+        ns.db.chars["Bob Smith-Blackhand"] = { name = "Bob", realm = "Blackhand", class = "WARRIOR",
+                                               lastSeen = env.time() - 30 * 86400 }
+        ns.Browser:Open()
+        local f = env.EllesmereUIBagsAltsBrowser
+        assert.truthy(sideRow(f, "Bob Smith-Blackhand").left.text:find("30 days ago", 1, true))
+        assert.truthy(sideRow(f, "Player-1-Bob").left.text:find("ago)", 1, true)
+            or sideRow(f, "Player-1-Bob").left.text:find("just now", 1, true))
+        assert.falsy(sideRow(f, "Player-1-Alice").left.text:find("(", 1, true))
+
+        -- the command does not guess which one is meant
+        env.Slash("delete bob")
+        assert.truthy(env.__chat[#env.__chat]:find("Several characters are named bob", 1, true))
+        assert.are.equal(0, #rec.popups)
+
+        sideRow(f, "Bob Smith-Blackhand"):Click("RightButton")
+        env.EllesmereUIBagsAltsMenu.entries[1]:Click()
+        assert.truthy(rec.popups[#rec.popups].message:find("30 days ago", 1, true))
+        rec.popups[#rec.popups].onConfirm()
+        assert.is_nil(ns.db.chars["Bob Smith-Blackhand"])
+        assert.is_not_nil(ns.db.chars["Player-1-Bob"])
+        env.RunOnUpdates()
+        assert.falsy(sideRow(f, "Player-1-Bob").left.text:find("(", 1, true))
+        assert.are.same({}, env.__errors)
     end)
 
     describe("currency tab", function()

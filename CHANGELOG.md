@@ -24,6 +24,13 @@ builds, each tested in the game by the maintainer.
   client's language.
 - **New:** The option "Money symbols" shows coin icons instead of the
   coloured letters g, s and c after the parts of a balance in the browser.
+- **Enhanced:** Characters and guild banks are deleted by right-clicking them
+  in the browser's sidebar, after a confirmation. The "Delete data" button
+  below the browser is gone. The current character's entry is greyed out, as
+  it cannot be deleted.
+- **Enhanced:** When two stored characters share a name on a realm, the
+  sidebar and the delete confirmation show when each was last seen.
+  `/alts delete` no longer picks one of them; it points to the browser.
 - **Bugfix:** Without EllesmereUI's skin module, the magnifier and the text of
   the browser's search box no longer touch its left border.
 - **Bugfix:** On WoW Forever, the keyring shows as "Keyring" after the bags in

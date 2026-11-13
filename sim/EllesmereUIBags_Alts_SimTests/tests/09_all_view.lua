@@ -5,7 +5,6 @@ simtest("all-characters view merges stacks and lists owners in the private toolt
     ns.Browser:SelectTab("all")
     local f = _G.EllesmereUIBagsAltsBrowser
     assertTrue(f.grid.used >= 1)
-    assertTrue(not f.delete:IsShown())
     local b = f.grid.buttons[1]
     b:GetScript("OnEnter")(b)
     local tooltip = _G.EllesmereUIBagsAltsTooltip

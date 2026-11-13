@@ -105,7 +105,6 @@ describe("All characters view", function()
         assert.are.equal(4, f.grid.used)
         -- grouped by item class, in class order
         assert.are.same({ "Armor", "Tradeskill", "Miscellaneous" }, headers(f))
-        assert.falsy(f.delete:IsShown())
         assert.are.same({}, env.__errors)
     end)
 
@@ -200,7 +199,6 @@ describe("Everything tab of a character", function()
         assert.are.equal(1, c[HELM_REF])
         assert.is_nil(c["item:190396"])                 -- warband bank is not the character's
         assert.are.same({ "Armor", "Tradeskill", "Miscellaneous" }, headers(f))
-        assert.is_true(f.delete:IsShown() == false)     -- current character: never deletable
         -- footer stays the character's
         assert.truthy(f.footer.text:find("Last seen", 1, true))
         assert.are.same({}, env.__errors)
@@ -247,7 +245,6 @@ describe("Realm view", function()
         assert.are.equal(7, c["item:2589"])
         assert.is_nil(c[HELM_REF])
         assert.truthy(f.footer.text:find("1 characters", 1, true))
-        assert.falsy(f.delete:IsShown())
         assert.are.same({}, env.__errors)
     end)
 

@@ -313,9 +313,17 @@ local function CreateSidebarRow(parent)
     b.hl = b:CreateTexture(nil, "HIGHLIGHT")
     b.hl:SetAllPoints()
     b.hl:SetColorTexture(1, 1, 1, 0.05)
-    b:SetScript("OnClick", function(self)
-        if self.ownerKey then Browser:Select(self.ownerKey) end
+    b:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    b:SetScript("OnClick", function(self, button)
+        if not self.ownerKey then return end
+        if button == "RightButton" then
+            Browser:ShowOwnerMenu(self.ownerKey)
+        else
+            Browser:Select(self.ownerKey)
+        end
     end)
+    b:SetScript("OnEnter", function(self) Browser:ShowOwnerTooltip(self, self.ownerKey) end)
+    b:SetScript("OnLeave", function() W.GetTooltip():Hide() end)
     return b
 end
 
@@ -555,10 +563,7 @@ function Browser:Build()
     -- Footer
     f.footer = W.Text(f, 11, nil, 0.75, 0.75, 0.75)
     f.footer:SetPoint("BOTTOMLEFT", PAD + 2, 14)
-    f.footer:SetPoint("BOTTOMRIGHT", -180, 14)
-    f.delete = W.Button(f, L["Delete data"], 150, 22)
-    f.delete:SetPoint("BOTTOMRIGHT", -PAD, 9)
-    f.delete:SetScript("OnClick", function() Browser:ConfirmDelete() end)
+    f.footer:SetPoint("BOTTOMRIGHT", -PAD, 14)
 
     f:SetScript("OnShow", function()
         ns.RegisterEvent(Browser, "ITEM_DATA_LOAD_RESULT", function(_, _, itemID, success)
@@ -572,6 +577,7 @@ function Browser:Build()
         if Browser.stale then Browser:Refresh() end
     end)
     f:SetScript("OnHide", function()
+        W.HideMenu()
         f:SetFrameStrata("HIGH")
         ns.UnregisterEvent(Browser, "ITEM_DATA_LOAD_RESULT")
         f:SetScript("OnUpdate", nil)
@@ -676,6 +682,14 @@ local function RenderSidebar(f)
     for _, c in pairs(ns.db.chars) do
         if c.realm then realmGold[c.realm] = (realmGold[c.realm] or 0) + (c.money or 0) end
     end
+    -- Records sharing a name on a realm (a character not yet moved to its
+    -- GUID, or deleted and created again) show when they were last seen,
+    -- the one thing that tells them apart before deleting one.
+    local sameName = {}
+    for _, c in pairs(ns.db.chars) do
+        local id = (c.realm or "") .. "|" .. string.lower(c.name or "")
+        sameName[id] = (sameName[id] or 0) + 1
+    end
     local lastRealm
     for _, key in ipairs(ns.GetSortedCharKeys()) do
         local c = ns.db.chars[key]
@@ -692,7 +706,11 @@ local function RenderSidebar(f)
         end
         local r, g, b = W.ClassColor(c.class)
         local name = (c.name or key) .. (key == playerKey and " *" or "")
-        Row(key, name .. (c.level and (" |cff888888" .. c.level .. "|r") or ""), W.FormatGold(c.money), r, g, b)
+        local extra = c.level and (" |cff888888" .. c.level .. "|r") or ""
+        if sameName[(c.realm or "") .. "|" .. string.lower(c.name or "")] > 1 then
+            extra = extra .. " |cff888888(" .. W.FormatAgo(c.lastSeen) .. ")|r"
+        end
+        Row(key, name .. extra, W.FormatGold(c.money), r, g, b)
     end
 
     if ns.Compat.HAS_WARBAND_BANK then
@@ -1036,26 +1054,76 @@ function Browser:Refresh()
         f.footer:SetText(FooterFor(owner))
     end
     f.scroll.content:SetHeight(math.max(1, height))
-    f.delete:SetShown(not searching and not isAll and owner ~= ns.WARBAND_OWNER and owner ~= ns.GetPlayerKey())
 end
 
 -------------------------------------------------------------------------------
 --  Actions
 -------------------------------------------------------------------------------
-function Browser:ConfirmDelete()
-    local owner = state.owner
-    if not owner or owner == ns.GetPlayerKey() or owner == ns.WARBAND_OWNER or AggregateScope(owner) then return end
+-- Only stored characters and guild banks have data of their own to delete;
+-- the aggregated views and the warband bank do not.
+local function IsDeletable(owner)
+    if not owner then return false end
+    if owner:sub(1, 1) == "@" then return ns.db.guilds[owner:sub(2)] ~= nil end
+    return ns.db.chars[owner] ~= nil
+end
+
+local function OwnerLabel(owner)
+    if owner:sub(1, 1) == "@" then
+        local g = ns.db.guilds[owner:sub(2)]
+        return (g and g.name) or owner:sub(2)
+    end
+    return CharLabel(owner)
+end
+
+-- The sidebar's tooltip for a character or guild bank; the rest have none.
+function Browser:ShowOwnerTooltip(row, owner)
+    if not IsDeletable(owner) then return end
+    local tooltip = W.GetTooltip()
+    tooltip:SetOwner(row, "ANCHOR_RIGHT")
+    tooltip:AddLine(OwnerLabel(owner))
+    local c = ns.db.chars[owner]
+    if c then tooltip:AddDoubleLine(L["Last seen"], W.FormatAgo(c.lastSeen), 1, 0.82, 0, 1, 1, 1) end
+    tooltip:AddLine(L["Right-click for options"], 0.6, 0.6, 0.6)
+    tooltip:Show()
+end
+
+-- The current character is collected again at its next game event, so
+-- deleting it would only leave the parts it has not visited since (bank,
+-- mail, auctions) empty; its entry stays, greyed out with the reason.
+function Browser:ShowOwnerMenu(owner)
+    if not frame or not IsDeletable(owner) then return end
+    W.GetTooltip():Hide()
+    local isPlayer = owner == ns.GetPlayerKey()
+    return W.ShowMenu(frame, OwnerLabel(owner), {
+        {
+            text = L["Delete data"],
+            disabled = isPlayer,
+            tooltip = isPlayer and L["The current character cannot be deleted."] or nil,
+            onClick = function() Browser:ConfirmDelete(owner) end,
+        },
+    })
+end
+
+-- Asks, then deletes all stored data of one character or guild bank.
+-- Characters are named with the time they were last seen, which tells two
+-- records of the same name apart.
+function Browser:ConfirmDelete(owner)
+    if not IsDeletable(owner) or owner == ns.GetPlayerKey() then return end
     local isGuild = owner:sub(1, 1) == "@"
-    local label = isGuild and ((ns.db.guilds[owner:sub(2)] or {}).name or owner:sub(2)) or ns.CharDisplayName(owner)
+    local message
+    if isGuild then
+        message = string.format(L["Delete all stored data of %s?"], OwnerLabel(owner))
+    else
+        message = string.format(L["Delete all stored data of %s?"], ns.CharDisplayName(owner))
+            .. "\n" .. L["Last seen"] .. ": " .. W.FormatAgo(ns.db.chars[owner].lastSeen)
+    end
     Ext:Confirm({
         title = L["Delete data"],
-        message = string.format(L["Delete all stored data of %s?"], label),
+        message = message,
         confirmText = L["Delete"],
         cancelText = CANCEL or "Cancel",
         onConfirm = function()
             if isGuild then ns.DeleteGuild(owner:sub(2)) else ns.DeleteChar(owner) end
-            state.owner = nil
-            Browser:Refresh()
         end,
     })
 end
