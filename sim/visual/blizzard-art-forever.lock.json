@@ -3,7 +3,7 @@
   "product": "wowf",
   "version": "1.60.1.70888",
   "build_config": "0597e74b01a3f779d849ffe9b3270196",
-  "cdn_config": "8ecf609471cb2ea16667be9cc2b7a555",
+  "cdn_config": "d035f2e911f93076941c9f9ec088a9e3",
   "files": [
     {
       "path": "interface/auctionframe/auctionhouse.blp",
@@ -2716,6 +2716,16 @@
       "size": 5406
     },
     {
+      "path": "interface/mainmenubar/mainmenubar.blp",
+      "file_data_id": 1721259,
+      "content_key": "d5bc2a2c11ea51a492e6b9d2de8393c3",
+      "content_size": 1049748,
+      "encoding_key": "108840fd1b0650bfebb666692424f30d",
+      "archive": "373b34dff5d160afc14bcb29d11f4837",
+      "offset": 218539628,
+      "size": 214344
+    },
+    {
       "path": "interface/minimap/objecticonsatlas.blp",
       "file_data_id": 1121272,
       "content_key": "4084785ae8145bf8f9d363884e45e2df",
@@ -3214,6 +3224,16 @@
       "archive": "68c9b716a019a8f9d40d2f8f3d92d1be",
       "offset": 225335400,
       "size": 157
+    },
+    {
+      "path": "interface/warbands/uiwarbandsicons.blp",
+      "file_data_id": 5855104,
+      "content_key": "f642332aaa4b69049fa65e2b8185b916",
+      "content_size": 5268,
+      "encoding_key": "11198569795360ece443d4dadec55749",
+      "archive": "7c3f827f756b07fc2a8225985d253d25",
+      "offset": 94501850,
+      "size": 1480
     }
   ],
   "absent": [
