@@ -75,6 +75,9 @@ function Options:Register()
     Dropdown(category, "ui_moneyFormat", { "ui", "moneyFormat" }, L["Money display in the browser"], nil, {
         { "g", "12g" }, { "gs", "12g 34s" }, { "gsc", "12g 34s 56c" },
     })
+    Dropdown(category, "ui_moneySymbols", { "ui", "moneySymbols" }, L["Money symbols"], nil, {
+        { "text", L["Letters (g, s, c)"] }, { "icons", L["Coin icons"] },
+    })
 
     layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(L["Data collection"]))
     Checkbox(category, "collect_bags", { "collect", "bags" }, L["Bags"])
