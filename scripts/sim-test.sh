@@ -21,32 +21,34 @@ BIN="$SIM/target/release/wow-sim"
 ADDONS="$SIM/Interface/AddOns"
 MODE="${1:-tests}"
 
-# Link the addons under test (links are removed again on exit).
-LINKS=("$ADDONS/EllesmereUIBags_Alts" "$ADDONS/EllesmereUIBags_Alts_SimTests" "$ADDONS/EllesmereUI" "$ADDONS/EllesmereUIBags" "$ADDONS/EllesmereUIBlizzardSkin")
+# Put the addons under test in place (taken out again on exit).
 cleanup() {
   local status=$?
-  for l in "${LINKS[@]}"; do if [ -L "$l" ]; then rm "$l"; fi; done
+  sim_addons_clear
   sim_lock_release
   return $status
 }
 # shellcheck source=sim-lock.sh
 . "$ROOT/scripts/sim-lock.sh"
+# shellcheck source=sim-addons.sh
+. "$ROOT/scripts/sim-addons.sh"
 sim_lock_acquire
 trap cleanup EXIT
-ln -sfn "$ROOT/EllesmereUIBags_Alts" "$ADDONS/EllesmereUIBags_Alts"
-ln -sfn "$ROOT/sim/EllesmereUIBags_Alts_SimTests" "$ADDONS/EllesmereUIBags_Alts_SimTests"
+sim_addons_clear
+sim_addon EllesmereUIBags_Alts "$ROOT/EllesmereUIBags_Alts"
+sim_addon EllesmereUIBags_Alts_SimTests "$ROOT/sim/EllesmereUIBags_Alts_SimTests"
 if [ "$MODE" = "upstream" ]; then
   # Copy of the real Bags module with the proposed extension file appended to its TOC.
   PATCHED="$ROOT/.tools/sim-upstream/EllesmereUIBags"
   rm -rf "$PATCHED" && mkdir -p "$(dirname "$PATCHED")" && cp -R "$EUI/EllesmereUIBags" "$PATCHED"
   cp "$ROOT/upstream/EllesmereUIBags_ExtAPI.lua" "$PATCHED/"
   printf '\nEllesmereUIBags_ExtAPI.lua\n' >> "$PATCHED/EllesmereUIBags.toc"
-  ln -sfn "$EUI" "$ADDONS/EllesmereUI"
-  ln -sfn "$PATCHED" "$ADDONS/EllesmereUIBags"
+  sim_addon EllesmereUI "$EUI"
+  sim_addon EllesmereUIBags "$PATCHED"
 else
-  ln -sfn "$EUI" "$ADDONS/EllesmereUI"
-  ln -sfn "$EUI/EllesmereUIBags" "$ADDONS/EllesmereUIBags"
-  if [ "$MODE" = "skin" ]; then ln -sfn "$EUI/EllesmereUIBlizzardSkin" "$ADDONS/EllesmereUIBlizzardSkin"; fi
+  sim_addon EllesmereUI "$EUI"
+  sim_addon EllesmereUIBags "$EUI/EllesmereUIBags"
+  if [ "$MODE" = "skin" ]; then sim_addon EllesmereUIBlizzardSkin "$EUI/EllesmereUIBlizzardSkin"; fi
 fi
 
 cd "$SIM"
@@ -70,7 +72,7 @@ export WOW_SIM_LOAD_OUT_OF_DATE_ADDONS=1
 export WOW_SIM_NO_SOUND=1
 # Text in Blizzard's fonts (FRIZQT__, ARIALN) falls back to the first system
 # font without a WoW install, a different one per operating system; EUI's
-# default font stands in for them on every machine (scripts/patches/wow-ui-sim).
+# default font stands in for them on every machine (WOW_SIM_FALLBACK_FONT).
 export WOW_SIM_FALLBACK_FONT="$EUI/media/fonts/Expressway.TTF"
 # The binary also looks next to the sources it was built from; naming the
 # directory keeps a cached or copied binary on this checkout's addons.

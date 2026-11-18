@@ -56,12 +56,12 @@ else
 fi
 
 ADDONS="$SIM/Interface/AddOns"
-LINKS=("$ADDONS/EllesmereUIBags_Alts" "$ADDONS/EllesmereUIBags_Alts_SimTests" "$ADDONS/EllesmereUI" "$ADDONS/EllesmereUIBags" "$ADDONS/EllesmereUIBlizzardSkin")
-unlink_all() { for l in "${LINKS[@]}"; do if [ -L "$l" ]; then rm "$l"; fi; done; }
 # shellcheck source=sim-lock.sh
 . "$ROOT/scripts/sim-lock.sh"
+# shellcheck source=sim-addons.sh
+. "$ROOT/scripts/sim-addons.sh"
 sim_lock_acquire
-trap 'unlink_all; sim_lock_release' EXIT
+trap 'sim_addons_clear; sim_lock_release' EXIT
 
 rm -rf "${OUT:?}" && mkdir -p "$OUT"
 export HOME="$ROOT/.tools/simhome"
@@ -72,7 +72,7 @@ export WOW_SIM_LOAD_OUT_OF_DATE_ADDONS=1
 export WOW_SIM_NO_SOUND=1
 # Text in Blizzard's fonts (FRIZQT__, ARIALN) falls back to the first system
 # font without a WoW install, a different one per operating system; EUI's
-# default font stands in for them on every machine (scripts/patches/wow-ui-sim).
+# default font stands in for them on every machine (WOW_SIM_FALLBACK_FONT).
 export WOW_SIM_FALLBACK_FONT="$EUI/media/fonts/Expressway.TTF"
 # Blizzard's textures (icons, atlases, frame art): the files pinned in the
 # client's lock (sim/visual/blizzard-art.lock.json, blizzard-art-forever.lock.json),
@@ -88,11 +88,13 @@ export WOW_INSTALL_PATH="$ART" WOW_SIM_CASC=0
 # directory keeps a cached or copied binary on this checkout's addons.
 export WOW_SIM_ADDONS_PATH="$SIM/Interface/AddOns"
 
+sim_addons_clear
+sim_addon EllesmereUIBags_Alts "$ROOT/EllesmereUIBags_Alts"
+sim_addon EllesmereUIBags_Alts_SimTests "$ROOT/sim/EllesmereUIBags_Alts_SimTests"
+sim_addon EllesmereUI "$EUI"
+sim_addon EllesmereUIBags "$EUI/EllesmereUIBags"
+
 if [ "$INVENTORY" = 1 ]; then
-  ln -sfn "$ROOT/EllesmereUIBags_Alts" "$ADDONS/EllesmereUIBags_Alts"
-  ln -sfn "$ROOT/sim/EllesmereUIBags_Alts_SimTests" "$ADDONS/EllesmereUIBags_Alts_SimTests"
-  ln -sfn "$EUI" "$ADDONS/EllesmereUI"
-  ln -sfn "$EUI/EllesmereUIBags" "$ADDONS/EllesmereUIBags"
   cat "$ROOT/sim/visual/prelude.lua" "$ROOT/sim/visual/texture-inventory.lua" > "$OUT/inventory.lua"
   (cd "$SIM" && "$BIN" --no-saved-vars --exec-lua "@$OUT/inventory.lua" dump-tree \
       --filter EllesmereUIBagsAltsBrowser > "$OUT/inventory.log" 2>&1) || true
@@ -102,12 +104,11 @@ if [ "$INVENTORY" = 1 ]; then
 fi
 
 for mode in bags skin; do
-  unlink_all
-  ln -sfn "$ROOT/EllesmereUIBags_Alts" "$ADDONS/EllesmereUIBags_Alts"
-  ln -sfn "$ROOT/sim/EllesmereUIBags_Alts_SimTests" "$ADDONS/EllesmereUIBags_Alts_SimTests"
-  ln -sfn "$EUI" "$ADDONS/EllesmereUI"
-  ln -sfn "$EUI/EllesmereUIBags" "$ADDONS/EllesmereUIBags"
-  if [ "$mode" = "skin" ]; then ln -sfn "$EUI/EllesmereUIBlizzardSkin" "$ADDONS/EllesmereUIBlizzardSkin"; fi
+  if [ "$mode" = "skin" ]; then
+    sim_addon EllesmereUIBlizzardSkin "$EUI/EllesmereUIBlizzardSkin"
+  else
+    sim_addon_drop EllesmereUIBlizzardSkin
+  fi
   mkdir -p "$OUT/$mode"
   for name in "${SCENARIOS[@]}"; do
     scenario="$ROOT/sim/visual/scenarios/$name.lua"
