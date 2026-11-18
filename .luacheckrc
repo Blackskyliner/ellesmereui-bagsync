@@ -23,7 +23,7 @@ files["EllesmereUIBags_Alts/**/*.lua"] = {
         -- Frames / UI
         "CreateFrame", "UIParent", "GameTooltip", "ItemRefTooltip", 
         "BattlePetToolTip_UnpackBattlePetLink", "BattlePetTooltipTemplate_SetBattlePet", "C_PetJournal",
-        "UISpecialFrames", "DEFAULT_CHAT_FRAME",
+        "UISpecialFrames", "DEFAULT_CHAT_FRAME", "GetCursorPosition",
         "STANDARD_TEXT_FONT", "GameFontHighlight", "BackdropTemplateMixin", 
         "SetItemButtonTexture", "SetItemButtonCount", "SetItemButtonQuality",
         "HandleModifiedItemClick", "IsModifiedClick", "IsShiftKeyDown", "IsControlKeyDown", "IsAltKeyDown",

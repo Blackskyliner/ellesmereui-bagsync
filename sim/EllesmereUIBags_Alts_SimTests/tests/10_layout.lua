@@ -79,11 +79,7 @@ local function check(where)
             local r = f.currencies.items[i]
             Lay.AssertNone(Lay.Overlaps({ { "name", Lay.TextRect(r.name) }, { "qty", Lay.TextRect(r.qty) } }), "currency row " .. i)
         end
-        -- 8. footer text and delete button apart
-        if f.delete:IsVisible() then
-            Lay.AssertNone(Lay.Overlaps({ { "footer", Lay.TextRect(f.footer) }, { "delete", Lay.Rect(f.delete) } }), "footer")
-        end
-        -- 9. no frame pinned far above the window (other windows must cover it)
+        -- 8. no frame pinned far above the window (other windows must cover it)
         Lay.AssertNone(Lay.LevelOutliers(f, 20), "frame level")
     end)
     if not ok then error(where .. ": " .. tostring(err), 0) end
@@ -122,6 +118,37 @@ simtest("layout invariants hold at a smaller and a larger browser scale", functi
     end)
     frame():SetScale(ns.db.settings.ui.browserScale or 1)
     ns.Browser:SelectTab("bags")
+    ns.Browser:Close()
+    EUIAltsSimFixture.Uninstall()
+    if not ok then error(err, 0) end
+end)
+
+simtest("the sidebar's context menu holds its title and entries", function()
+    EUIAltsSimFixture.Install()
+    local ok, err = pcall(function()
+        local f = show(Fixture.MAIN, "bags")
+        local row
+        for i = 1, f.sideRows.used do
+            if f.sideRows.items[i].ownerKey == Fixture.SECOND then row = f.sideRows.items[i] end
+        end
+        row:Click("RightButton")
+        local menu = _G.EllesmereUIBagsAltsMenu
+        assertTrue(menu:IsVisible())
+        -- above the browser, which a click outside the menu must not reach
+        assertTrue(menu:GetFrameStrata() == "FULLSCREEN_DIALOG")
+        assertTrue(menu.catcher:GetFrameStrata() == "DIALOG")
+        local box = Lay.Rect(menu)
+        local parts = { { "title", Lay.TextRect(menu.title) } }
+        for i, entry in ipairs(menu.entries) do
+            if entry:IsVisible() then parts[#parts + 1] = { "entry " .. i, Lay.TextRect(entry.label) } end
+        end
+        for _, part in ipairs(parts) do
+            if not Lay.Inside(part[2], box) then error(Lay.Describe(part[1], part[2]) .. " outside " .. Lay.Describe("menu", box)) end
+        end
+        Lay.AssertNone(Lay.Overlaps(parts), "menu")
+        menu.catcher:Click()
+        assertTrue(not menu:IsVisible())
+    end)
     ns.Browser:Close()
     EUIAltsSimFixture.Uninstall()
     if not ok then error(err, 0) end

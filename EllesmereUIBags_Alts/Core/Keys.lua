@@ -94,12 +94,14 @@ local function Trim(s)
     return (strgsub(strgsub(s, "^%s+", ""), "%s+$", ""))
 end
 
--- Typed character name -> key of a known character, or nil. Takes "name"
--- (current realm) and "name-realm", ignoring case and the spaces, hyphens and
--- apostrophes of the realm. The full name matches (on WoW Forever
--- "First Last"); a first name alone only when one character on that realm
--- has it. Of two records with the same name (one not yet moved to its GUID)
--- the GUID-keyed one wins.
+-- Typed character name -> key of a known character or nil, and true when the
+-- name fits more than one record. Takes "name" (current realm) and
+-- "name-realm", ignoring case and the spaces, hyphens and apostrophes of the
+-- realm. The full name matches (on WoW Forever "First Last"); a first name
+-- alone only when one character on that realm has it. Of two records with the
+-- same name (one not yet moved to its GUID) the GUID-keyed one is returned,
+-- as it belongs to the live character; callers that remove data check the
+-- second value, since the other record may be the one meant.
 function ns.FindCharacterByName(chars, input)
     if type(input) ~= "string" or type(chars) ~= "table" then return nil end
     input = Trim(input)
@@ -108,20 +110,21 @@ function ns.FindCharacterByName(chars, input)
     if not name then name, realm = input, ns.GetPlayerRealm() end
     if not realm then return nil end
     name, realm = strlower(Trim(name)), strlower(strgsub(realm, "[%s%-']", ""))
-    local exact, byFirst, firstCount = nil, nil, 0
+    local exact, exactCount, byFirst, firstCount = nil, 0, nil, 0
     for key, c in pairs(chars) do
         if type(c) == "table" and type(c.name) == "string" and type(c.realm) == "string"
             and strlower(c.realm) == realm then
             if strlower(c.name) == name then
+                exactCount = exactCount + 1
                 if not exact or ns.IsGUIDKey(key) then exact = key end
             elseif type(c.firstName) == "string" and strlower(c.firstName) == name then
                 byFirst, firstCount = key, firstCount + 1
             end
         end
     end
-    if exact then return exact end
-    if firstCount == 1 then return byFirst end
-    return nil
+    if exact then return exact, exactCount > 1 end
+    if firstCount == 1 then return byFirst, false end
+    return nil, firstCount > 1
 end
 
 -------------------------------------------------------------------------------

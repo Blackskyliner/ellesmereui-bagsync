@@ -76,7 +76,10 @@ describe("Keys", function()
             ["Bob-Blackhand"] = { name = "Bob", realm = "Blackhand" },
             ["Player-1-Bob"] = { name = "Bob", realm = "Blackhand" },
         }
-        assert.are.equal("Player-1-Bob", ns.FindCharacterByName(chars, "Bob"))
+        local key, ambiguous = ns.FindCharacterByName(chars, "Bob")
+        assert.are.equal("Player-1-Bob", key)
+        assert.is_true(ambiguous)
+        assert.is_false(select(2, ns.FindCharacterByName({ ["Player-1-Bob"] = chars["Player-1-Bob"] }, "Bob")))
     end)
 
     it("moves a record of an older version to the GUID when its character logs in", function()

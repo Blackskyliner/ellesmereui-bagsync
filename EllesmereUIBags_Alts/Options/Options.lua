@@ -198,6 +198,9 @@ function Options:Register()
     Dropdown(category, "ui_moneyFormat", { "ui", "moneyFormat" }, L["Money display in the browser"], nil, {
         { "g", "12g" }, { "gs", "12g 34s" }, { "gsc", "12g 34s 56c" },
     })
+    Dropdown(category, "ui_moneySymbols", { "ui", "moneySymbols" }, L["Money symbols"], nil, {
+        { "text", L["Letters (g, s, c)"] }, { "icons", L["Coin icons"] },
+    })
 
     layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(L["Data collection"]))
     Checkbox(category, "collect_bags", { "collect", "bags" }, L["Bags"])
@@ -325,19 +328,16 @@ function Options:HandleSlash(msg)
     elseif cmd == "status" then
         PrintStatus()
     elseif cmd == "delete" then
-        local key = ns.FindCharacterByName(ns.db.chars, rest)
-        if not key then
+        local key, ambiguous = ns.FindCharacterByName(ns.db.chars, rest)
+        if ambiguous then
+            -- Only the browser tells the records apart (last seen).
+            ns.Print(L["Several characters are named %s. Right-click the one to delete in the browser (/alts)."], rest)
+        elseif not key then
             ns.Print(L["Unknown character: %s"], rest)
         elseif key == ns.GetPlayerKey() then
             ns.Print(L["The current character cannot be deleted."])
         else
-            Ext:Confirm({
-                title = L["Delete data"],
-                message = string.format(L["Delete all stored data of %s?"], ns.CharDisplayName(key)),
-                confirmText = L["Delete"],
-                cancelText = CANCEL or "Cancel",
-                onConfirm = function() ns.DeleteChar(key) end,
-            })
+            ns.Browser:ConfirmDelete(key)
         end
     else
         Usage()
