@@ -114,9 +114,12 @@ CONTRIBUTING.md has the details and this file says how an agent works with them.
   read that repository's agent and contributor rules in full, including every
   convention they link, and check the change against each rule before showing
   it. List the result (rule: met or not met) with the pull request text.
-- Never open or push an upstream pull request yourself, also not to a fork.
-  Prepare the branch, the pull request text and the rule checklist locally and
-  hand them to the maintainer, who reviews and opens it.
+- Prepare the branch, the pull request text and the rule checklist locally
+  and show them to the maintainer first, who may want to iterate on them.
+  Push and open the upstream pull request (or push to a fork) only when the
+  maintainer explicitly asks you to; otherwise the maintainer opens it.
+- Images for an upstream pull request go to a separate branch of the fork,
+  embedded through commit-pinned URLs. Crop out character and guild names.
 - Claims about client behavior need a check in the game. Ask the maintainer
   for `/run` or `/dump` probes and note the client and build
   (`/dump GetBuildInfo()`) they were measured in. For such probes: the chat
