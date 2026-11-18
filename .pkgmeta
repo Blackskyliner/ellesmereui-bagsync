@@ -13,6 +13,7 @@ ignore:
   - .pkgmeta
   - .release-notes.md
   - CHANGELOG.md
+  - changelog.d
   - CONTRIBUTING.md
   - README.md
   - docs
