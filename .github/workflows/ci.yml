@@ -74,7 +74,7 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
-          relevant='^(EllesmereUIBags_Alts/|sim/|spec/|upstream/[^/]*\.lua$|scripts/(check-api\.py|setup-tools\.sh|sim-test\.sh|test\.sh)$|scripts/patches/|\.busted$|\.luacheckrc$|\.github/workflows/ci\.yml$)'
+          relevant='^(EllesmereUIBags_Alts/|sim/|spec/|upstream/[^/]*\.lua$|scripts/(check-api\.py|setup-tools\.sh|sim-test\.sh|sim-addons\.sh|sim-lock\.sh|test\.sh)$|scripts/patches/|\.busted$|\.luacheckrc$|\.github/workflows/ci\.yml$)'
           run=true reason="$EVENT on $GITHUB_REF: always tested"
           case "$EVENT:$GITHUB_REF" in pull_request:*) range="$BASE_SHA...$HEAD_SHA" ;; push:refs/heads/main) range="$BASE_SHA..$HEAD_SHA" ;; *) range= ;; esac
           if [ -n "$range" ] && [ -n "${BASE_SHA//0/}" ] && files="$(git diff --name-only "$range")"; then
@@ -250,7 +250,7 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
-          relevant='^(EllesmereUIBags_Alts/|sim/|scripts/(setup-tools\.sh|visual-test\.sh|visual-compare\.py|blizzard-art\.py|blizzard-art/.*)$|scripts/patches/|\.github/workflows/ci\.yml$)'
+          relevant='^(EllesmereUIBags_Alts/|sim/|scripts/(setup-tools\.sh|visual-test\.sh|sim-addons\.sh|sim-lock\.sh|visual-compare\.py|blizzard-art\.py|blizzard-art/.*)$|scripts/patches/|\.github/workflows/ci\.yml$)'
           run=true reason="$EVENT on $GITHUB_REF: always tested"
           case "$EVENT:$GITHUB_REF" in pull_request:*) range="$BASE_SHA...$HEAD_SHA" ;; push:refs/heads/main) range="$BASE_SHA..$HEAD_SHA" ;; *) range= ;; esac
           if [ -n "$range" ] && [ -n "${BASE_SHA//0/}" ] && files="$(git diff --name-only "$range")"; then

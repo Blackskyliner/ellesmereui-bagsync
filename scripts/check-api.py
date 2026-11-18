@@ -324,21 +324,27 @@ def main():
         # always agree on it: WoW Forever reports a 1.60+ interface (16001).
         ("EllesmereUI.IS_FOREVER from the client gate",
          r"if iface >= 16000 and iface < 20000 then\s+EUI_CLIENT_FOREVER = true[\s\S]*EllesmereUI\.IS_FOREVER = \(EUI_CLIENT_FOREVER == true\)", eui),
-        # The gold ledger is keyed by GUID; its entries carry the full name
-        # (surname included on Forever) and the realm group, GetRealmName()
-        # off Forever and the ruleset name on it. Entries of older builds keep
-        # their "Name-RealmGroupName()" key until the character logs in.
-        ("goldLedger key UnitGUID(\"player\")",
-         r'function GL\.CharKey\(\)\s+local guid = UnitGUID\("player"\)', eui),
+        # EllesmereUI's character roster (EllesmereUIDB.chars) is keyed by
+        # GUID and holds each balance under .gold; the entry carries the full
+        # name (surname included on Forever) and the realm group,
+        # GetRealmName() off Forever and the ruleset name on it. Entries of
+        # older builds keep their "Name-RealmGroupName()" key until the
+        # character logs in. Builds before the roster kept the balances in
+        # goldLedger.chars, older ones in characterGold.
+        ("roster key UnitGUID(\"player\")",
+         r'function EllesmereUI\.CharGUID\(\)\s+local guid = UnitGUID\("player"\)', eui),
         ("RealmGroupName() is GetRealmName() off Forever",
          r"function EllesmereUI\.RealmGroupName\(\)\s+if not EllesmereUI\.IS_FOREVER then return GetRealmName\(\) end", eui),
         ("WithSurname joins by CHARACTERNAME_SURNAME_SEPARATOR or \" \"",
          r'local SEP = Constants and Constants\.CharacterNameSeparatorConsts\s+and Constants\.CharacterNameSeparatorConsts\.CHARACTERNAME_SURNAME_SEPARATOR or " "[\s\S]*function EllesmereUI\.WithSurname\(', eui),
-        ("EllesmereUIDB.goldLedger.chars", r"local ledger = db\.goldLedger[\s\S]*ledger\.chars = \{\}", eui),
-        ("goldLedger.chars[guid] = { money, name, realm, updated }",
-         r"e\.money, e\.class, e\.name, e\.realm, e\.updated = money, class, EUI\.WithSurname\(name, surname, true\), EUI\.RealmGroupName\(\), time\(\)", eui),
-        ("characterGold { gold, lastUpdated } moved into goldLedger",
-         r"local bags, dbars, wband = db\.characterGold[\s\S]*chars\[key\] = \{ money = e\.gold,[^}]*updated = IsUsable\(e\.lastUpdated\)", eui),
+        ("EllesmereUIDB.chars roster",
+         r'local chars = db\.chars\s+if type\(chars\) ~= "table" then chars = \{\}; db\.chars = chars end', eui),
+        ("roster entry name and realm",
+         r"c\.name = EllesmereUI\.WithSurname\(first, Plain\(surname\), true\)[\s\S]*c\.realm = Plain\(EllesmereUI\.RealmGroupName\(\)\) or c\.realm", eui),
+        ("roster entry .gold = { money, updated }",
+         r'local e = EUI\.CharData\("gold", true\)[\s\S]*e\.money, e\.updated = money, time\(\)', eui),
+        ("goldLedger.chars and characterGold moved into the roster",
+         r"local bags, dbars, wband = db\.characterGold[\s\S]*chars\[key\] = \{ money = e\.gold,[^}]*updated = IsUsable\(e\.lastUpdated\)[\s\S]*FoldIntoRoster\(chars, gl\.chars, \"gold\"\)", eui),
     ]
     for label, pattern, text in contract:
         if not re.search(pattern, text, re.M):

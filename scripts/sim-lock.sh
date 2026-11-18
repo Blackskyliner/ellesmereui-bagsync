@@ -1,7 +1,7 @@
 # Sourced by sim-test.sh and visual-test.sh: one simulator run at a time.
 # Git worktrees share .tools (a symlink to the main checkout's), and with it
-# the simulator's Interface/AddOns, where each run links the addons under test
-# and unlinks them on exit, and .tools/visual-out. Parallel runs from two
+# the simulator's Interface/AddOns, where each run puts the addons under test
+# and takes them out on exit, and .tools/visual-out. Parallel runs from two
 # checkouts would test each other's code. The lock is a directory (mkdir is
 # atomic) holding the owner's PID; a lock whose owner is gone is taken over.
 SIM_LOCK="$ROOT/.tools/.sim-lock"

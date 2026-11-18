@@ -6,18 +6,11 @@ SimGapSignatures = {
         ["C_AuctionHouse.GetOwnedAuctions"] = { "table" },
         ["C_PetJournal.GetOwnedBattlePetString"] = false,
         ["C_PlayerInteractionManager.IsInteractingWithNpcOfType"] = { "boolean" },
-        ["IsUsingGamepad"] = { "boolean" },
     },
     forever = {
         ["C_AuctionHouse.GetOwnedAuctions"] = { "table" },
         ["C_Bank.CanViewBank"] = { "boolean" },
         ["C_CurrencyInfo.GetCurrencyIDFromLink"] = { "number" },
-        ["C_Item.IsCorruptedItem"] = { "boolean?" },
-        ["C_Item.IsCosmeticItem"] = { "boolean?" },
-        ["C_Item.IsCurioItem"] = { "boolean?" },
-        ["C_Item.IsDecorItem"] = { "boolean?" },
-        ["C_Item.IsRelicItem"] = { "boolean?" },
         ["C_PlayerInteractionManager.IsInteractingWithNpcOfType"] = { "boolean" },
-        ["C_Soulbinds.IsItemConduitByItemInfo"] = { "boolean" },
     },
 }

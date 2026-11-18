@@ -409,6 +409,35 @@ describe("Character, equipment and currency", function()
         assert.are.same({}, env.__errors)
     end)
 
+    it("repairs 0g from EllesmereUI's character roster before its gold ledger", function()
+        local sv = {
+            schema = 1,
+            chars = {
+                ["Player-1-Bob"] = { name = "Bob", realm = "Blackhand", realmName = "Blackhand", money = 0 },
+                ["Player-1-Eve"] = { name = "Eve", realm = "Blackhand", realmName = "Blackhand", money = 0 },
+            },
+        }
+        local env, ns = wow.boot(wow.defaultState({ money = 123 }), sv, { beforeLoad = function(e)
+            fakeEUI.install(e)
+            e.EllesmereUIDB = {
+                chars = {
+                    ["Player-1-0000000B"] = { name = "Bob", realm = "Blackhand", class = "MAGE",
+                        gold = { money = 2500000, updated = 1789990000 } },
+                    -- a roster entry without a balance: another feature's data only
+                    ["Player-1-0000000E"] = { name = "Eve", realm = "Blackhand", lastSpec = 1 },
+                },
+                goldLedger = { chars = {
+                    ["Player-1-0000000B"] = { money = 7, name = "Bob", realm = "Blackhand" },
+                    ["Player-1-0000000E"] = { money = 40000, name = "Eve", realm = "Blackhand" },
+                } },
+            }
+        end })
+        assert.are.equal(2500000, ns.db.chars["Player-1-Bob"].money)
+        assert.are.equal(1789990000, ns.db.chars["Player-1-Bob"].moneyAt)
+        assert.are.equal(40000, ns.db.chars["Player-1-Eve"].money)
+        assert.are.same({}, env.__errors)
+    end)
+
     it("does not store 0g from a teardown PLAYER_MONEY on a loading screen", function()
         local env, ns = wow.boot(wow.defaultState({ money = 777 }))
         env.FireEvent("PLAYER_LEAVING_WORLD")
