@@ -338,17 +338,20 @@ end
 
 -------------------------------------------------------------------------------
 --  Character gold tracked by EllesmereUI (read-only)
---  EllesmereUIDB.goldLedger.chars[guid] = { money, updated, name, realm, ... }:
---  name is the full name (on WoW Forever with the surname, joined by
---  CHARACTERNAME_SURNAME_SEPARATOR like EllesmereUI.WithSurname),
---  realm is EllesmereUI.RealmGroupName(): the display realm (spaces kept), on
---  WoW Forever the realm group (ruleset name). Entries of older EllesmereUI
---  builds stay under "Name-Realm Name" until that character logs in again.
---  EllesmereUI moves the older Bags store EllesmereUIDB.characterGold
---  (key "Name-Realm Name", { gold, lastUpdated }) into the ledger only when one
---  of its modules first asks for it, so until then the balances are still there.
---  The table is read directly: EllesmereUI.GetGoldLedger() would run that
---  move and write EllesmereUI's saved variables.
+--  EllesmereUIDB.chars[guid] is EllesmereUI's character roster: .gold =
+--  { money, updated }, and the entry itself carries name and realm. name is
+--  the full name (on WoW Forever with the surname, joined by
+--  CHARACTERNAME_SURNAME_SEPARATOR like EllesmereUI.WithSurname), realm is
+--  EllesmereUI.RealmGroupName(): the display realm (spaces kept), on WoW
+--  Forever the realm group (ruleset name). Entries of older builds stay under
+--  "Name-Realm Name" until that character logs in again.
+--  EllesmereUI builds before the roster kept the same balances in
+--  EllesmereUIDB.goldLedger.chars[guid] = { money, updated, name, realm }, and
+--  older ones in EllesmereUIDB.characterGold (key "Name-Realm Name",
+--  { gold, lastUpdated }); EllesmereUI moves the latter into its ledger only
+--  when one of its modules first asks for it, so until then the balances are
+--  still there. The tables are read directly: EllesmereUI.GetGoldLedger()
+--  would run that move and write EllesmereUI's saved variables.
 -------------------------------------------------------------------------------
 -- The one ledger entry whose name and realm belong to this character, or nil.
 -- Two entries that both match (WoW Forever: same first name, other surname)
@@ -373,10 +376,20 @@ function lib:GetCharacterGold(name, realmName)
     local db = _G.EllesmereUIDB
     if type(db) ~= "table" then return nil end
     local key = name .. "-" .. realmName
+    local roster = {}
+    if type(db.chars) == "table" then
+        for k, c in pairs(db.chars) do
+            if type(c) == "table" and type(c.gold) == "table" then
+                roster[k] = { money = c.gold.money, updated = c.gold.updated, name = c.name, realm = c.realm }
+            end
+        end
+    end
     local ledger = type(db.goldLedger) == "table" and db.goldLedger.chars
-    local entry = type(ledger) == "table" and (ledger[key] or LedgerEntryByName(ledger, name, realmName))
-    if type(entry) == "table" and type(entry.money) == "number" then
-        return entry.money, type(entry.updated) == "number" and entry.updated or nil
+    for _, entries in ipairs({ roster, type(ledger) == "table" and ledger or {} }) do
+        local entry = entries[key] or LedgerEntryByName(entries, name, realmName)
+        if type(entry) == "table" and type(entry.money) == "number" then
+            return entry.money, type(entry.updated) == "number" and entry.updated or nil
+        end
     end
     local legacy = type(db.characterGold) == "table" and db.characterGold[key]
     if type(legacy) == "table" and type(legacy.gold) == "number" then
