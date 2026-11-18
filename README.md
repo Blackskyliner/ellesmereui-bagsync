@@ -145,7 +145,8 @@ bank in the list and choose "Delete data" to remove its stored data (asks
 first); the current character cannot be deleted. Two characters with the same
 name show when each was last seen. The option "Money display in the browser" picks
 the parts of a balance: whole gold (retail default), gold and silver, or gold,
-silver and copper (WoW Forever default).
+silver and copper (WoW Forever default). "Money symbols" picks coloured
+letters (g, s, c) or coin icons after each part.
 
 **Overviews.** "All characters" at the top of the sidebar and every realm header
 show all stored items merged: equal items share one slot with the total amount,

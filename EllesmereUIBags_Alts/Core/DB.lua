@@ -60,6 +60,7 @@ ns.DEFAULTS = {
             useEUICategories = false,
             browserScale     = 1,
             moneyFormat      = ns.Compat.DEFAULT_MONEY_FORMAT,   -- "g" | "gs" | "gsc": parts of a balance in the browser
+            moneySymbols     = "text",   -- "text" | "icons": coloured g/s/c or coin icons after each part
         },
         firstRunAsked = false,
         debug = false,   -- /alts debug: chat diagnostics

@@ -22,6 +22,8 @@ builds, each tested in the game by the maintainer.
 - **New:** A "?" beside the browser's search box explains the search syntax on
   hover: words, item ID, `q:` quality and `t:` item type, with examples in the
   client's language.
+- **New:** The option "Money symbols" shows coin icons instead of the
+  coloured letters g, s and c after the parts of a balance in the browser.
 - **Enhanced:** Characters and guild banks are deleted by right-clicking them
   in the browser's sidebar, after a confirmation. The "Delete data" button
   below the browser is gone. The current character's entry is greyed out, as
