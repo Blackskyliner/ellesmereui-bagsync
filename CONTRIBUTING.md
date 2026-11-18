@@ -147,7 +147,9 @@ Rules for translation files:
 ## Git workflow
 
 - Work on a branch (`feature/...`, `fix/...`, `docs/...`), never directly on
-  `main`. Changes reach `main` by fast-forward merge.
+  `main`. Changes reach `main` through a pull request that is squash-merged:
+  its description becomes the commit message, so it reads like one (a short
+  subject and a few lines of context).
 - Commit in functional groups: one commit per logical change, tests with the
   change they cover or as their own commit, fixes separate from features. The
   subject says what the change does; the body says why, in a few lines.
