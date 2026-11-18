@@ -395,7 +395,7 @@ ns.RegisterFeature({
             hooked = true
             ALLOWED_TOOLTIPS = {}
             -- Not the comparison (shopping) tooltips: counts there are noise.
-            for _, name in ipairs({ "GameTooltip", "ItemRefTooltip", "EllesmereUIBagsAltsTooltip" }) do
+            for _, name in ipairs({ "GameTooltip", "ItemRefTooltip", "NotGameTooltipEllesmereUIBagsAlts" }) do
                 local tt = _G[name]
                 if tt then ALLOWED_TOOLTIPS[tt] = true end
             end

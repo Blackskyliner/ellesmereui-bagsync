@@ -93,7 +93,7 @@ describe("Currency search", function()
         ns.Browser:OpenSearch("valor")
         local r = rows(env.EllesmereUIBagsAltsBrowser)[1].row
         r:RunScript("OnEnter")
-        local tt = env.EllesmereUIBagsAltsTooltip
+        local tt = env.NotGameTooltipEllesmereUIBagsAlts
         assert.are.equal(5, tt.processingInfo.tooltipData.type)
         local text = {}
         for _, l in ipairs(tt.lines) do text[#text + 1] = table.concat(l, " | ") end
@@ -112,7 +112,7 @@ describe("Currency search", function()
         assert.are.equal(1, #r)
         assert.is_nil(r[1].currencyID)
         r[1].row:RunScript("OnEnter")
-        assert.are.equal(0, env.EllesmereUIBagsAltsTooltip.processingInfo.tooltipData.type)
+        assert.are.equal(0, env.NotGameTooltipEllesmereUIBagsAlts.processingInfo.tooltipData.type)
     end)
 
     it("an item result says where it lies, in the row and in its tooltip", function()
@@ -122,7 +122,7 @@ describe("Currency search", function()
         assert.truthy(r[1].detail:find("Alice|r 20 |A:hud-backpack:12:12|a", 1, true))
         r[1].row:RunScript("OnEnter")
         local text = {}
-        for _, l in ipairs(env.EllesmereUIBagsAltsTooltip.lines) do text[#text + 1] = table.concat(l, " | ") end
+        for _, l in ipairs(env.NotGameTooltipEllesmereUIBagsAlts.lines) do text[#text + 1] = table.concat(l, " | ") end
         assert.truthy(table.concat(text, "\n"):find("Bags: 20", 1, true))
         assert.are.same({}, env.__errors)
     end)

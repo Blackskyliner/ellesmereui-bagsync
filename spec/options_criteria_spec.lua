@@ -152,7 +152,7 @@ describe("Options: NEW labels and preview", function()
         for _, o in ipairs(detail.options) do if o.value == "icons" then icons = o end end
         env.__mouseFocus = env.CreateFrame("Button")
         icons.onEnter(icons)
-        local tt = env.EllesmereUIBagsAltsTooltip
+        local tt = env.NotGameTooltipEllesmereUIBagsAlts
         assert.are.equal(2589, tt.processingInfo.euiAltsOwners)
         assert.are.equal("icons", tt.processingInfo.euiAltsDetail)
         local text = {}

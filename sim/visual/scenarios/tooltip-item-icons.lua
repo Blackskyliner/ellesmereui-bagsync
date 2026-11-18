@@ -1,4 +1,4 @@
--- frame: EllesmereUIBagsAltsTooltip
+-- frame: NotGameTooltipEllesmereUIBagsAlts
 -- Location icons on a second line, bank tabs named after their bank.
 local t = ns.db.settings.tooltip
 t.otherRealms, t.detail, t.showTabs = "always", "icons", true

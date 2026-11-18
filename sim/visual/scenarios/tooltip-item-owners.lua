@@ -1,4 +1,4 @@
--- frame: EllesmereUIBagsAltsTooltip
+-- frame: NotGameTooltipEllesmereUIBagsAlts
 -- The fixture's characters live on realms the simulator's player is not
 -- connected to: other realms are listed always.
 ns.db.settings.tooltip.otherRealms = "always"

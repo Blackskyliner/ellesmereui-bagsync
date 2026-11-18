@@ -46,7 +46,7 @@ end
 
 local function sweep()
     visited = {}
-    for _, name in ipairs({ "EllesmereUIBagsAltsBrowser", "EllesmereUIBagsAltsTooltip", "GameTooltip",
+    for _, name in ipairs({ "EllesmereUIBagsAltsBrowser", "NotGameTooltipEllesmereUIBagsAlts", "GameTooltip",
                             "ItemRefTooltip", "ShoppingTooltip1", "ShoppingTooltip2",
                             "BattlePetTooltip", "EUI_Bags" }) do
         walk(_G[name])

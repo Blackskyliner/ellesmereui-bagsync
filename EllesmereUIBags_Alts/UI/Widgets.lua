@@ -327,11 +327,24 @@ end
 -- (waitingForData, suppressAutomaticCompareItem, ...) in our execution
 -- context, i.e. tainted; a private GameTooltipTemplate frame keeps GameTooltip
 -- untouched. Created on first use.
+--
+-- Other addons still add their lines (prices and the like) where they opt in
+-- private tooltips: the "NotGameTooltip" name prefix is the convention
+-- Auctionator's TooltipDataProcessor post-call accepts, and LibExtraTip
+-- (Oribos Exchange, among others) serves the frames registered with it.
+local TOOLTIP_NAME = "NotGameTooltipEllesmereUIBagsAlts"
+W.TOOLTIP_NAME = TOOLTIP_NAME
+
 local browserTooltip
 function W.GetTooltip()
     if not browserTooltip then
-        browserTooltip = CreateFrame("GameTooltip", "EllesmereUIBagsAltsTooltip", UIParent, "GameTooltipTemplate")
+        browserTooltip = CreateFrame("GameTooltip", TOOLTIP_NAME, UIParent, "GameTooltipTemplate")
         browserTooltip:SetFrameStrata("TOOLTIP")
+        local libStub = _G.LibStub
+        local extraTip = type(libStub) == "table" and libStub("LibExtraTip-1", true)
+        if extraTip and extraTip.RegisterTooltip then
+            ns.SafeCall(extraTip.RegisterTooltip, extraTip, browserTooltip)
+        end
         ns.Fire("BROWSER_TOOLTIP_CREATED", browserTooltip)
     end
     return browserTooltip

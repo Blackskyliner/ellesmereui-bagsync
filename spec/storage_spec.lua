@@ -91,7 +91,7 @@ describe("Links from stored cores", function()
         local b = env.EllesmereUIBagsAltsBrowser.grid.buttons[1]
         assert.are.equal(HELM_CORE, b.ref)
         b:RunScript("OnEnter")
-        assert.are.equal(HELM_CORE, env.EllesmereUIBagsAltsTooltip.processingInfo.getterArgs[1])
+        assert.are.equal(HELM_CORE, env.NotGameTooltipEllesmereUIBagsAlts.processingInfo.getterArgs[1])
         env.__state.modifiers.shift = true
         b:RunScript("OnClick", "LeftButton")
         assert.truthy(env.__clicks[#env.__clicks]:find("|Hitem:230000", 1, true))   -- a full link for chat

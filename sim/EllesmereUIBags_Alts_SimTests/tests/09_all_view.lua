@@ -7,12 +7,12 @@ simtest("all-characters view merges stacks and lists owners in the private toolt
     assertTrue(f.grid.used >= 1)
     local b = f.grid.buttons[1]
     b:GetScript("OnEnter")(b)
-    local tooltip = _G.EllesmereUIBagsAltsTooltip
+    local tooltip = _G.NotGameTooltipEllesmereUIBagsAlts
     assertEquals(b.itemID, tooltip.processingInfo.euiAltsOwners)
     -- the item's own lines come first, the holders follow them
     local holder
     for i = 2, tooltip:NumLines() do
-        local text = _G["EllesmereUIBagsAltsTooltipTextLeft" .. i]:GetText() or ""
+        local text = _G["NotGameTooltipEllesmereUIBagsAltsTextLeft" .. i]:GetText() or ""
         if text:find(UnitName("player"), 1, true) then holder = i end
     end
     assertTrue(holder ~= nil)
@@ -36,12 +36,12 @@ simtest("currency rows show Blizzard's currency tooltip plus the holders", funct
     assertTrue(f.currencies.used >= 1)
     local row = f.currencies.items[1]
     row:GetScript("OnEnter")(row)
-    local tooltip = _G.EllesmereUIBagsAltsTooltip
+    local tooltip = _G.NotGameTooltipEllesmereUIBagsAlts
     assertTrue(tooltip:IsShown())
     -- the item's own lines come first, the holders follow them
     local holder
     for i = 2, tooltip:NumLines() do
-        local text = _G["EllesmereUIBagsAltsTooltipTextLeft" .. i]:GetText() or ""
+        local text = _G["NotGameTooltipEllesmereUIBagsAltsTextLeft" .. i]:GetText() or ""
         if text:find(UnitName("player"), 1, true) then holder = i end
     end
     assertTrue(holder ~= nil)
@@ -74,7 +74,7 @@ simtest("search lists matching currencies with the holder tooltip", function()
     local row = f.results.items[1]
     assertEquals(id, row.currencyID)
     row:GetScript("OnEnter")(row)
-    assertTrue(_G.EllesmereUIBagsAltsTooltip:IsShown())
+    assertTrue(_G.NotGameTooltipEllesmereUIBagsAlts:IsShown())
     row:GetScript("OnLeave")(row)
     ns.Browser:OpenSearch("")
     ns.Browser:Close()
