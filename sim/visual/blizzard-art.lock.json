@@ -3,7 +3,7 @@
   "product": "wow",
   "version": "12.1.5.70783",
   "build_config": "bc493ecb2898766c0f8947a99b4b3d65",
-  "cdn_config": "8ecf609471cb2ea16667be9cc2b7a555",
+  "cdn_config": "d035f2e911f93076941c9f9ec088a9e3",
   "files": [
     {
       "path": "interface/auctionframe/auctionhouse.blp",
@@ -434,6 +434,16 @@
       "archive": "fe516dbb5d7e2b25367c8b0c45e603cf",
       "offset": 94350835,
       "size": 292386
+    },
+    {
+      "path": "interface/hud/uimicromenu2x.blp",
+      "file_data_id": 4708813,
+      "content_key": "b3a413687f2a89e398426c9f70a01d23",
+      "content_size": 2098324,
+      "encoding_key": "8c428b03cbccc8e5e26168d3c538921a",
+      "archive": "431d3797c76df782e43a8ddb22c78e43",
+      "offset": 23819992,
+      "size": 267804
     },
     {
       "path": "interface/icons/ability_crown_of_the_heavens_icon.blp",
@@ -2766,6 +2776,16 @@
       "size": 5406
     },
     {
+      "path": "interface/mainmenubar/mainmenubar.blp",
+      "file_data_id": 1721259,
+      "content_key": "d5bc2a2c11ea51a492e6b9d2de8393c3",
+      "content_size": 1049748,
+      "encoding_key": "108840fd1b0650bfebb666692424f30d",
+      "archive": "373b34dff5d160afc14bcb29d11f4837",
+      "offset": 218539628,
+      "size": 214344
+    },
+    {
       "path": "interface/minimap/objecticonsatlas.blp",
       "file_data_id": 1121272,
       "content_key": "87671fa910528e9221b7c7eb0a00a060",
@@ -3264,6 +3284,17 @@
       "archive": "68c9b716a019a8f9d40d2f8f3d92d1be",
       "offset": 225335400,
       "size": 157
+    },
+    {
+      "path": "interface/warbands/uiwarbandsicons.blp",
+      "file_data_id": 5855104,
+      "content_key": "f642332aaa4b69049fa65e2b8185b916",
+      "content_size": 5268,
+      "encoding_key": "11198569795360ece443d4dadec55749",
+      "archive": "7c3f827f756b07fc2a8225985d253d25",
+      "offset": 94501850,
+      "size": 1480
     }
-  ]
+  ],
+  "absent": []
 }

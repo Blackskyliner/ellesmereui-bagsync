@@ -58,7 +58,10 @@ fi
 ADDONS="$SIM/Interface/AddOns"
 LINKS=("$ADDONS/EllesmereUIBags_Alts" "$ADDONS/EllesmereUIBags_Alts_SimTests" "$ADDONS/EllesmereUI" "$ADDONS/EllesmereUIBags" "$ADDONS/EllesmereUIBlizzardSkin")
 unlink_all() { for l in "${LINKS[@]}"; do if [ -L "$l" ]; then rm "$l"; fi; done; }
-trap unlink_all EXIT
+# shellcheck source=sim-lock.sh
+. "$ROOT/scripts/sim-lock.sh"
+sim_lock_acquire
+trap 'unlink_all; sim_lock_release' EXIT
 
 rm -rf "${OUT:?}" && mkdir -p "$OUT"
 export HOME="$ROOT/.tools/simhome"

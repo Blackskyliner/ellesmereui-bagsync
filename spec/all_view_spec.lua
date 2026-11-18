@@ -13,7 +13,7 @@ local CURRENCIES = {
 
 local function tooltipText(env)
     local out = {}
-    for _, l in ipairs(env.EllesmereUIBagsAltsTooltip.lines) do out[#out + 1] = table.concat(l, " | ") end
+    for _, l in ipairs(env.NotGameTooltipEllesmereUIBagsAlts.lines) do out[#out + 1] = table.concat(l, " | ") end
     return table.concat(out, "\n")
 end
 
@@ -136,7 +136,16 @@ describe("All characters view", function()
         local text = tooltipText(env)
         assert.truthy(text:find("Alice", 1, true))
         assert.truthy(text:find("Bags: 20, Bank: 5", 1, true))
-        assert.truthy(text:find("Carol%-Proudmoore"))  -- other realm: listed with its realm
+        assert.falsy(text:find("Carol", 1, true))       -- other realm: not in the realm scope
+        assert.truthy(text:find("Total | 28", 1, true))       -- Alice 25 + Bob 3
+        -- the tooltip settings apply: other realms always, listed with their realm
+        ns.db.settings.tooltip.otherRealms = "always"
+        ns.SettingsChanged()
+        for i = 1, f.grid.used do
+            if f.grid.buttons[i].itemID == 2589 then f.grid.buttons[i]:RunScript("OnEnter") end
+        end
+        text = tooltipText(env)
+        assert.truthy(text:find("Carol%-Proudmoore"))
         assert.truthy(text:find("Total | 35", 1, true))
         assert.are.same({}, env.__errors)
     end)
@@ -153,14 +162,15 @@ describe("All characters view", function()
         end
         local _, n = tooltipText(env):gsub("Total", "")
         assert.are.equal(1, n)
-        -- a single character's bag tab keeps the normal (feature) lines
+        -- a single character's bag tab: the same lines, once
         ns.Browser:Select("Player-1-Alice")
         ns.Browser:SelectTab("bags")
         for i = 1, f.grid.used do
             if f.grid.buttons[i].itemID == 2589 then f.grid.buttons[i]:RunScript("OnEnter") end
         end
-        assert.is_nil(env.EllesmereUIBagsAltsTooltip.processingInfo.euiAltsOwners)
-        assert.truthy(tooltipText(env):find("Total", 1, true))
+        assert.are.equal(2589, env.NotGameTooltipEllesmereUIBagsAlts.processingInfo.euiAltsOwners)
+        _, n = tooltipText(env):gsub("Total", "")
+        assert.are.equal(1, n)
     end)
 
     it("sums currencies over all characters, warband-wide ones counted once", function()
@@ -213,12 +223,12 @@ describe("Everything tab of a character", function()
             if f.grid.buttons[i].itemID == 2589 then f.grid.buttons[i]:RunScript("OnEnter") end
         end
         assert.truthy(tooltipText(env):find("Bags: 20, Bank: 5", 1, true))
-        -- the per-location tabs keep their own tooltip (no owner lines)
+        -- the per-location tabs show the same owner lines
         ns.Browser:SelectTab("bags")
         for i = 1, f.grid.used do
             if f.grid.buttons[i].itemID == 2589 then f.grid.buttons[i]:RunScript("OnEnter") end
         end
-        assert.is_nil(env.EllesmereUIBagsAltsTooltip.processingInfo.euiAltsOwners)
+        assert.truthy(tooltipText(env):find("Bags: 20, Bank: 5", 1, true))
     end)
 
     it("stays on Everything when switching characters", function()
@@ -273,7 +283,7 @@ describe("Currency tooltip", function()
         ns.Browser:SelectTab("currency")
         local f = env.EllesmereUIBagsAltsBrowser
         currencyRow(f, "Valorstones"):RunScript("OnEnter")
-        local tt = env.EllesmereUIBagsAltsTooltip
+        local tt = env.NotGameTooltipEllesmereUIBagsAlts
         assert.are.equal(5, tt.processingInfo.tooltipData.type)   -- currency tooltip data
         local lines = {}
         for _, l in ipairs(tt.lines) do lines[#lines + 1] = table.concat(l, " | ") end
@@ -304,6 +314,48 @@ describe("Currency tooltip", function()
         currencyRow(env.EllesmereUIBagsAltsBrowser, "Valorstones"):RunScript("OnEnter")
         assert.is_nil(env.GameTooltip.processingInfo)
         currencyRow(env.EllesmereUIBagsAltsBrowser, "Valorstones"):RunScript("OnLeave")
-        assert.is_false(env.EllesmereUIBagsAltsTooltip:IsShown())
+        assert.is_false(env.NotGameTooltipEllesmereUIBagsAlts:IsShown())
+    end)
+end)
+
+describe("Other addons' lines on the browser tooltip", function()
+    -- Hovers item 2589 in a character's bag tab.
+    local function hover(env, ns)
+        ns.Browser:Open(ns.GetPlayerKey())
+        ns.Browser:SelectTab("bags")
+        local f = env.EllesmereUIBagsAltsBrowser
+        for i = 1, f.grid.used do
+            if f.grid.buttons[i].itemID == 2589 then f.grid.buttons[i]:RunScript("OnEnter") end
+        end
+        return env.NotGameTooltipEllesmereUIBagsAlts
+    end
+
+    it("reach it through the NotGameTooltip name prefix (Auctionator's opt-in)", function()
+        local s = wow.defaultState()
+        wow.putItem(s, 0, 1, 2589, 20)
+        local env, ns = wow.boot(s, nil, { beforeLoad = function(e)
+            -- Auctionator's filter: GameTooltip, ItemRefTooltip or a name starting "NotGameTooltip"
+            e.TooltipDataProcessor.AddTooltipPostCall(0, function(tooltip)
+                local name = tooltip:GetName() or ""
+                local info = tooltip.processingInfo
+                if (tooltip == e.GameTooltip or name:match("^NotGameTooltip")) and info and info.getterName then
+                    tooltip:AddLine("Auction price " .. tostring(info.getterArgs[1]))
+                end
+            end)
+        end })
+        hover(env, ns)
+        assert.truthy(tooltipText(env):find("Auction price item:2589", 1, true))
+        assert.are.same({}, env.__errors)
+    end)
+
+    it("register it with LibExtraTip when that library is loaded", function()
+        local registered = {}
+        local env, ns = wow.boot(wow.defaultState(), nil, { beforeLoad = function(e)
+            local lib = { RegisterTooltip = function(_, tooltip) registered[#registered + 1] = tooltip end }
+            e.LibStub = setmetatable({}, { __call = function(_, major) return major == "LibExtraTip-1" and lib or nil end })
+        end })
+        local tooltip = ns.W.GetTooltip()
+        assert.are.same({ tooltip }, registered)
+        assert.are.same({}, env.__errors)
     end)
 end)

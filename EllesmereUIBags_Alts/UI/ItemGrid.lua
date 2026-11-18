@@ -30,8 +30,8 @@ end
 -- The item tooltip is built through Blizzard's own TooltipDataHandler with a
 -- per-call linePreCall/tooltipPostCall (scoped to this one tooltip, no global
 -- hooks): a stored item that is bound shows "Soulbound"/"Warbound" instead of
--- the generic "Binds when equipped", equipment sets are listed and, in the
--- all-characters view, who holds how many.
+-- the generic "Binds when equipped", equipment sets are listed and so is who
+-- holds how many where (ns.AddOwnerLines).
 local BINDING_LINE = Enum.TooltipDataLineType.ItemBinding
 
 local function BindingPreCall(tooltip, lineData)
@@ -50,13 +50,7 @@ local function SetsPostCall(tooltip)
     if sets then
         tooltip:AddLine(string.format(ns.L["Equipment sets: %s"], "|cffffffff" .. sets .. "|r"), 1, 0.82, 0, true)
     end
-    local lines = info and info.euiAltsOwners and ns.BuildAllOwnerLines(info.euiAltsOwners)
-    if lines then
-        tooltip:AddLine(" ")
-        for i = 1, #lines, 2 do
-            tooltip:AddDoubleLine(lines[i], lines[i + 1], 1, 0.82, 0, 1, 1, 1)
-        end
-    end
+    ns.AddOwnerLines(tooltip)
 end
 
 local function Button_OnEnter(self)
@@ -74,7 +68,7 @@ local function Button_OnEnter(self)
         tooltipPostCall = SetsPostCall,
         euiAltsBound = self.bound,
         euiAltsSets = self.sets,
-        euiAltsOwners = self.owners and self.itemID or nil,
+        euiAltsOwners = self.itemID,
     })
 end
 
@@ -127,7 +121,7 @@ function Grid:Reset()
     for i = 1, self.used do
         local b = self.buttons[i]
         b:Hide()
-        b.ref, b.itemID, b.bound, b.sets, b.owners = nil, nil, nil, nil, nil
+        b.ref, b.itemID, b.bound, b.sets = nil, nil, nil, nil
     end
     for i = 1, self.usedHeaders do self.headers[i]:Hide() end
     self.used, self.usedHeaders = 0, 0
@@ -140,7 +134,6 @@ function Grid:Paint(b, enc, sets)
     b.itemID = id
     b.ref = link or ("item:" .. id)
     b.bound, b.sets = bound, sets
-    b.owners = self.showOwners
     local _, _, _, _, icon = C_Item.GetItemInfoInstant(id)
     SetItemButtonTexture(b, icon or 134400)
     SetItemButtonCount(b, count)
@@ -181,11 +174,9 @@ function Grid:OnItemLoaded(itemID)
 end
 
 -- sections = { { title = "...", items = { enc, enc, ... } }, ... }
--- showOwners: tooltips list every owner (aggregated all-characters view).
 -- Returns the total content height.
-function Grid:Layout(sections, width, showOwners)
+function Grid:Layout(sections, width)
     self:Reset()
-    self.showOwners = showOwners and true or nil
     local columns = math.max(1, math.floor((width - 2 * INSET + GAP) / (SLOT + GAP)))
     local y = 0
     for _, section in ipairs(sections) do

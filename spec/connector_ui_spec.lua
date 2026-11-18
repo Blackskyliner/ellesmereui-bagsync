@@ -310,7 +310,7 @@ describe("Browser", function()
         local f = env.EllesmereUIBagsAltsBrowser
         local b = f.grid.buttons[1]
         b:RunScript("OnEnter")
-        assert.are.equal(b, env.EllesmereUIBagsAltsTooltip.owner)   -- private tooltip, not GameTooltip
+        assert.are.equal(b, env.NotGameTooltipEllesmereUIBagsAlts.owner)   -- private tooltip, not GameTooltip
         assert.is_nil(env.GameTooltip.owner)
         b:Click()
         assert.are.equal(0, #env.__clicks)            -- plain click does nothing
@@ -368,7 +368,7 @@ describe("Browser", function()
         assert.are.equal(0, #rec.popups)
         assert.is_not_nil(ns.db.chars["Player-1-Alice"])
         entry:RunScript("OnEnter")
-        local tooltip = env.EllesmereUIBagsAltsTooltip
+        local tooltip = env.NotGameTooltipEllesmereUIBagsAlts
         assert.truthy(tooltip.lines[1][1]:find("cannot be deleted", 1, true))
         -- even when asked directly, as /alts delete does
         ns.Browser:ConfirmDelete("Player-1-Alice")
@@ -384,10 +384,10 @@ describe("Browser", function()
         sideRow(f, ns.WARBAND_OWNER):Click("RightButton")
         assert.is_nil(env.EllesmereUIBagsAltsMenu)
         sideRow(f, ns.WARBAND_OWNER):RunScript("OnEnter")
-        assert.is_nil(env.EllesmereUIBagsAltsTooltip and env.EllesmereUIBagsAltsTooltip.owner)
+        assert.is_nil(env.NotGameTooltipEllesmereUIBagsAlts and env.NotGameTooltipEllesmereUIBagsAlts.owner)
         -- characters explain the right-click
         sideRow(f, "Player-1-Bob"):RunScript("OnEnter")
-        local tooltip = env.EllesmereUIBagsAltsTooltip
+        local tooltip = env.NotGameTooltipEllesmereUIBagsAlts
         assert.truthy(tooltip.lines[#tooltip.lines][1]:find("Right-click", 1, true))
     end)
 

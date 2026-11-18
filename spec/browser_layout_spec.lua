@@ -39,7 +39,7 @@ for _, withEUI in ipairs({ true, false }) do
         it("explains the search syntax on hover of the ? beside the search box", function()
             local env, ns, f = open(withEUI)
             f.searchHelp:RunScript("OnEnter")
-            local tt = env.EllesmereUIBagsAltsTooltip
+            local tt = env.NotGameTooltipEllesmereUIBagsAlts
             assert.are.equal(f.searchHelp, tt.owner)
             local text = {}
             for _, l in ipairs(tt.lines) do text[#text + 1] = table.concat(l, " | ") end

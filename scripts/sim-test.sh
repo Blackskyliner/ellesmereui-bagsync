@@ -26,8 +26,12 @@ LINKS=("$ADDONS/EllesmereUIBags_Alts" "$ADDONS/EllesmereUIBags_Alts_SimTests" "$
 cleanup() {
   local status=$?
   for l in "${LINKS[@]}"; do if [ -L "$l" ]; then rm "$l"; fi; done
+  sim_lock_release
   return $status
 }
+# shellcheck source=sim-lock.sh
+. "$ROOT/scripts/sim-lock.sh"
+sim_lock_acquire
 trap cleanup EXIT
 ln -sfn "$ROOT/EllesmereUIBags_Alts" "$ADDONS/EllesmereUIBags_Alts"
 ln -sfn "$ROOT/sim/EllesmereUIBags_Alts_SimTests" "$ADDONS/EllesmereUIBags_Alts_SimTests"

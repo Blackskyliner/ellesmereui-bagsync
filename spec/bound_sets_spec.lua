@@ -5,7 +5,7 @@ local HELM_LINK = wow.itemLink(230000, "item:230000::::::::80:66::13:1:10256")
 
 local function tooltipText(env, tooltip)
     local out = {}
-    for _, l in ipairs((tooltip or env.EllesmereUIBagsAltsTooltip).lines) do out[#out + 1] = table.concat(l, " | ") end
+    for _, l in ipairs((tooltip or env.NotGameTooltipEllesmereUIBagsAlts).lines) do out[#out + 1] = table.concat(l, " | ") end
     return table.concat(out, "\n")
 end
 
@@ -111,7 +111,7 @@ describe("Bound state", function()
         s.bags[0].slots[1].bound = true
         local env, ns = wow.boot(s)
         hoverFirst(env, ns, "bags", "230000")
-        local info = env.EllesmereUIBagsAltsTooltip.processingInfo
+        local info = env.NotGameTooltipEllesmereUIBagsAlts.processingInfo
         assert.are.equal("GetHyperlink", info.getterName)
         assert.is_function(info.linePreCall)
         assert.is_nil(env.GameTooltip.processingInfo)          -- Blizzard's GameTooltip never touched

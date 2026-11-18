@@ -73,7 +73,7 @@ simtest("hovering a grid item uses the private tooltip through Blizzard's Proces
     local b = f.grid.buttons[1]
     assertNotNil(b)
     b:GetScript("OnEnter")(b)
-    local tooltip = _G.EllesmereUIBagsAltsTooltip
+    local tooltip = _G.NotGameTooltipEllesmereUIBagsAlts
     assertNotNil(tooltip)
     local info = tooltip.processingInfo
     assertNotNil(info)

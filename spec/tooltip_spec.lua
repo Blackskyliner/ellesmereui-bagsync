@@ -215,3 +215,111 @@ describe("Tooltip (opt-in)", function()
         assert.are.same({}, env.__errors)
     end)
 end)
+
+describe("Tooltip layout settings", function()
+    local function enabled(settings)
+        local env, ns = multiCharWorld()
+        local t = ns.db.settings.tooltip
+        t.enabled = true
+        for k, v in pairs(settings or {}) do t[k] = v end
+        ns.SettingsChanged()
+        return env, ns
+    end
+
+    it("lists the current character first, set apart by a rule, whatever the sort", function()
+        local env = enabled({ sort = "count" })
+        local lines = tooltipLines(env, 2589)
+        assert.truthy(lines[2][1]:find("Alice", 1, true))        -- after the blank line
+        assert.truthy(lines[3][1]:find("WHITE8X8", 1, true))      -- the rule
+        assert.truthy(lines[4][1]:find("Bob", 1, true))
+    end)
+
+    it("sorts the other characters by amount, last played or name", function()
+        local env, ns = enabled({ hideCurrent = true, otherRealms = "always" })
+        local function order()
+            local names = {}
+            for _, l in ipairs(tooltipLines(env, 2589)) do
+                local n = l[1] and (l[1]:match("^|c%x%x%x%x%x%x%x%x(%a+)"))
+                if n == "Bob" or n == "Carl" then names[#names + 1] = n end
+            end
+            return table.concat(names, ",")
+        end
+        assert.are.equal("Bob,Carl", order())                     -- 5 before 3
+        for _, c in pairs(ns.db.chars) do
+            if c.name == "Carl" then c.lastSeen = 2e9 elseif c.name == "Bob" then c.lastSeen = 1 end
+        end
+        ns.db.settings.tooltip.sort = "recent"
+        ns.SettingsChanged()
+        assert.are.equal("Carl,Bob", order())
+        ns.db.settings.tooltip.sort = "name"
+        ns.SettingsChanged()
+        assert.are.equal("Bob,Carl", order())
+    end)
+
+    it("shows only totals, locations as text, as icons on two lines or compact", function()
+        local env, ns = enabled({ detail = "total" })
+        local text = flatten(tooltipLines(env, 2589))
+        assert.truthy(text:find("Alice|r | 20", 1, true))
+        assert.truthy(text:find("Knights|r | 7", 1, true))
+        assert.falsy(text:find("Bags", 1, true))
+
+        ns.db.settings.tooltip.detail = "icons"
+        ns.SettingsChanged()
+        local lines = tooltipLines(env, 2589)
+        assert.truthy(lines[2][1]:find("Alice", 1, true))
+        assert.are.equal("20", lines[2][2])
+        assert.are.same({ " ", "|A:hud-backpack:14:14|a 20" }, lines[3])
+        text = flatten(lines)
+        assert.truthy(text:find("Warband Bank|r | |A:warbands-icon:14:14|a 100", 1, true))
+        assert.truthy(text:find("Knights|r | |A:ui-hud-micromenu-guildcommunities-up:14:14|a 7", 1, true))
+
+        ns.db.settings.tooltip.detail = "compact"
+        ns.SettingsChanged()
+        lines = tooltipLines(env, 2589)
+        assert.are.equal("|A:hud-backpack:14:14|a 20", lines[2][2])
+        assert.are.same({}, env.__errors)
+    end)
+
+    it("names the bank tabs holding the item, as a group after the bank", function()
+        local env, ns = enabled({ showTabs = true })
+        local text = flatten(tooltipLines(env, 2589))
+        assert.truthy(text:find("Warband Bank|r | 100 (Mats)", 1, true))   -- one tab: no count
+        assert.truthy(text:find("Guild Bank: 7 (T1)", 1, true))
+        local tabs = ns.db.warband.bank
+        for _, cont in pairs(tabs) do cont.icon = 133784 end
+        ns.db.settings.tooltip.detail = "compact"
+        ns.SettingsChanged()
+        text = flatten(tooltipLines(env, 2589))
+        assert.truthy(text:find("|A:warbands-icon:14:14|a 100 (|T133784:14:14:0:0:64:64:5:59:5:59|t)", 1, true))
+    end)
+
+    it("lists other realms only while their modifier is held, or always", function()
+        local env, ns = enabled({ otherRealms = "alt" })
+        assert.falsy(flatten(tooltipLines(env, 2589)):find("Carl", 1, true))
+        env.__state.modifiers.alt = true
+        assert.truthy(flatten(tooltipLines(env, 2589)):find("Carl-Antonidas", 1, true))
+        env.__state.modifiers.alt = false
+        ns.db.settings.tooltip.otherRealms = "always"
+        ns.SettingsChanged()
+        assert.truthy(flatten(tooltipLines(env, 2589)):find("Carl-Antonidas", 1, true))
+    end)
+
+    it("turns a stored realm scope 'all' into 'other realms: always' and repairs bad values", function()
+        local t = { realmScope = "all", detail = "huge", sort = 3, maxChars = 99.7, otherRealms = "never" }
+        local _, ns = wow.boot(wow.defaultState())
+        ns.NormalizeTooltipSettings(t)
+        assert.are.equal("connected", t.realmScope)
+        assert.are.equal("always", t.otherRealms)
+        assert.are.equal("text", t.detail)
+        assert.are.equal("count", t.sort)
+        assert.are.equal(40, t.maxChars)
+    end)
+
+    it("caps the listed characters at the configured number", function()
+        local env = enabled({ maxChars = 1, otherRealms = "always" })
+        local text = flatten(tooltipLines(env, 2589))
+        assert.truthy(text:find("Alice", 1, true))
+        assert.falsy(text:find("Bob", 1, true))
+        assert.truthy(text:find("and 2 more", 1, true))
+    end)
+end)

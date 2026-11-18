@@ -487,6 +487,7 @@ a beta or alpha file; its TOC version carries the same suffix.
 
 - [ ] Fits the project goals and all five acceptance criteria
 - [ ] Settings for anything new default to off
+- [ ] A new setting's variable is in `NEW_SETTINGS` (Options/Options.lua), so it carries the NEW label
 - [ ] Lua 5.1, ASCII outside the locales, matches the surrounding code
 - [ ] New strings translated in all ten locales
 - [ ] Tests added or updated; a regression test fails without the fix
