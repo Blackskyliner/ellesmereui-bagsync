@@ -17,7 +17,7 @@ better, faster or reads better), **Bugfix** (something did not work as intended)
 0.8.5 is the first public release. The versions before it were development
 builds, each tested in the game by the maintainer.
 
-## 0.11.0 (UNRELEASED)
+## 0.11.0
 
 - **New:** A "?" beside the browser's search box explains the search syntax on
   hover: words, item ID, `q:` quality and `t:` item type, with examples in the
