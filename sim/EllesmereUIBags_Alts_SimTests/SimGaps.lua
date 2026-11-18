@@ -67,9 +67,6 @@ function Gap(name, client, fn, opts)
     end
 end
 
--- Retail: EllesmereUI's gamepad support asks it whenever its bag window opens.
-Gap("IsUsingGamepad", "retail", function() return false end)
-
 -- Retail: C_PetJournal.GetOwnedBattlePetString (not in the generated docs;
 -- Blizzard's BattlePetTooltip.lua shows its string only when there is one):
 -- the fixture's character owns none of the species.
@@ -88,13 +85,3 @@ Gap("C_Bank.CanViewBank", "forever", function(bankType) return bankType == Enum.
 Gap("C_CurrencyInfo.GetCurrencyIDFromLink", "forever", function(link)
     return tonumber(type(link) == "string" and link:match("currency:(%d+)") or nil) or 0
 end, { rarely = true })
--- ItemDocumentation.lua: Blizzard's item buttons ask these for their icon
--- overlay; no Forever item is corrupted, cosmetic, a curio, relic or decor.
-Gap("C_Item.IsCorruptedItem", "forever", function() return false end)
-Gap("C_Item.IsCosmeticItem", "forever", function() return false end)
-Gap("C_Item.IsCurioItem", "forever", function() return false end)
-Gap("C_Item.IsRelicItem", "forever", function() return false end)
-Gap("C_Item.IsDecorItem", "forever", function() return false end)
--- SoulbindsDocumentation.lua: asked by the same overlay code; Forever has no
--- conduits.
-Gap("C_Soulbinds.IsItemConduitByItemInfo", "forever", function() return false end)
