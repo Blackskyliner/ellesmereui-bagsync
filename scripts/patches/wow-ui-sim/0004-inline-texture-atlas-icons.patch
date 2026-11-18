@@ -1,0 +1,1712 @@
+Subject: [PATCH] feat: draw inline texture and atlas icons in text
+
+FontStrings and GameTooltip lines dropped |T...|t and |A...|a escapes
+with the other markup, so text after an icon moved left, measured
+widths left the icons out and a line of icons alone measured no height;
+the client draws the icons in the line and measures them.
+
+- sim_render::inline_markup splits text into text pieces and icons
+  (path or file ID, sizes, offsets, texel rectangle and vertex color of
+  |T; atlas, sizes, offsets and color of |A, with or without the colon
+  after |A) and sizes them as measured on WoW Forever 1.60.1: a |T
+  height of 0 is one line high, a |T without a height takes no room, an
+  |A without a width is a square one line high.
+- Text with an icon is laid out piece by piece: icons become textured
+  quads, atlases draw their own @crop: region, a line is as high as its
+  tallest icon with text and icons centered on it, word wrap may move an
+  icon to the next line. Text without icons takes the unchanged paths.
+- WowFontSystem::measure_markup_width and measure_markup_height back
+  GetStringWidth, GetStringHeight, FontString auto width and the
+  GameTooltip width and line heights.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ crates/sim-render/src/inline_markup.rs        | 388 ++++++++++++++
+ crates/sim-render/src/lib.rs                  |   1 +
+ docs/wiki/index.md                            |   2 +-
+ docs/wiki/log.md                              |   4 +
+ docs/wiki/systems/rendering-pipeline.md       |  15 +
+ src/iced_app/quad_builders.rs                 |  68 ++-
+ src/iced_app/tooltip.rs                       | 150 +++++-
+ .../methods/text_attribute_event/text.rs      |  77 ++-
+ src/render/font.rs                            |  55 ++
+ src/render/glyph.rs                           |   2 +
+ src/render/glyph/inline_emit.rs               | 494 ++++++++++++++++++
+ src/render/mod.rs                             |   1 +
+ tests/inline_icon_width.rs                    | 141 +++++
+ 13 files changed, 1360 insertions(+), 38 deletions(-)
+ create mode 100644 crates/sim-render/src/inline_markup.rs
+ create mode 100644 src/render/glyph/inline_emit.rs
+ create mode 100644 tests/inline_icon_width.rs
+
+diff --git a/crates/sim-render/src/inline_markup.rs b/crates/sim-render/src/inline_markup.rs
+new file mode 100644
+index 000000000..e4a8bd7bc
+--- /dev/null
++++ b/crates/sim-render/src/inline_markup.rs
+@@ -0,0 +1,388 @@
++//! Inline texture (`|T...|t`) and atlas (`|A...|a`) escapes in text.
++//!
++//! The client draws these escapes as images inside a line of text and
++//! reserves their width when it measures the string. This module splits a
++//! string into text and icon pieces and sizes the icons; drawing them is up
++//! to the renderer.
++
++use crate::strip_wow_markup;
++
++/// What an inline icon draws.
++#[derive(Debug, Clone, PartialEq)]
++pub enum InlineIconSource {
++    /// A texture path, e.g. `Interface\Icons\INV_Misc_QuestionMark`.
++    File(String),
++    /// A texture file data ID, written as a number in place of the path.
++    FileId(u32),
++    /// An atlas name.
++    Atlas(String),
++}
++
++/// One `|T...|t` or `|A...|a` escape.
++///
++/// `|Tpath:height:width:offsetX:offsetY:texWidth:texHeight:left:right:top:bottom:r:g:b|t`
++/// and `|A:atlas:height:width:offsetX:offsetY:r:g:b|a` (the colon after `|A`
++/// is optional). Every field after the path or atlas name may be left out.
++#[derive(Debug, Clone, PartialEq)]
++pub struct InlineIcon {
++    pub source: InlineIconSource,
++    /// Height in UI units as written; see [`InlineIcon::size`] for 0 and
++    /// missing values.
++    pub height: Option<f32>,
++    /// Width in UI units as written; see [`InlineIcon::size`].
++    pub width: Option<f32>,
++    /// Shift to the right, in UI units.
++    pub offset_x: f32,
++    /// Shift upwards, in UI units.
++    pub offset_y: f32,
++    /// Texture coordinates `(left, right, top, bottom)` in the 0..1 range,
++    /// from the texel rectangle of `|T` and the texture's size.
++    pub tex_coords: Option<(f32, f32, f32, f32)>,
++    /// Vertex color, each channel 0..1.
++    pub vertex_color: Option<[f32; 3]>,
++}
++
++impl InlineIcon {
++    /// Width and height in UI units next to text whose lines are
++    /// `line_height` units high.
++    ///
++    /// A texture without a height takes no room; a height of 0 is the line
++    /// height, and a missing or zero width is the height. An atlas without a
++    /// width, or with a width of 0, is a square of the line height whatever
++    /// its height; otherwise a missing or zero height is the line height.
++    pub fn size(&self, line_height: f32) -> (f32, f32) {
++        let positive = |value: Option<f32>| value.filter(|value| *value > 0.0);
++        if let InlineIconSource::Atlas(_) = self.source {
++            return match positive(self.width) {
++                Some(width) => (width, positive(self.height).unwrap_or(line_height)),
++                None => (line_height, line_height),
++            };
++        }
++        let Some(height) = self.height else {
++            return (0.0, 0.0);
++        };
++        let height = if height > 0.0 { height } else { line_height };
++        (positive(self.width).unwrap_or(height), height)
++    }
++}
++
++/// A piece of a string: text with every escape removed, or an icon.
++#[derive(Debug, Clone, PartialEq)]
++pub enum InlinePiece {
++    Text(String),
++    Icon(InlineIcon),
++}
++
++/// Whether `text` holds an inline texture or atlas escape.
++pub fn has_inline_icons(text: &str) -> bool {
++    text.contains("|T") || text.contains("|A")
++}
++
++/// Split `text` into text pieces (colors, hyperlinks and other escapes
++/// removed, as by [`strip_wow_markup`]) and icons, in reading order. Empty
++/// text pieces are left out. An escape without its closing `|t`/`|a` ends
++/// the string, as the client draws nothing after it.
++pub fn split_inline_markup(text: &str) -> Vec<InlinePiece> {
++    let mut pieces = Vec::new();
++    let mut rest = text;
++    while let Some((start, close)) = next_icon_escape(rest) {
++        push_text(&mut pieces, &rest[..start]);
++        let body_start = start + 2;
++        let Some(body_len) = rest[body_start..].find(close) else {
++            return pieces;
++        };
++        let body = &rest[body_start..body_start + body_len];
++        let icon = if close == "|t" {
++            parse_texture_escape(body)
++        } else {
++            parse_atlas_escape(body)
++        };
++        if let Some(icon) = icon {
++            pieces.push(InlinePiece::Icon(icon));
++        }
++        rest = &rest[body_start + body_len + 2..];
++    }
++    push_text(&mut pieces, rest);
++    pieces
++}
++
++/// Width of the first line of `text` (up to the first line break), with
++/// inline icons sized for lines of `line_height` units. `measure` gives the
++/// width of a text piece that holds no escapes.
++pub fn first_line_width(text: &str, line_height: f32, mut measure: impl FnMut(&str) -> f32) -> f32 {
++    let mut width = 0.0;
++    for piece in split_inline_markup(text) {
++        match piece {
++            InlinePiece::Text(text) => {
++                let (line, broken) = match text.split_once('\n') {
++                    Some((line, _)) => (line, true),
++                    None => (text.as_str(), false),
++                };
++                if !line.is_empty() {
++                    width += measure(line);
++                }
++                if broken {
++                    break;
++                }
++            }
++            InlinePiece::Icon(icon) => width += icon.size(line_height).0,
++        }
++    }
++    width
++}
++
++/// Height of each line of `text` (split at line breaks, without word wrap):
++/// `line_height`, or the tallest icon on the line when it is taller.
++pub fn line_heights(text: &str, line_height: f32) -> Vec<f32> {
++    let mut heights = vec![line_height];
++    for piece in split_inline_markup(text) {
++        match piece {
++            InlinePiece::Text(text) => {
++                for _ in 0..text.matches('\n').count() {
++                    heights.push(line_height);
++                }
++            }
++            InlinePiece::Icon(icon) => {
++                let last = heights.last_mut().expect("one line at least");
++                *last = last.max(icon.size(line_height).1);
++            }
++        }
++    }
++    heights
++}
++
++fn push_text(pieces: &mut Vec<InlinePiece>, raw: &str) {
++    let text = strip_wow_markup(raw);
++    if !text.is_empty() {
++        pieces.push(InlinePiece::Text(text));
++    }
++}
++
++/// Byte offset of the next `|T` or `|A` and the escape that closes it. A
++/// doubled `||` is a literal bar, not the start of an escape.
++fn next_icon_escape(text: &str) -> Option<(usize, &'static str)> {
++    let bytes = text.as_bytes();
++    let mut i = 0;
++    while i + 1 < bytes.len() {
++        if bytes[i] == b'|' {
++            match bytes[i + 1] {
++                b'T' => return Some((i, "|t")),
++                b'A' => return Some((i, "|a")),
++                b'|' => i += 1,
++                _ => {}
++            }
++        }
++        i += 1;
++    }
++    None
++}
++
++fn parse_texture_escape(body: &str) -> Option<InlineIcon> {
++    let fields: Vec<&str> = body.split(':').collect();
++    let path = fields[0].trim();
++    if path.is_empty() {
++        return None;
++    }
++    let source = match path.parse::<u32>() {
++        Ok(id) => InlineIconSource::FileId(id),
++        Err(_) => InlineIconSource::File(path.to_string()),
++    };
++    let number = |index: usize| {
++        fields
++            .get(index)
++            .and_then(|field| field.trim().parse::<f32>().ok())
++    };
++    let tex_coords = match (number(5), number(6)) {
++        (Some(tex_width), Some(tex_height)) if tex_width > 0.0 && tex_height > 0.0 => {
++            match (number(7), number(8), number(9), number(10)) {
++                (Some(left), Some(right), Some(top), Some(bottom)) => Some((
++                    left / tex_width,
++                    right / tex_width,
++                    top / tex_height,
++                    bottom / tex_height,
++                )),
++                _ => None,
++            }
++        }
++        _ => None,
++    };
++    Some(InlineIcon {
++        source,
++        height: number(1),
++        width: number(2),
++        offset_x: number(3).unwrap_or(0.0),
++        offset_y: number(4).unwrap_or(0.0),
++        tex_coords,
++        vertex_color: vertex_color(number(11), number(12), number(13)),
++    })
++}
++
++fn parse_atlas_escape(body: &str) -> Option<InlineIcon> {
++    let body = body.strip_prefix(':').unwrap_or(body);
++    let fields: Vec<&str> = body.split(':').collect();
++    let name = fields[0].trim();
++    if name.is_empty() {
++        return None;
++    }
++    let number = |index: usize| {
++        fields
++            .get(index)
++            .and_then(|field| field.trim().parse::<f32>().ok())
++    };
++    Some(InlineIcon {
++        source: InlineIconSource::Atlas(name.to_string()),
++        height: number(1),
++        width: number(2),
++        offset_x: number(3).unwrap_or(0.0),
++        offset_y: number(4).unwrap_or(0.0),
++        tex_coords: None,
++        vertex_color: vertex_color(number(5), number(6), number(7)),
++    })
++}
++
++/// Escape colors are 0..255 per channel; all three must be given.
++fn vertex_color(r: Option<f32>, g: Option<f32>, b: Option<f32>) -> Option<[f32; 3]> {
++    let channel = |value: f32| (value / 255.0).clamp(0.0, 1.0);
++    Some([channel(r?), channel(g?), channel(b?)])
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    fn icon(source: InlineIconSource) -> InlineIcon {
++        InlineIcon {
++            source,
++            height: None,
++            width: None,
++            offset_x: 0.0,
++            offset_y: 0.0,
++            tex_coords: None,
++            vertex_color: None,
++        }
++    }
++
++    #[test]
++    fn splits_text_around_a_texture() {
++        let pieces = split_inline_markup("Icon|TInterface\\Icons\\Spell:16|tEnd");
++        assert_eq!(
++            pieces,
++            vec![
++                InlinePiece::Text("Icon".into()),
++                InlinePiece::Icon(InlineIcon {
++                    height: Some(16.0),
++                    ..icon(InlineIconSource::File("Interface\\Icons\\Spell".into()))
++                }),
++                InlinePiece::Text("End".into()),
++            ]
++        );
++    }
++
++    #[test]
++    fn reads_every_texture_field() {
++        let pieces = split_inline_markup("|T133784:12:20:1:-2:64:32:16:48:0:32:255:0:51|t");
++        let [InlinePiece::Icon(parsed)] = pieces.as_slice() else {
++            panic!("one icon expected: {pieces:?}");
++        };
++        assert_eq!(parsed.source, InlineIconSource::FileId(133784));
++        assert_eq!((parsed.height, parsed.width), (Some(12.0), Some(20.0)));
++        assert_eq!((parsed.offset_x, parsed.offset_y), (1.0, -2.0));
++        assert_eq!(parsed.tex_coords, Some((0.25, 0.75, 0.0, 1.0)));
++        assert_eq!(parsed.vertex_color, Some([1.0, 0.0, 0.2]));
++    }
++
++    #[test]
++    fn reads_atlas_with_and_without_colon() {
++        for text in ["|A:hud-backpack:14:16:2:3|a", "|Ahud-backpack:14:16:2:3|a"] {
++            let pieces = split_inline_markup(text);
++            assert_eq!(
++                pieces,
++                vec![InlinePiece::Icon(InlineIcon {
++                    height: Some(14.0),
++                    width: Some(16.0),
++                    offset_x: 2.0,
++                    offset_y: 3.0,
++                    ..icon(InlineIconSource::Atlas("hud-backpack".into()))
++                })],
++                "{text}"
++            );
++        }
++    }
++
++    #[test]
++    fn strips_other_markup_from_text_pieces() {
++        let pieces = split_inline_markup("|cFFFFD100Bags|r |A:hud-backpack:0:0|a |cnIQ3:3|r");
++        assert_eq!(
++            pieces,
++            vec![
++                InlinePiece::Text("Bags ".into()),
++                InlinePiece::Icon(InlineIcon {
++                    height: Some(0.0),
++                    width: Some(0.0),
++                    ..icon(InlineIconSource::Atlas("hud-backpack".into()))
++                }),
++                InlinePiece::Text(" 3".into()),
++            ]
++        );
++    }
++
++    #[test]
++    fn unterminated_escape_ends_the_string() {
++        assert_eq!(
++            split_inline_markup("Before|TInterface\\Icons\\Spell:16"),
++            vec![InlinePiece::Text("Before".into())]
++        );
++    }
++
++    #[test]
++    fn doubled_bar_is_not_an_escape() {
++        assert!(matches!(
++            split_inline_markup("a||Tb").as_slice(),
++            [InlinePiece::Text(_)]
++        ));
++    }
++
++    #[test]
++    fn texture_size_zero_is_the_line_height_and_no_size_takes_no_room() {
++        let texture = |height, width| InlineIcon {
++            height,
++            width,
++            ..icon(InlineIconSource::File("x".into()))
++        };
++        assert_eq!(texture(None, None).size(15.0), (0.0, 0.0));
++        assert_eq!(texture(Some(0.0), None).size(15.0), (15.0, 15.0));
++        assert_eq!(texture(Some(0.0), Some(0.0)).size(15.0), (15.0, 15.0));
++        assert_eq!(texture(Some(20.0), None).size(15.0), (20.0, 20.0));
++        assert_eq!(texture(Some(1.0), Some(110.0)).size(15.0), (110.0, 1.0));
++    }
++
++    #[test]
++    fn atlas_without_width_is_a_line_high_square() {
++        let atlas = |height, width| InlineIcon {
++            height,
++            width,
++            ..icon(InlineIconSource::Atlas("x".into()))
++        };
++        assert_eq!(atlas(Some(24.0), Some(0.0)).size(15.0), (15.0, 15.0));
++        assert_eq!(atlas(Some(24.0), None).size(15.0), (15.0, 15.0));
++        assert_eq!(atlas(Some(0.0), Some(0.0)).size(15.0), (15.0, 15.0));
++        assert_eq!(atlas(Some(12.0), Some(20.0)).size(15.0), (20.0, 12.0));
++        assert_eq!(atlas(Some(0.0), Some(20.0)).size(15.0), (20.0, 15.0));
++    }
++
++    #[test]
++    fn tall_icons_raise_their_line() {
++        assert_eq!(
++            line_heights("a|A:x:32:32|a b|nc|A:x:8:8|a|nd", 15.0),
++            vec![32.0, 15.0, 15.0]
++        );
++    }
++
++    #[test]
++    fn first_line_width_adds_icon_widths() {
++        let width = first_line_width("|A:a:14:14|a 3|nsecond |A:b:30:30|a", 12.0, |text| {
++            text.chars().count() as f32 * 5.0
++        });
++        assert_eq!(width, 14.0 + 2.0 * 5.0);
++    }
++}
+diff --git a/crates/sim-render/src/lib.rs b/crates/sim-render/src/lib.rs
+index f8002b897..dd790ec2f 100644
+--- a/crates/sim-render/src/lib.rs
++++ b/crates/sim-render/src/lib.rs
+@@ -1,6 +1,7 @@
+ //! Reusable markup and GPU/canvas primitives, below runtime composition.
+ pub use sim_texture::{self as texture_data, logging};
+ pub mod font;
++pub mod inline_markup;
+ pub use crate as render;
+ #[cfg(feature = "gui")]
+ pub use shader::{QuadBatch, QuadVertex, TextureRequest};
+diff --git a/docs/wiki/index.md b/docs/wiki/index.md
+index 97cf37a65..2eafb19e8 100644
+--- a/docs/wiki/index.md
++++ b/docs/wiki/index.md
+@@ -4208,7 +4208,7 @@ The sixteen retail 12.0.0 `Enum.EditModeDamageMeterSetting.*` and `Enum.EditMode
+ | Page | Summary |
+ |------|---------|
+ | [[layout-system]] | AnchorPoint enum (9 positions), single vs multi-anchor resolution, coordinate system (top-left screen / bottom-left Lua), SetPoint API, cycle detection |
+-| [[rendering-pipeline]] | QuadBatch (60-byte QuadVertex), five-tier RGBA GPU atlas plus glyph/BC1/BC3 bindings, WGSL shaders, mask resolution, presentation-only ScrollFrame geometry/clips with traversal-local offset reuse, strata/level sorting, monotonic top-level show segments, alpha propagation, hit testing, [bounded FontString smooth scaling](../specs/fontstring-smooth-scaling.md) |
++| [[rendering-pipeline]] | QuadBatch (60-byte QuadVertex), five-tier RGBA GPU atlas plus glyph/BC1/BC3 bindings, WGSL shaders, mask resolution, presentation-only ScrollFrame geometry/clips with traversal-local offset reuse, strata/level sorting, monotonic top-level show segments, alpha propagation, hit testing, [bounded FontString smooth scaling](../specs/fontstring-smooth-scaling.md), inline `|T`/`|A` icons in text |
+ | [[widget-system]] | Frame struct (~140 fields), WidgetType enum (18 types), WidgetRegistry storage accounting, lazy boxed model-family state, verified bounded ColorSelect RGB/XML/unchanged-Retail-consumer proof, requested offsets, designated-child ownership, presentation-only ScrollFrame geometry, default children, button text rendering, three-slice pattern, and 3D no-op boundary |
+ | [[simple-html]] | Frame-owned styles, shared block shaping/height/glyph hit regions, actual XML frame-name role application, and bounded original-consumer proof |
+ | [[lua-api]] | WowLuaEnv, FrameHandle userdata, 300+ frame methods, model-family compatibility surface, texture fileDataID/path identity, C_* namespaces including the bounded C_ProfSpecs specialization fixture, timers, animation system |
+diff --git a/docs/wiki/log.md b/docs/wiki/log.md
+index 3cd3a754d..2f95051f6 100644
+--- a/docs/wiki/log.md
++++ b/docs/wiki/log.md
+@@ -1,3 +1,7 @@
++## [2026-11-13] docs | Inline texture and atlas icons
++
++[Rendering pipeline](systems/rendering-pipeline.md#inline-icons-in-text) records how `|T` and `|A` escapes are parsed, laid out, drawn and measured, with icon sizes and line heights from a contributor measurement on WoW Forever 1.60.1; tests live in `crates/sim-render/src/inline_markup.rs`, `src/render/glyph/inline_emit.rs` and `tests/inline_icon_width.rs`.
++
+ ## [2026-11-12] investigation | EditBox text font and insets
+ 
+ [EditBox text font, insets and justification](investigations/editbox-text-font.md) records the client checks, the three loader gaps and their fix, and the unmodeled font of `InputBoxInstructionsTemplate`'s instructions region.
+diff --git a/docs/wiki/systems/rendering-pipeline.md b/docs/wiki/systems/rendering-pipeline.md
+index a5cb3dc62..7889a441b 100644
+--- a/docs/wiki/systems/rendering-pipeline.md
++++ b/docs/wiki/systems/rendering-pipeline.md
+@@ -106,6 +106,18 @@ Follow-ups `4e344ab4f` and `1ecc0c98c` cache cumulative offsets only for one ren
+ 
+ Without CASC every Blizzard font path maps to one fallback family: the font file `WOW_SIM_FALLBACK_FONT` names, else the first system face. The first system face differs between operating systems, so renders compared across machines pin the fallback.
+ 
++## Inline icons in text
++
++Text may hold texture escapes, `|Tpath-or-fileID:height:width:offsetX:offsetY:texWidth:texHeight:left:right:top:bottom:r:g:b|t`, and atlas escapes, `|A:atlas:height:width:offsetX:offsetY:r:g:b|a` (Blizzard's `CreateAtlasMarkup` writes the colon after `|A`; without it the escape parses the same). Every field after the path or atlas name is optional. `sim_render::inline_markup` splits a string into text pieces, with colors and hyperlinks stripped as by `strip_wow_markup`, and icons. A texture escape without a height takes no room; a height of 0 is the height of one line of text, and a missing or zero width is the icon's height. An atlas escape without a width, or with a width of 0, is a square one line high whatever its height. Offsets are in UI units with y up, the texel rectangle becomes texture coordinates of `texWidth`×`texHeight`, and the 0–255 color tints the icon.
++
++FontStrings, their color segments and GameTooltip lines that hold an icon are laid out piece by piece (`src/render/glyph/inline_emit.rs`): text pieces are shaped and drawn as before, each icon becomes a textured quad as wide as it is, a line is as high as its text or its tallest icon with text and icons centered on it, and word wrap may move an icon to the next line. An atlas draws its own `@crop:` region of the atlas file; a file ID resolves through the interface manifest; an unknown atlas or file ID draws nothing but keeps its room. Text without icons takes the unchanged paths.
++
++`WowFontSystem::measure_markup_width` measures the first line with the icons' widths; `GetStringWidth`, FontString auto-width and GameTooltip width selection use it, so a tooltip line with icons is as wide as its text plus its icons. `WowFontSystem::measure_markup_height` makes a text of icons alone one line high and raises each line to its tallest icon; `GetStringHeight` and the tooltip line heights use it. Word wrap is measured on the text without the icons.
++
++**Client measurement** (contributor, WoW Forever 1.60.1 build 70938, `FontString` with `Fonts\FRIZQT__.TTF` at 12, where `X` measures 10.54 × 12.30): `|T…:12|t` and `|A:…:12:12|a` are 11.95 wide; `|T…:0|t`, `|T…:0:0|t`, `|A:…:12:0|a` and `|A:…:0:0|a` are 12.30, the line height; `|T…|t` without a size is 0 wide; `|A:…:24:0|a` draws a square one line high; `X` with a 32-high icon is 31.86 high; `|TInterface\Buttons\WHITE8X8:1:110|t` alone is 109.53 × 12.30. The simulator's line height is `ceil(1.2 × size)` (15 for 12), so its size-0 icons are 15. Typed into the chat, `|` arrives as `||` and the escape as text; the probes build it with `"\124"`.
++
++**UNVERIFIED native claims:** Retail sizes (only Forever was measured), the small shrink of explicit sizes (11.95 for 12, 31.86 for 32, not modeled), an atlas escape with a width but no height, and the vertical centering of text next to a tall icon beyond the probe's screenshot.
++
+ ## FontString smooth scaling
+ 
+ `0624da720` adds independent `Frame.font_string_smooth_scaling`, shared fractional line-height shaping, mode-keyed caches, and ordinary/runtime/inherited XML handling under retail 12.0.5+. `3c8b48012` adds wrapped render/cache measurement assertions. Contract, inferred-policy boundaries, RED provenance, current GREEN status, earlier XML epoch gap, and future native recorder live in [FontString smooth scaling](../../specs/fontstring-smooth-scaling.md). No native/GPU visual proof is claimed.
+@@ -126,6 +138,9 @@ The headless path is implemented in `src/render/headless.rs` and uses the same W
+ ## Sources
+ 
+ - [font.rs](../../../src/render/font.rs) — font sources: Blizzard fonts from CASC, addon font files loaded on first use, the error for a missing one, the fallback family without CASC and `WOW_SIM_FALLBACK_FONT`
++- [inline_markup.rs](../../../crates/sim-render/src/inline_markup.rs) — inline `|T`/`|A` escape fields, sizes and first-line width
++- [inline_emit.rs](../../../src/render/glyph/inline_emit.rs) — inline icon layout and quads
++- [TextureUtil.lua](https://github.com/Gethe/wow-ui-source/blob/live/Interface/AddOns/Blizzard_SharedXMLBase/TextureUtil.lua) — `CreateTextureMarkup` and `CreateAtlasMarkup`, the escape formats Blizzard writes
+ - [FontString smooth scaling](../../specs/fontstring-smooth-scaling.md) — inferred height policy, tests, scope and future native probe
+ 
+ - [rendering-pipeline.md](../../rendering-pipeline.md) — QuadBatch, shaders, atlas, hit testing, alpha, text
+diff --git a/src/iced_app/quad_builders.rs b/src/iced_app/quad_builders.rs
+index fb039a0bb..f1f127f8e 100644
+--- a/src/iced_app/quad_builders.rs
++++ b/src/iced_app/quad_builders.rs
+@@ -3,7 +3,9 @@
+ use iced::{Point, Rectangle, Size};
+ 
+ use crate::render::font::WowFontSystem;
+-use crate::render::glyph::{GlyphAtlas, emit_text_quads};
++use crate::render::glyph::{
++    GlyphAtlas, InlineTextRequest, InlineTextRun, emit_inline_markup_quads, emit_text_quads,
++};
+ use crate::render::shader::GLYPH_ATLAS_TEX_INDEX;
+ use crate::render::{BlendMode, QuadBatch};
+ use crate::widget::{TextJustify, WidgetType};
+@@ -202,6 +204,11 @@ pub(super) fn emit_widget_text_quads(
+     let shadow = (f.shadow_color.a > 0.0).then(|| color_with_alpha(&f.shadow_color, layout.alpha));
+     let clip_bounds = layout.bounds;
+     let vert_before = text_renderer.batch.vertices.len();
++    if widget_text_has_inline_icons(f, layout.text) {
++        emit_widget_inline_text_quads(text_renderer, f, &layout, color, shadow);
++        clip_recent_quads(text_renderer.batch, vert_before, clip_bounds);
++        return;
++    }
+     if !f.text_segments.is_empty() {
+         emit_widget_text_segment_quads(text_renderer, f, layout, shadow);
+         clip_recent_quads(text_renderer.batch, vert_before, clip_bounds);
+@@ -232,6 +239,65 @@ pub(super) fn emit_widget_text_quads(
+     clip_recent_quads(text_renderer.batch, vert_before, clip_bounds);
+ }
+ 
++fn widget_text_has_inline_icons(f: &crate::widget::Frame, text: &str) -> bool {
++    use crate::render::inline_markup::has_inline_icons;
++    if f.text_segments.is_empty() {
++        has_inline_icons(text)
++    } else {
++        f.text_segments
++            .iter()
++            .any(|segment| has_inline_icons(&segment.text))
++    }
++}
++
++/// Text with `|T`/`|A` escapes: drawn piece by piece so the icons take room
++/// in the line. Color segments, when present, give the runs.
++fn emit_widget_inline_text_quads(
++    text_renderer: &mut WidgetTextRenderer<'_>,
++    f: &crate::widget::Frame,
++    layout: &WidgetTextLayout<'_>,
++    color: [f32; 4],
++    shadow: Option<[f32; 4]>,
++) {
++    let runs: Vec<InlineTextRun<'_>> = if f.text_segments.is_empty() {
++        vec![InlineTextRun {
++            text: layout.text,
++            color,
++        }]
++    } else {
++        f.text_segments
++            .iter()
++            .map(|segment| InlineTextRun {
++                text: &segment.text,
++                color: color_with_alpha(&segment.color, layout.alpha),
++            })
++            .collect()
++    };
++    emit_inline_markup_quads(
++        text_renderer.batch,
++        text_renderer.font_sys,
++        text_renderer.glyph_atlas,
++        &InlineTextRequest {
++            runs: &runs,
++            bounds: layout.bounds,
++            font_path: f.font.as_deref(),
++            font_size: f.font_size * f.effective_scale,
++            icon_scale: f.effective_scale,
++            justify_h: layout.justify_h,
++            justify_v: layout.justify_v,
++            word_wrap: layout.word_wrap,
++            max_lines: layout.max_lines,
++            spacing: f.text_line_spacing * f.effective_scale,
++            smooth_scaling: f.font_string_smooth_scaling,
++            glyph_tex_index: GLYPH_ATLAS_TEX_INDEX,
++            shadow_color: shadow,
++            shadow_offset: screen_shadow_offset(f),
++            outline: f.font_outline,
++            alpha: layout.alpha,
++        },
++    );
++}
++
+ fn emit_widget_text_segment_quads(
+     text_renderer: &mut WidgetTextRenderer<'_>,
+     f: &crate::widget::Frame,
+diff --git a/src/iced_app/tooltip.rs b/src/iced_app/tooltip.rs
+index 76738f3e4..6453559ce 100644
+--- a/src/iced_app/tooltip.rs
++++ b/src/iced_app/tooltip.rs
+@@ -14,7 +14,9 @@ use crate::lua_api::tooltip::{
+ };
+ use crate::render::QuadBatch;
+ use crate::render::font::WowFontSystem;
+-use crate::render::glyph::{GlyphAtlas, emit_text_quads};
++use crate::render::glyph::{
++    GlyphAtlas, InlineTextRequest, InlineTextRun, emit_inline_markup_quads, emit_text_quads,
++};
+ use crate::render::shader::GLYPH_ATLAS_TEX_INDEX;
+ use crate::widget::{TextJustify, TextOutline};
+ 
+@@ -165,7 +167,12 @@ pub(crate) fn measure_tooltip(
+                 Some(content_width),
+             )
+         } else {
+-            (font_size * 1.2).ceil()
++            legacy_line_height(
++                font_system,
++                &line.left_text,
++                line.right_text.as_deref(),
++                font_size,
++            )
+         };
+         if (native && total_height > 0.0) || (!native && i > 0) {
+             total_height += line_spacing;
+@@ -249,9 +256,9 @@ fn measure_native_tooltip(state: &mut SimState, id: u64, fonts: &mut WowFontSyst
+             continue;
+         }
+         let (font, size, scale, spacing, smooth) = native_line_font(state, &td, index, false);
+-        let text = native_line_text(state, &td, index, false, &line.left_text);
+-        let measured = fonts.measure_text_height(
+-            &text,
++        let text = native_line_markup(state, &td, index, false, &line.left_text);
++        let measured = fonts.measure_markup_height(
++            text,
+             font.as_deref(),
+             size,
+             wrapped.then_some(wrap_width / scale),
+@@ -301,8 +308,8 @@ fn native_right_text_height(
+         return 0.0;
+     }
+     let (font, size, scale, spacing, smooth) = native_line_font(state, td, index, true);
+-    let text = native_line_text(state, td, index, true, right_text);
+-    fonts.measure_text_height(&text, font.as_deref(), size, None, spacing, smooth) * scale
++    let text = native_line_markup(state, td, index, true, right_text);
++    fonts.measure_markup_height(text, font.as_deref(), size, None, spacing, smooth) * scale
+ }
+ 
+ fn native_line_font(
+@@ -337,6 +344,17 @@ fn native_line_text(
+     right: bool,
+     fallback: &str,
+ ) -> String {
++    tooltip_visible_text(native_line_markup(state, td, index, right, fallback))
++}
++
++/// The line's text with its escapes, from its FontString when it has one.
++fn native_line_markup<'a>(
++    state: &'a SimState,
++    td: &crate::lua_api::tooltip::TooltipData,
++    index: usize,
++    right: bool,
++    fallback: &'a str,
++) -> &'a str {
+     let ids = if right {
+         &td.right_line_ids
+     } else {
+@@ -345,8 +363,7 @@ fn native_line_text(
+     ids.get(index)
+         .and_then(|id| state.widgets.get(*id))
+         .and_then(|frame| frame.text.as_deref())
+-        .map(tooltip_visible_text)
+-        .unwrap_or_else(|| tooltip_visible_text(fallback))
++        .unwrap_or(fallback)
+ }
+ 
+ fn native_line_width(
+@@ -365,8 +382,8 @@ fn native_line_width(
+         return 0.0;
+     }
+     let (font, size, scale, _, _) = native_line_font(state, td, index, right);
+-    let text = native_line_text(state, td, index, right, text);
+-    fonts.measure_text_width(&text, font.as_deref(), size) * scale
++    let text = native_line_markup(state, td, index, right, text);
++    fonts.measure_markup_width(text, font.as_deref(), size) * scale
+ }
+ 
+ fn tooltip_column_gap(left: &str, right: Option<&str>, effective_scale: f32) -> f32 {
+@@ -462,7 +479,24 @@ fn tooltip_line_has_width_text(line: &crate::lua_api::tooltip::TooltipLine) -> b
+ }
+ 
+ fn measure_tooltip_text_width(font_system: &mut WowFontSystem, text: &str, font_size: f32) -> f32 {
+-    font_system.measure_text_width(&tooltip_visible_text(text), None, font_size)
++    font_system.measure_markup_width(text, None, font_size)
++}
++
++/// Height of an unwrapped legacy tooltip line: `ceil(1.2 × font size)`, or
++/// more when an inline icon on either side is taller.
++fn legacy_line_height(
++    font_system: &mut WowFontSystem,
++    left: &str,
++    right: Option<&str>,
++    font_size: f32,
++) -> f32 {
++    let line_height = (font_size * 1.2).ceil();
++    [Some(left), right]
++        .into_iter()
++        .flatten()
++        .filter(|text| crate::render::inline_markup::has_inline_icons(text))
++        .map(|text| font_system.measure_markup_height(text, None, font_size, None, 0.0, false))
++        .fold(line_height, f32::max)
+ }
+ 
+ fn measure_tooltip_text_height(
+@@ -471,14 +505,7 @@ fn measure_tooltip_text_height(
+     font_size: f32,
+     wrap_width: Option<f32>,
+ ) -> f32 {
+-    font_system.measure_text_height(
+-        &tooltip_visible_text(text),
+-        None,
+-        font_size,
+-        wrap_width,
+-        0.0,
+-        false,
+-    )
++    font_system.measure_markup_height(text, None, font_size, wrap_width, 0.0, false)
+ }
+ 
+ fn tooltip_visible_text(text: &str) -> String {
+@@ -764,7 +791,12 @@ fn emit_tooltip_lines(
+                 false,
+             )
+         } else {
+-            line.measured_height * eff_scale
++            legacy_line_height(
++                text_renderer.font_sys,
++                &line.left_text,
++                line.right_text.as_deref(),
++                line.font_size,
++            ) * eff_scale
+         };
+ 
+         let left_origin = if matches!(
+@@ -946,6 +978,7 @@ fn emit_left_tooltip_text(
+             font_size,
+             color: line.left_color,
+             wrap: line.wrap,
++            icon_scale: font_size / line.font_size,
+         },
+     );
+ }
+@@ -973,6 +1006,7 @@ fn emit_right_tooltip_text(
+             font_size,
+             color: line.right_color,
+             wrap: false,
++            icon_scale: effective_scale,
+         },
+     );
+ }
+@@ -986,6 +1020,8 @@ struct TooltipTextSegments<'a> {
+     font_size: f32,
+     color: [f32; 4],
+     wrap: bool,
++    /// Screen pixels per UI unit, for inline icon sizes.
++    icon_scale: f32,
+ }
+ 
+ struct TooltipSegmentFlow {
+@@ -999,6 +1035,10 @@ fn emit_tooltip_text_segments(
+     tr: &mut TooltipTextRenderer<'_>,
+     segment_run: TooltipTextSegments<'_>,
+ ) {
++    if tooltip_text_has_inline_icons(segment_run) {
++        emit_inline_tooltip_text(tr, segment_run);
++        return;
++    }
+     if segment_run.segments.is_empty() {
+         emit_unsegmented_tooltip_text(tr, segment_run);
+         return;
+@@ -1010,6 +1050,72 @@ fn emit_tooltip_text_segments(
+     }
+ }
+ 
++fn tooltip_text_has_inline_icons(segment_run: TooltipTextSegments<'_>) -> bool {
++    use crate::render::inline_markup::has_inline_icons;
++    if segment_run.segments.is_empty() {
++        has_inline_icons(segment_run.text)
++    } else {
++        segment_run
++            .segments
++            .iter()
++            .any(|segment| has_inline_icons(&segment.text))
++    }
++}
++
++/// A line with `|T`/`|A` escapes: icons take room in the line, as in the
++/// client, instead of being dropped with the other markup.
++fn emit_inline_tooltip_text(
++    tr: &mut TooltipTextRenderer<'_>,
++    segment_run: TooltipTextSegments<'_>,
++) {
++    let runs: Vec<InlineTextRun<'_>> = if segment_run.segments.is_empty() {
++        vec![InlineTextRun {
++            text: segment_run.text,
++            color: segment_run.color,
++        }]
++    } else {
++        segment_run
++            .segments
++            .iter()
++            .map(|segment| InlineTextRun {
++                text: &segment.text,
++                color: segment.color,
++            })
++            .collect()
++    };
++    let line_height = (segment_run.font_size * 1.2).ceil();
++    let bounds = Rectangle::new(
++        segment_run.bounds.position(),
++        Size::new(
++            segment_run.bounds.width,
++            line_height.max(segment_run.bounds.height),
++        ),
++    );
++    emit_inline_markup_quads(
++        tr.batch,
++        tr.font_sys,
++        tr.glyph_atlas,
++        &InlineTextRequest {
++            runs: &runs,
++            bounds,
++            font_path: None,
++            font_size: segment_run.font_size,
++            icon_scale: segment_run.icon_scale,
++            justify_h: segment_run.justify,
++            justify_v: TextJustify::Left,
++            word_wrap: segment_run.wrap,
++            max_lines: 0,
++            spacing: 0.0,
++            smooth_scaling: false,
++            glyph_tex_index: GLYPH_ATLAS_TEX_INDEX,
++            shadow_color: None,
++            shadow_offset: (0.0, 0.0),
++            outline: TextOutline::None,
++            alpha: segment_run.color[3],
++        },
++    );
++}
++
+ fn emit_unsegmented_tooltip_text(
+     tr: &mut TooltipTextRenderer<'_>,
+     segment_run: TooltipTextSegments<'_>,
+@@ -1095,7 +1201,7 @@ fn measure_tooltip_segments_width(
+         .iter()
+         .map(|segment| {
+             tr.font_sys
+-                .measure_text_width(&segment.text, None, font_size)
++                .measure_markup_width(&segment.text, None, font_size)
+         })
+         .sum()
+ }
+diff --git a/src/lua_api/frame/methods/text_attribute_event/text.rs b/src/lua_api/frame/methods/text_attribute_event/text.rs
+index afa2d20eb..8f5ee3f6f 100644
+--- a/src/lua_api/frame/methods/text_attribute_event/text.rs
++++ b/src/lua_api/frame/methods/text_attribute_event/text.rs
+@@ -728,9 +728,35 @@ fn frame_text_scale_value(state: &LuaState, id: u64) -> f64 {
+ 
+ pub(super) fn measure_text_width(state: &LuaState, id: u64) -> f64 {
+     let (text, font, font_size) = frame_text_measurement(state, id);
++    if let Some(markup) = frame_inline_icon_markup(state, id) {
++        // Inline |T/|A icons take their width in the line, scaled with the
++        // text like the glyphs around them.
++        let text_scale = frame_text_scale_value(state, id);
++        let line_height =
++            crate::render::font::line_height_for_font_size(font_size, false).unwrap_or(font_size);
++        let unscaled =
++            crate::render::inline_markup::first_line_width(&markup, line_height, |piece| {
++                (measure_width_in_frame_font(state, id, piece, font.as_deref(), font_size)
++                    / text_scale) as f32
++            });
++        return f64::from(unscaled) * text_scale;
++    }
+     measure_width_in_frame_font(state, id, &text, font.as_deref(), font_size)
+ }
+ 
++/// The measured text with its escapes, when it holds an inline icon.
++fn frame_inline_icon_markup(state: &LuaState, id: u64) -> Option<String> {
++    let sim = borrow_state(state).expect("sim state should exist");
++    let frame = sim.widgets.get(id)?;
++    let measurement_frame = frame
++        .children_keys
++        .get("Text")
++        .and_then(|&child_id| sim.widgets.get(child_id))
++        .unwrap_or(frame);
++    frame_text_value(&sim, measurement_frame, false)
++        .filter(|text| crate::render::inline_markup::has_inline_icons(text))
++}
++
+ fn measure_width_in_frame_font(
+     state: &LuaState,
+     id: u64,
+@@ -767,9 +793,6 @@ pub(super) fn get_unbounded_string_width_for_text(state: &mut LuaState) -> LuaRe
+ 
+ fn measure_text_height(state: &LuaState, id: u64, wrap_width: Option<f32>) -> f64 {
+     let (text, font, font_size) = frame_text_measurement(state, id);
+-    if text.is_empty() {
+-        return 0.0;
+-    }
+     let text_scale = frame_text_scale_value(state, id);
+     let (spacing, smooth_scaling) = borrow_state(state)
+         .expect("sim state should exist")
+@@ -777,21 +800,47 @@ fn measure_text_height(state: &LuaState, id: u64, wrap_width: Option<f32>) -> f6
+         .get(id)
+         .map(|frame| (frame.text_line_spacing, frame.font_string_smooth_scaling))
+         .unwrap_or((0.0, false));
++    let markup = frame_inline_icon_markup(state, id);
++    if text.is_empty() && markup.is_none() {
++        return 0.0;
++    }
+     if let Some(app) = state.app_data::<crate::lua_api::env::WowLuaAppData>()
+         && let Some(font_system) = app.font_system.as_ref()
+     {
+-        return font_system.borrow_mut().measure_text_height(
+-            &text,
+-            font.as_deref(),
+-            font_size,
+-            wrap_width,
+-            spacing,
+-            smooth_scaling,
+-        ) as f64
+-            * text_scale;
++        let mut font_system = font_system.borrow_mut();
++        let height = match markup.as_deref() {
++            // Inline |T/|A icons: one line at least, lines raised to tall icons.
++            Some(markup) => font_system.measure_markup_height(
++                markup,
++                font.as_deref(),
++                font_size,
++                wrap_width,
++                spacing,
++                smooth_scaling,
++            ),
++            None => font_system.measure_text_height(
++                &text,
++                font.as_deref(),
++                font_size,
++                wrap_width,
++                spacing,
++                smooth_scaling,
++            ),
++        };
++        return height as f64 * text_scale;
++    }
++    let mut height = approximate_text_height(&text, font_size, wrap_width, spacing, smooth_scaling);
++    if let Some(markup) = markup
++        && let Some(line_height) =
++            crate::render::font::line_height_for_font_size(font_size, smooth_scaling)
++    {
++        let raised: f32 = crate::render::inline_markup::line_heights(&markup, line_height)
++            .iter()
++            .map(|line| line - line_height)
++            .sum();
++        height = height.max(line_height) + raised;
+     }
+-    approximate_text_height(&text, font_size, wrap_width, spacing, smooth_scaling) as f64
+-        * text_scale
++    height as f64 * text_scale
+ }
+ 
+ pub(super) fn get_string_width(state: &mut LuaState) -> LuaResult<u32> {
+diff --git a/src/render/font.rs b/src/render/font.rs
+index bab37adc3..fccaaa3a6 100644
+--- a/src/render/font.rs
++++ b/src/render/font.rs
+@@ -564,6 +564,61 @@ impl WowFontSystem {
+             .unwrap_or(0.0)
+     }
+ 
++    /// Width of the first line of text that may hold WoW escapes: colors and
++    /// hyperlinks take no room, inline `|T`/`|A` icons take their width, as
++    /// the client's `GetStringWidth` reports it.
++    pub fn measure_markup_width(
++        &mut self,
++        text: &str,
++        font_path: Option<&str>,
++        font_size: f32,
++    ) -> f32 {
++        use crate::render::inline_markup::{first_line_width, has_inline_icons};
++        if !has_inline_icons(text) {
++            let stripped = crate::render::strip_wow_markup(text);
++            return self.measure_text_width(&stripped, font_path, font_size);
++        }
++        let line_height = line_height_for_font_size(font_size, false).unwrap_or(font_size);
++        first_line_width(text, line_height, |piece| {
++            self.measure_text_width(piece, font_path, font_size)
++        })
++    }
++
++    /// Height of text that may hold WoW escapes: the text without its
++    /// escapes, one line at least when it holds an inline `|T`/`|A` icon, and
++    /// each line raised to its tallest icon.
++    pub fn measure_markup_height(
++        &mut self,
++        text: &str,
++        font_path: Option<&str>,
++        font_size: f32,
++        wrap_width: Option<f32>,
++        spacing: f32,
++        smooth_scaling: bool,
++    ) -> f32 {
++        use crate::render::inline_markup::{has_inline_icons, line_heights};
++        let stripped = crate::render::strip_wow_markup(text);
++        let text_height = self.measure_text_height(
++            &stripped,
++            font_path,
++            font_size,
++            wrap_width,
++            spacing,
++            smooth_scaling,
++        );
++        if !has_inline_icons(text) {
++            return text_height;
++        }
++        let Some(line_height) = line_height_for_font_size(font_size, smooth_scaling) else {
++            return text_height;
++        };
++        let raised: f32 = line_heights(text, line_height)
++            .iter()
++            .map(|height| height - line_height)
++            .sum();
++        text_height.max(line_height) + raised
++    }
++
+     /// Measure the pixel height of text, accounting for word wrapping.
+     ///
+     /// If `wrap_width` is Some and > 0, text wraps at that width.
+diff --git a/src/render/glyph.rs b/src/render/glyph.rs
+index 912bc7bca..68b374f98 100644
+--- a/src/render/glyph.rs
++++ b/src/render/glyph.rs
+@@ -15,7 +15,9 @@ use super::font::{WowFontSystem, line_height_for_font_size, spaced_text_height};
+ use super::shader::{BlendMode, QuadBatch};
+ use crate::widget::TextJustify;
+ 
++mod inline_emit;
+ mod text_emit;
++pub use inline_emit::{InlineTextRequest, InlineTextRun, emit_inline_markup_quads};
+ pub use text_emit::emit_text_quads;
+ pub(crate) use text_emit::{PreparedBufferTextRequest, emit_prepared_buffer_text_quads};
+ 
+diff --git a/src/render/glyph/inline_emit.rs b/src/render/glyph/inline_emit.rs
+new file mode 100644
+index 000000000..e6b06a168
+--- /dev/null
++++ b/src/render/glyph/inline_emit.rs
+@@ -0,0 +1,494 @@
++//! Text with inline texture and atlas escapes (`|T...|t`, `|A...|a`).
++//!
++//! The client draws these escapes as images in the line and makes room for
++//! them, so text after an icon moves right by the icon's width. Text runs and
++//! icons are laid out here piece by piece: text pieces are shaped and drawn by
++//! [`emit_text_quads`], icons become textured quads centered on their line.
++
++use crate::render::inline_markup::{
++    InlineIcon, InlineIconSource, InlinePiece, split_inline_markup,
++};
++use iced::{Point, Rectangle, Size};
++
++use super::GlyphAtlas;
++use super::text_emit::emit_text_quads;
++use crate::render::font::{WowFontSystem, line_height_for_font_size};
++use crate::render::shader::{BlendMode, QuadBatch};
++use crate::widget::TextJustify;
++
++/// Text in one color, escapes included.
++pub struct InlineTextRun<'a> {
++    pub text: &'a str,
++    pub color: [f32; 4],
++}
++
++/// Everything [`emit_inline_markup_quads`] needs besides the runs.
++pub struct InlineTextRequest<'a> {
++    pub runs: &'a [InlineTextRun<'a>],
++    pub bounds: Rectangle,
++    pub font_path: Option<&'a str>,
++    /// Font size in screen pixels.
++    pub font_size: f32,
++    /// Screen pixels per UI unit, for the icon sizes and offsets the escapes
++    /// give in UI units.
++    pub icon_scale: f32,
++    pub justify_h: TextJustify,
++    pub justify_v: TextJustify,
++    pub word_wrap: bool,
++    pub max_lines: u32,
++    pub spacing: f32,
++    pub smooth_scaling: bool,
++    pub glyph_tex_index: i32,
++    pub shadow_color: Option<[f32; 4]>,
++    pub shadow_offset: (f32, f32),
++    pub outline: crate::widget::TextOutline,
++    /// Alpha the icons are drawn with.
++    pub alpha: f32,
++}
++
++#[derive(Debug, Clone, PartialEq)]
++pub(crate) enum InlineItem {
++    Text { text: String, color: [f32; 4] },
++    Icon(InlineIcon),
++}
++
++/// A laid-out item: its x within the line and its size in screen pixels.
++#[derive(Debug, Clone, PartialEq)]
++pub(crate) struct PlacedItem {
++    pub(crate) item: InlineItem,
++    pub(crate) x: f32,
++    pub(crate) width: f32,
++    pub(crate) height: f32,
++}
++
++#[derive(Debug, Default, Clone, PartialEq)]
++pub(crate) struct InlineLine {
++    pub(crate) items: Vec<PlacedItem>,
++    pub(crate) width: f32,
++}
++
++/// Lay the runs out in lines and emit their glyph and icon quads.
++pub fn emit_inline_markup_quads(
++    batch: &mut QuadBatch,
++    font_system: &mut WowFontSystem,
++    glyph_atlas: &mut GlyphAtlas,
++    request: &InlineTextRequest<'_>,
++) {
++    let Some(line_height) = line_height_for_font_size(request.font_size, request.smooth_scaling)
++    else {
++        return;
++    };
++    let mut lines = layout_inline_runs(request, |text| {
++        font_system.measure_text_width(text, request.font_path, request.font_size)
++    });
++    if request.max_lines > 0 {
++        lines.truncate(request.max_lines as usize);
++    }
++    let heights = line_box_heights(&lines, line_height);
++    let total_height =
++        heights.iter().sum::<f32>() + lines.len().saturating_sub(1) as f32 * request.spacing;
++    let top = request.bounds.y
++        + match request.justify_v {
++            TextJustify::Left => 0.0,
++            TextJustify::Center => (request.bounds.height - total_height) / 2.0,
++            TextJustify::Right => request.bounds.height - total_height,
++        };
++    let mut y = top;
++    for (line, &height) in lines.iter().zip(&heights) {
++        let x = line_start_x(request.bounds, request.justify_h, line.width);
++        for placed in &line.items {
++            let item_x = x + placed.x;
++            match &placed.item {
++                InlineItem::Text { text, color } => {
++                    let bounds = Rectangle::new(
++                        Point::new(item_x, y + (height - line_height) / 2.0),
++                        Size::new(placed.width.max(1.0), line_height),
++                    );
++                    emit_text_piece(
++                        batch,
++                        font_system,
++                        glyph_atlas,
++                        request,
++                        text,
++                        bounds,
++                        *color,
++                    );
++                }
++                InlineItem::Icon(icon) => {
++                    let bounds = Rectangle::new(
++                        Point::new(
++                            item_x + icon.offset_x * request.icon_scale,
++                            y + (height - placed.height) / 2.0 - icon.offset_y * request.icon_scale,
++                        ),
++                        Size::new(placed.width, placed.height),
++                    );
++                    push_inline_icon(batch, icon, bounds, request.alpha);
++                }
++            }
++        }
++        y += height + request.spacing;
++    }
++}
++
++/// Height of each laid-out line: the text's line height, or its tallest
++/// icon when that is taller. Text and icons are centered on the line.
++pub(crate) fn line_box_heights(lines: &[InlineLine], line_height: f32) -> Vec<f32> {
++    lines
++        .iter()
++        .map(|line| {
++            line.items
++                .iter()
++                .filter(|placed| matches!(placed.item, InlineItem::Icon(_)))
++                .fold(line_height, |height, placed| height.max(placed.height))
++        })
++        .collect()
++}
++
++/// Break the runs into lines. A line ends at a line break and, with word
++/// wrap, before a word or icon that would cross the right edge of the
++/// bounds. `measure` gives the pixel width of escape-free text.
++pub(crate) fn layout_inline_runs(
++    request: &InlineTextRequest<'_>,
++    mut measure: impl FnMut(&str) -> f32,
++) -> Vec<InlineLine> {
++    let max_width = request.bounds.width;
++    let line_height = line_height_for_font_size(request.font_size, request.smooth_scaling)
++        .unwrap_or(request.font_size)
++        / request.icon_scale;
++    let mut lines = vec![InlineLine::default()];
++    for run in request.runs {
++        for piece in split_inline_markup(run.text) {
++            match piece {
++                InlinePiece::Text(text) => {
++                    for (index, paragraph) in text.split('\n').enumerate() {
++                        if index > 0 {
++                            lines.push(InlineLine::default());
++                        }
++                        for chunk in text_chunks(paragraph, request.word_wrap) {
++                            let width = measure(chunk);
++                            let item = InlineItem::Text {
++                                text: chunk.to_string(),
++                                color: run.color,
++                            };
++                            let breakable = !chunk.trim().is_empty();
++                            place(&mut lines, request, max_width, breakable, item, width, 0.0);
++                        }
++                    }
++                }
++                InlinePiece::Icon(icon) => {
++                    let (width, height) = icon.size(line_height);
++                    let (width, height) = (width * request.icon_scale, height * request.icon_scale);
++                    place(
++                        &mut lines,
++                        request,
++                        max_width,
++                        true,
++                        InlineItem::Icon(icon),
++                        width,
++                        height,
++                    );
++                }
++            }
++        }
++    }
++    lines
++}
++
++fn text_chunks(text: &str, word_wrap: bool) -> Vec<&str> {
++    if text.is_empty() {
++        Vec::new()
++    } else if word_wrap {
++        text.split_inclusive(char::is_whitespace).collect()
++    } else {
++        vec![text]
++    }
++}
++
++fn place(
++    lines: &mut Vec<InlineLine>,
++    request: &InlineTextRequest<'_>,
++    max_width: f32,
++    breakable: bool,
++    item: InlineItem,
++    width: f32,
++    height: f32,
++) {
++    let line = lines.last_mut().expect("layout keeps one line");
++    if request.word_wrap && breakable && line.width > 0.0 && line.width + width > max_width {
++        lines.push(InlineLine::default());
++    }
++    let line = lines.last_mut().expect("layout keeps one line");
++    line.items.push(PlacedItem {
++        item,
++        x: line.width,
++        width,
++        height,
++    });
++    line.width += width;
++}
++
++fn line_start_x(bounds: Rectangle, justify_h: TextJustify, line_width: f32) -> f32 {
++    match justify_h {
++        TextJustify::Left => bounds.x,
++        TextJustify::Center => bounds.x + ((bounds.width - line_width) / 2.0).max(0.0),
++        TextJustify::Right => bounds.x + (bounds.width - line_width).max(0.0),
++    }
++}
++
++fn emit_text_piece(
++    batch: &mut QuadBatch,
++    font_system: &mut WowFontSystem,
++    glyph_atlas: &mut GlyphAtlas,
++    request: &InlineTextRequest<'_>,
++    text: &str,
++    bounds: Rectangle,
++    color: [f32; 4],
++) {
++    emit_text_quads(
++        batch,
++        font_system,
++        glyph_atlas,
++        text,
++        bounds,
++        request.font_path,
++        request.font_size,
++        color,
++        TextJustify::Left,
++        TextJustify::Center,
++        request.glyph_tex_index,
++        request.shadow_color,
++        request.shadow_offset,
++        request.outline,
++        false,
++        0,
++        0.0,
++        request.smooth_scaling,
++        Some(text),
++        None,
++    );
++}
++
++/// Push the icon's textured quad. Its texture loads like any other texture
++/// path; an unknown atlas or file ID draws nothing, as in the client.
++pub(crate) fn push_inline_icon(
++    batch: &mut QuadBatch,
++    icon: &InlineIcon,
++    bounds: Rectangle,
++    alpha: f32,
++) {
++    let [r, g, b] = icon.vertex_color.unwrap_or([1.0, 1.0, 1.0]);
++    let tint = [r, g, b, alpha];
++    match &icon.source {
++        InlineIconSource::File(path) => push_file_icon(batch, path, icon.tex_coords, bounds, tint),
++        InlineIconSource::FileId(id) => {
++            if let Some(path) = crate::manifest_interface_data::get_texture_path(*id) {
++                let path = format!("Interface\\{}", path.replace('/', "\\"));
++                push_file_icon(batch, &path, icon.tex_coords, bounds, tint);
++            }
++        }
++        InlineIconSource::Atlas(name) => {
++            if let Some(lookup) = crate::atlas::get_render_atlas_info(name) {
++                let info = lookup.info;
++                // The atlas region gets a texture of its own, as for an atlas
++                // set on a Texture, so filtering cannot bleed in its neighbours.
++                let path = format!(
++                    "{}@crop:{:.6},{:.6},{:.6},{:.6}",
++                    info.file,
++                    info.left_tex_coord,
++                    info.right_tex_coord,
++                    info.top_tex_coord,
++                    info.bottom_tex_coord
++                );
++                batch.push_textured_path(bounds, &path, tint, BlendMode::Alpha);
++            }
++        }
++    }
++}
++
++fn push_file_icon(
++    batch: &mut QuadBatch,
++    path: &str,
++    tex_coords: Option<(f32, f32, f32, f32)>,
++    bounds: Rectangle,
++    tint: [f32; 4],
++) {
++    match tex_coords {
++        Some((left, right, top, bottom)) => {
++            let uvs = Rectangle::new(Point::new(left, top), Size::new(right - left, bottom - top));
++            batch.push_textured_path_uv(bounds, uvs, path, tint, BlendMode::Alpha);
++        }
++        None => batch.push_textured_path(bounds, path, tint, BlendMode::Alpha),
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    fn request<'a>(
++        runs: &'a [InlineTextRun<'a>],
++        width: f32,
++        word_wrap: bool,
++    ) -> InlineTextRequest<'a> {
++        InlineTextRequest {
++            runs,
++            bounds: Rectangle::new(Point::ORIGIN, Size::new(width, 100.0)),
++            font_path: None,
++            font_size: 24.0,
++            icon_scale: 2.0,
++            justify_h: TextJustify::Left,
++            justify_v: TextJustify::Left,
++            word_wrap,
++            max_lines: 0,
++            spacing: 0.0,
++            smooth_scaling: false,
++            glyph_tex_index: 0,
++            shadow_color: None,
++            shadow_offset: (0.0, 0.0),
++            outline: crate::widget::TextOutline::None,
++            alpha: 1.0,
++        }
++    }
++
++    /// Five pixels per character.
++    fn measure(text: &str) -> f32 {
++        text.chars().count() as f32 * 5.0
++    }
++
++    fn summary(lines: &[InlineLine]) -> Vec<Vec<(String, f32, f32)>> {
++        lines
++            .iter()
++            .map(|line| {
++                line.items
++                    .iter()
++                    .map(|placed| {
++                        let label = match &placed.item {
++                            InlineItem::Text { text, .. } => text.clone(),
++                            InlineItem::Icon(_) => "<icon>".to_string(),
++                        };
++                        (label, placed.x, placed.width)
++                    })
++                    .collect()
++            })
++            .collect()
++    }
++
++    #[test]
++    fn icons_take_room_in_the_line() {
++        let runs = [InlineTextRun {
++            text: "|A:hud-backpack:14:14|a 3 |A:banker:0:0|a 2",
++            color: [1.0; 4],
++        }];
++        let lines = layout_inline_runs(&request(&runs, 500.0, false), measure);
++        // 14 UI units at two pixels per unit; size 0 is the 29 px line of
++        // the 24 px font.
++        assert_eq!(
++            summary(&lines),
++            vec![vec![
++                ("<icon>".into(), 0.0, 28.0),
++                (" 3 ".into(), 28.0, 15.0),
++                ("<icon>".into(), 43.0, 29.0),
++                (" 2".into(), 72.0, 10.0),
++            ]]
++        );
++        assert_eq!(lines[0].width, 82.0);
++        let InlineItem::Icon(_) = &lines[0].items[0].item else {
++            panic!("icon first");
++        };
++        assert_eq!(lines[0].items[0].height, 28.0);
++    }
++
++    #[test]
++    fn a_tall_icon_raises_its_line() {
++        let runs = [InlineTextRun {
++            text: "a|T133784:32|t|nb",
++            color: [1.0; 4],
++        }];
++        let lines = layout_inline_runs(&request(&runs, 500.0, false), measure);
++        assert_eq!(line_box_heights(&lines, 29.0), vec![64.0, 29.0]);
++    }
++
++    #[test]
++    fn word_wrap_moves_an_icon_to_the_next_line() {
++        let runs = [InlineTextRun {
++            text: "abcd |T133784:10|t",
++            color: [1.0; 4],
++        }];
++        let lines = layout_inline_runs(&request(&runs, 30.0, true), measure);
++        assert_eq!(
++            summary(&lines),
++            vec![
++                vec![("abcd ".into(), 0.0, 25.0)],
++                vec![("<icon>".into(), 0.0, 20.0)]
++            ]
++        );
++    }
++
++    #[test]
++    fn line_breaks_and_colored_runs_keep_their_order() {
++        let runs = [
++            InlineTextRun {
++                text: "a|A:x:5:5|a",
++                color: [1.0, 0.0, 0.0, 1.0],
++            },
++            InlineTextRun {
++                text: "b\nc",
++                color: [0.0, 1.0, 0.0, 1.0],
++            },
++        ];
++        let lines = layout_inline_runs(&request(&runs, 500.0, false), measure);
++        assert_eq!(
++            summary(&lines),
++            vec![
++                vec![
++                    ("a".into(), 0.0, 5.0),
++                    ("<icon>".into(), 5.0, 10.0),
++                    ("b".into(), 15.0, 5.0)
++                ],
++                vec![("c".into(), 0.0, 5.0)],
++            ]
++        );
++    }
++
++    #[test]
++    fn atlas_icon_uses_its_own_texture_region() {
++        let mut batch = QuadBatch::new();
++        let icon = split_inline_markup("|A:hud-backpack:14:14|a").remove(0);
++        let InlinePiece::Icon(icon) = icon else {
++            panic!("icon expected");
++        };
++        push_inline_icon(
++            &mut batch,
++            &icon,
++            Rectangle::new(Point::ORIGIN, Size::new(14.0, 14.0)),
++            1.0,
++        );
++        let lookup =
++            crate::atlas::get_render_atlas_info("hud-backpack").expect("atlas in the table");
++        assert_eq!(batch.texture_requests.len(), 1);
++        assert!(
++            batch.texture_requests[0]
++                .path
++                .starts_with(&format!("{}@crop:", lookup.info.file)),
++            "{}",
++            batch.texture_requests[0].path
++        );
++    }
++
++    #[test]
++    fn unknown_atlas_draws_nothing() {
++        let mut batch = QuadBatch::new();
++        let InlinePiece::Icon(icon) =
++            split_inline_markup("|A:no-such-atlas-anywhere:14:14|a").remove(0)
++        else {
++            panic!("icon expected");
++        };
++        push_inline_icon(
++            &mut batch,
++            &icon,
++            Rectangle::new(Point::ORIGIN, Size::new(14.0, 14.0)),
++            1.0,
++        );
++        assert!(batch.vertices.is_empty());
++    }
++}
+diff --git a/src/render/mod.rs b/src/render/mod.rs
+index 870f0d898..ad7566954 100644
+--- a/src/render/mod.rs
++++ b/src/render/mod.rs
+@@ -21,6 +21,7 @@ pub use sim_render::texture;
+ pub use crate::BlendMode;
+ pub use crate::font::WowFontSystem;
+ 
++pub use sim_render::inline_markup;
+ pub use sim_render::strip_wow_markup;
+ 
+ #[cfg(feature = "gui")]
+diff --git a/tests/inline_icon_width.rs b/tests/inline_icon_width.rs
+new file mode 100644
+index 000000000..ab3fff090
+--- /dev/null
++++ b/tests/inline_icon_width.rs
+@@ -0,0 +1,141 @@
++//! Inline `|T`/`|A` icons take their width in measured text, as the client's
++//! `GetStringWidth` reports it, and GameTooltip lines with icons widen the
++//! tooltip by the icons' widths.
++use wow_ui_sim::lua_api::WowLuaEnv;
++
++fn widths(text_a: &str, text_b: &str) -> (f64, f64) {
++    let env = WowLuaEnv::new().unwrap();
++    env.eval(&format!(
++        r#"
++        local fs = UIParent:CreateFontString(nil, "ARTWORK")
++        fs:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
++        fs:SetText({text_a:?})
++        local a = fs:GetStringWidth()
++        fs:SetText({text_b:?})
++        return a, fs:GetStringWidth()
++        "#
++    ))
++    .unwrap()
++}
++
++#[test]
++fn atlas_icon_adds_its_width() {
++    let (plain, with_icon) = widths("3 2", "3 |A:hud-backpack:14:20|a2");
++    assert!(
++        (with_icon - plain - 20.0).abs() < 0.01,
++        "plain {plain}, with icon {with_icon}"
++    );
++}
++
++#[test]
++fn texture_icon_of_size_zero_is_as_wide_as_a_line_is_high() {
++    let env = WowLuaEnv::new().unwrap();
++    let (plain, with_icon, line): (f64, f64, f64) = env
++        .eval(
++            r#"
++            local fs = UIParent:CreateFontString(nil, "ARTWORK")
++            fs:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
++            fs:SetText("ab")
++            local a, h = fs:GetStringWidth(), fs:GetStringHeight()
++            fs:SetText("a|TInterface\\Icons\\INV_Misc_QuestionMark:0|tb")
++            return a, fs:GetStringWidth(), h
++            "#,
++        )
++        .unwrap();
++    assert!(
++        line > 0.0 && (with_icon - plain - line).abs() < 0.01,
++        "plain {plain}, with icon {with_icon}, line {line}"
++    );
++}
++
++#[test]
++fn texture_icon_without_size_takes_no_room() {
++    let (plain, with_icon) = widths("ab", "a|TInterface\\Icons\\INV_Misc_QuestionMark|tb");
++    assert!(
++        (with_icon - plain).abs() < 0.01,
++        "plain {plain}, with icon {with_icon}"
++    );
++}
++
++#[test]
++fn atlas_icon_without_width_is_a_line_high_square() {
++    let (plain, with_icon) = widths("ab", "a|A:hud-backpack:24:0|ab");
++    let (_, line) = widths("ab", "|A:hud-backpack:0:0|a");
++    assert!(
++        line > 0.0 && (with_icon - plain - line).abs() < 0.01,
++        "plain {plain}, with icon {with_icon}, line {line}"
++    );
++}
++
++#[test]
++fn a_tall_icon_raises_the_line() {
++    let env = WowLuaEnv::new().unwrap();
++    let (text, tall): (f64, f64) = env
++        .eval(
++            r#"
++            local fs = UIParent:CreateFontString(nil, "ARTWORK")
++            fs:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
++            fs:SetText("X")
++            local a = fs:GetStringHeight()
++            fs:SetText("X|TInterface\\Icons\\INV_Misc_QuestionMark:32|t")
++            return a, fs:GetStringHeight()
++            "#,
++        )
++        .unwrap();
++    assert!(text < 32.0 && (tall - 32.0).abs() < 0.01, "text {text}, tall {tall}");
++}
++
++#[test]
++fn texture_icon_width_overrides_its_height() {
++    let (plain, with_icon) = widths(
++        "x",
++        "x|TInterface\\Buttons\\WHITE8X8:1:110:0:0:8:8:0:8:0:8:110:110:110|t",
++    );
++    assert!(
++        (with_icon - plain - 110.0).abs() < 0.01,
++        "plain {plain}, with icon {with_icon}"
++    );
++}
++
++#[test]
++fn text_scale_scales_the_icons_with_the_glyphs() {
++    let env = WowLuaEnv::new().unwrap();
++    let (plain, with_icon): (f64, f64) = env
++        .eval(
++            r#"
++            local fs = UIParent:CreateFontString(nil, "ARTWORK")
++            fs:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
++            fs:SetTextScale(2)
++            fs:SetText("ab")
++            local a = fs:GetStringWidth()
++            fs:SetText("a|A:hud-backpack:10:10|ab")
++            return a, fs:GetStringWidth()
++            "#,
++        )
++        .unwrap();
++    assert!(
++        (with_icon - plain - 20.0).abs() < 0.01,
++        "plain {plain}, with icon {with_icon}"
++    );
++}
++
++#[test]
++fn icon_only_text_is_one_line_high() {
++    let env = WowLuaEnv::new().unwrap();
++    let (text, icon_only): (f64, f64) = env
++        .eval(
++            r#"
++            local fs = UIParent:CreateFontString(nil, "ARTWORK")
++            fs:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
++            fs:SetText("X")
++            local a = fs:GetStringHeight()
++            fs:SetText("|TInterface\\Buttons\\WHITE8X8:1:110|t")
++            return a, fs:GetStringHeight()
++            "#,
++        )
++        .unwrap();
++    assert!(
++        icon_only > 0.0 && (icon_only - text).abs() < 0.01,
++        "text {text}, icon only {icon_only}"
++    );
++}
