@@ -56,7 +56,8 @@ GETHE_FOREVER_REV=aff0d8cd53bf4d9ef1c1dd2786b94461a276fb16 # 1.60.1.70707
 # own when the pins part.
 # wow-ui-sim 0001: a MaskTexture with slice margins was stretched whole, so
 # EllesmereUI's rounded tooltip corners blurred the whole tooltip; masked
-# quads are split at the mask's slice lines (upstream pull request pending).
+# quads are split at the mask's slice lines
+# (https://github.com/Osso/wow-ui-sim/pull/65).
 # The Forever profile reads selected spell data of client build 1.60.1.70685,
 # which wow-cli generates from Blizzard's CDN; the checksum is that of the file
 # the pinned wow-cli generates (its selection of spell IDs grows with the
