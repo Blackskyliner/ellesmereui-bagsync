@@ -7,10 +7,12 @@
 # changelog on CurseForge and GitHub (default notes file: .release-notes.md).
 # Its entries start with **New:**, **Enhanced:**, **Bugfix:** or **Removed:**,
 # in that order.
-# Until the release, the section is headed "## <version> (UNRELEASED)" and
-# collects the changes merged since the last release. A tag is never released
-# from it: the release pull request removes the marker. --allow-unreleased
-# accepts the marked heading (tests and pull request checks).
+# Changes not yet released wait as fragments in changelog.d/ (one file per
+# change, so pull requests never edit the same lines); every fragment is
+# checked for the same prefixes. scripts/changelog-release.py turns them into
+# the next version's section. A tag is never released while fragments wait:
+# they would miss its changelog. --allow-unreleased accepts waiting fragments
+# (tests and pull request checks).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 ALLOW_UNRELEASED=0
@@ -24,13 +26,37 @@ if [ "$TAG" != "$VERSION" ]; then
   exit 1
 fi
 
-if grep -qxF "## $VERSION (UNRELEASED)" "$ROOT/CHANGELOG.md" && [ "$ALLOW_UNRELEASED" = 0 ]; then
-  echo "CHANGELOG.md: \"## $VERSION\" is still marked (UNRELEASED); the release pull request removes the marker" >&2
+# check_fragment <file>: entries with a prefix, continuation lines indented by
+# two spaces, nothing else.
+check_fragment() {
+  awk '
+    /^[[:space:]]*$/ { next }
+    /^- \*\*(New|Enhanced|Bugfix|Removed):\*\* [^[:space:]]/ { entries++; next }
+    /^  [^[:space:]]/ && entries { next }
+    { print FILENAME ": not an entry or its continuation: " $0; bad = 1 }
+    END {
+      if (!entries) { print FILENAME ": no entry"; bad = 1 }
+      exit bad
+    }
+  ' "$1" >&2
+}
+fragments=()
+for f in "$ROOT"/changelog.d/*.md; do
+  [ -f "$f" ] && [ "$(basename "$f")" != README.md ] && fragments+=("$f")
+done
+bad=0
+for f in ${fragments[@]+"${fragments[@]}"}; do check_fragment "$f" || bad=1; done
+if [ "$bad" = 1 ]; then
+  echo "changelog.d: every entry starts with - **New:**, **Enhanced:**, **Bugfix:** or **Removed:** (changelog.d/README.md)" >&2
+  exit 1
+fi
+if [ "${#fragments[@]}" -gt 0 ] && [ "$ALLOW_UNRELEASED" = 0 ]; then
+  echo "changelog.d holds ${#fragments[@]} unreleased fragment(s); scripts/changelog-release.py moves them into CHANGELOG.md" >&2
   exit 1
 fi
 
 awk -v v="$VERSION" '
-  $0 == "## " v || $0 == "## " v " (UNRELEASED)" { found = 1; next }
+  $0 == "## " v { found = 1; next }
   found && /^## / { exit }
   found { print }
 ' "$ROOT/CHANGELOG.md" | sed -e '/./,$!d' > "$NOTES.tmp"

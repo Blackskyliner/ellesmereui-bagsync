@@ -1,9 +1,10 @@
-# Checks the CHANGELOG.md section of the TOC version with the same script the
-# release workflow runs on a tag (scripts/release-check.sh): the section exists
-# and its entries carry a New/Enhanced/Bugfix/Removed prefix, in that order.
-# CI skips Markdown changes, so without this job a broken section would only
-# show when the release fails on the tag. The section may still be marked
-# (UNRELEASED); only the release workflow rejects that.
+# Checks the CHANGELOG.md section of the TOC version and the unreleased
+# fragments in changelog.d/ with the same script the release workflow runs on
+# a tag (scripts/release-check.sh): the section exists, and its entries and
+# every fragment's carry a New/Enhanced/Bugfix/Removed prefix, the section's in
+# that order. CI skips Markdown changes, so without this job a broken entry
+# would only show when the release fails on the tag. Fragments may wait here;
+# only the release workflow rejects them.
 name: Changelog
 
 on:
@@ -11,12 +12,14 @@ on:
     branches: [main]
     paths:
       - CHANGELOG.md
+      - changelog.d/**
       - EllesmereUIBags_Alts/EllesmereUIBags_Alts.toc
       - scripts/release-check.sh
       - .github/workflows/changelog.yml
   pull_request:
     paths:
       - CHANGELOG.md
+      - changelog.d/**
       - EllesmereUIBags_Alts/EllesmereUIBags_Alts.toc
       - scripts/release-check.sh
       - .github/workflows/changelog.yml
