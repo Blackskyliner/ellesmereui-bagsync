@@ -141,7 +141,10 @@ installs EllesmereUI as the dependency. By hand:
 **Browser.** On the left the characters grouped by realm, then the warband bank
 and the guild banks. At the top the tabs Everything, Bags, Bank, Equipped, Mail,
 Auctions and Currency. Hover shows the item tooltip, shift-click links an item
-in chat, ctrl-click opens the dressing room. Right-click a character or a guild
+in chat, ctrl-click opens the dressing room. The tooltip is the browser's own
+frame, so addons that add lines to item tooltips (prices and the like) show
+there only if they serve such frames: Auctionator and addons built on
+LibExtraTip (Oribos Exchange, among others) do. Right-click a character or a guild
 bank in the list and choose "Delete data" to remove its stored data (asks
 first); the current character cannot be deleted. Two characters with the same
 name show when each was last seen. The option "Money display in the browser" picks

@@ -45,6 +45,9 @@ builds, each tested in the game by the maintainer.
 - **Enhanced:** When two stored characters share a name on a realm, the
   sidebar and the delete confirmation show when each was last seen.
   `/alts delete` no longer picks one of them; it points to the browser.
+- **Bugfix:** The browser's item tooltips show the lines other addons add to
+  item tooltips that opt in their own tooltip frames, such as Auctionator's and
+  Oribos Exchange's prices (#18).
 - **Bugfix:** Without EllesmereUI's skin module, the magnifier and the text of
   the browser's search box no longer touch its left border.
 - **Bugfix:** On WoW Forever, the keyring shows as "Keyring" after the bags in
