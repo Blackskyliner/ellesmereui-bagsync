@@ -235,6 +235,8 @@ function FrameMethods:GetHeight() return self.height or 0 end
 function FrameMethods:GetParent() return self.parent end
 function FrameMethods:SetParent(p) self.parent = p end
 function FrameMethods:GetFrameLevel() return self.level or 1 end
+function FrameMethods:SetAlpha(a) self.alpha = a end
+function FrameMethods:GetAlpha() return self.alpha or 1 end
 function FrameMethods:SetFrameStrata(s) self.strata = s end
 function FrameMethods:GetFrameStrata()
     local f = self
