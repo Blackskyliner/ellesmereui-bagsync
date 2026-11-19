@@ -7,7 +7,7 @@
 --
 --  Layout
 --    schema   = <number>
---    settings = { collect = {...}, tooltip = {...}, ui = {...}, firstRunAsked, seenNew }
+--    settings = { collect = {...}, tooltip = {...}, ui = {...}, value = {...}, firstRunAsked, seenNew }
 --    chars    = { [guid] = CharRecord }   (versions before 0.10.0: "FirstName-Realm", see ns.AdoptLegacyChar)
 --    warband  = { money, moneyAt, bank = Container, bankAt }
 --    guilds   = { ["Guild-Realm"] = { name, realm, faction, money, scannedAt, tabs = { [tab] = Container } } }
@@ -68,6 +68,23 @@ ns.DEFAULTS = {
             moneyFormat      = ns.Compat.DEFAULT_MONEY_FORMAT,   -- "g" | "gs" | "gsc": parts of a balance in the browser
             moneySymbols     = "text",   -- "text" | "icons": coloured g/s/c or coin icons after each part
         },
+        -- The value list (browser tab "Value"): which price sources its
+        -- automatic choice compares, the auction house cut, the TSM price and
+        -- the list's own view state. They only act inside that tab.
+        value = {
+            oeRegion    = true,
+            oeRealm     = true,
+            auctionator = true,
+            tsm         = true,
+            vendor      = true,
+            ahCut       = true,          -- auction prices after the house's 5% cut
+            tsmPrice    = "first(DBMarket, DBRegionMarketAvg)",   -- or "custom": tsmCustom
+            tsmCustom   = "",
+            source      = "auto",        -- "auto" | a source key: the price the list shows
+            sort        = "value",       -- column the list is sorted by
+            sortDesc    = true,
+            showSets    = false,         -- list items of equipment sets (as a group of their own)
+        },
         firstRunAsked = false,
         debug = false,   -- /alts debug: chat diagnostics
     },
@@ -87,6 +104,22 @@ local TOOLTIP_CHOICES = {
     detail      = { total = true, text = true, icons = true, compact = true },
     sort        = { count = true, recent = true, name = true },
 }
+local VALUE_CHOICES = {
+    source = { auto = true, oeRegion = true, oeRealm = true, auctionator = true, tsm = true, vendor = true },
+    sort   = { name = true, char = true, loc = true, source = true, value = true, gain = true, bound = true },
+    tsmPrice = {
+        ["first(DBMarket, DBRegionMarketAvg)"] = true, DBMarket = true, DBMinBuyout = true, DBHistorical = true,
+        DBRegionMarketAvg = true, DBRegionHistorical = true, DBRegionSaleAvg = true, custom = true,
+    },
+}
+
+function ns.NormalizeValueSettings(v)
+    local defaults = ns.DEFAULTS.settings.value
+    for field, valid in pairs(VALUE_CHOICES) do
+        if not valid[v[field]] then v[field] = defaults[field] end
+    end
+end
+
 local MAX_CHARS_LIMIT = 40
 ns.MAX_CHARS_LIMIT = MAX_CHARS_LIMIT
 
@@ -224,6 +257,7 @@ function ns.InitDB()
 
     MergeDefaults(db, ns.DEFAULTS)
     ns.NormalizeTooltipSettings(db.settings.tooltip)
+    ns.NormalizeValueSettings(db.settings.value)
 
     -- Only the shape here; every stored record is checked by SanitizeData on
     -- activation, so an unused addon does not walk its data at login.
