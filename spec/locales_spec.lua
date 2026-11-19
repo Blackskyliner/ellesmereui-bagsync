@@ -8,14 +8,18 @@ local LOCALES = { "deDE", "esES", "esMX", "frFR", "itIT", "koKR", "ptBR", "ruRU"
 -- Keys that may legitimately stay English (product names, loan words).
 local MAY_STAY_ENGLISH = {
     ["Alts"] = true, ["EllesmereUI Bags: Alts"] = true, ["Account"] = true, ["Bank"] = true,
-    ["Browser"] = true, ["Gold"] = true, ["Tooltip"] = true, ["Total"] = true, ["version"] = true,
-    ["OK"] = true, ["Index"] = true,
+    ["Browser"] = true, ["Gold"] = true, ["Tooltip"] = true, ["Total"] = true, ["Total (%d)"] = true, ["version"] = true,
+    ["OK"] = true, ["Index"] = true, ["Source"] = true, ["Item"] = true,
 }
 
 -- Keys reached through lookup tables instead of literal L["..."] in the code.
 local INDIRECT_KEYS = { "Backpack", "Bag 1", "Bag 2", "Bag 3", "Bag 4", "Reagent Bag", "Currency",
     "Bags", "Bank", "Equipped", "Mail", "Auctions", "Warband Bank", "Guild Bank",
-    "Character-bound", "Transferable", "Warband-wide (shared)", "Everything" }
+    "Character-bound", "Transferable", "Warband-wide (shared)", "Everything", "Value",
+    -- value list columns and price sources (UI/ValueList.lua)
+    "Item", "Character", "Location", "Source", "Over vendor", "Binding",
+    "What the auction house brings beyond selling to a vendor.",
+    "OE region", "OE realm", "Vendor", "Oribos Exchange (region)", "Oribos Exchange (realm)" }
 
 -- Game terms and the Blizzard GlobalStrings that must spell them (any of them).
 -- Interface wording (tooltip, button, enable, ...) follows EllesmereUI instead

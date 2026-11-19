@@ -511,6 +511,7 @@ function M.newEnv(state, savedVariables)
         SetBackdropColor = function() end, SetBackdropBorderColor = function() end }
     env.OKAY, env.CANCEL = "Okay", "Cancel"
     env.ITEM_SOULBOUND, env.ITEM_ACCOUNTBOUND = "Soulbound", "Warbound"
+    env.ITEM_ACCOUNTBOUND_UNTIL_EQUIP = "Warbound until equipped"
     env.ITEM_QUALITY_COLORS = {}
     for q = 0, 8 do env.ITEM_QUALITY_COLORS[q] = { r = q / 8, g = 0.5, b = 1 - q / 8 } end
     env.ITEM_QUALITY4_DESC = "Epic"
@@ -574,7 +575,7 @@ function M.newEnv(state, savedVariables)
             local id, info = infoFor(ref)
             if not info or (S.uncachedItems and S.uncachedItems[id] and not S.loadedItems[id]) then return nil end
             return info.name, M.itemLink(id), info.quality, 80, 1, info.type, info.subtype, 20, info.equipLoc, info.icon,
-                100, 4, 1, info.bindType or 0
+                info.sellPrice or 100, 4, 1, info.bindType or 0
         end,
         GetItemInfoInstant = function(ref)
             local id, info = infoFor(ref)
@@ -699,6 +700,16 @@ function M.newEnv(state, savedVariables)
         end,
         GetEquipmentSetInfo = function(id)
             for _, set in ipairs(S.equipmentSets) do if set.id == id then return set.name, 0, id end end
+        end,
+        -- set.itemIDs: the item each slot asks for ({ [slot] = itemID }, 1 = ignored)
+        GetItemIDs = function(id)
+            for _, set in ipairs(S.equipmentSets) do
+                if set.id == id then
+                    local out = { [2] = 1 }
+                    for slot, itemID in pairs(set.itemIDs or {}) do out[slot] = itemID end
+                    return out
+                end
+            end
         end,
         GetItemLocations = function(id)
             for _, set in ipairs(S.equipmentSets) do
@@ -993,7 +1004,15 @@ function M.newEnv(state, savedVariables)
     env.__mouseFocus = nil
     env.GetMouseFoci = function() return { env.__mouseFocus } end
     env.CreateSettingsListSectionHeaderInitializer = function(name) return { header = name } end
-    env.CreateSettingsButtonInitializer = function(name, text, click) return { button = name, text = text, click = click } end
+    env.CreateSettingsButtonInitializer = function(name, text, click)
+        local init = { button = name, text = text, click = click, shown = {} }
+        function init:AddShownPredicate(fn) table.insert(self.shown, fn) end
+        function init:ShouldShow()
+            for _, fn in ipairs(self.shown) do if not fn() then return false end end
+            return true
+        end
+        return init
+    end
 
     -- Test helpers on the env
     -- Which interaction window is open (C_PlayerInteractionManager), kept like the
