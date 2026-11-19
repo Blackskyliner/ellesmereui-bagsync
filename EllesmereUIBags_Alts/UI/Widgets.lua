@@ -276,13 +276,15 @@ function W.ShowMenu(owner, title, entries)
     if menu:GetParent() ~= owner then menu:SetParent(owner) end
     -- A strata set on the window (raised above the settings, lowered when it
     -- hides) carries over to every frame inside it, the catcher included.
-    -- So each opening sets them again: all at the top strata, the catcher one
-    -- level below the menu and its entries, close to the window's own level.
+    -- So each opening sets them again: all at the top strata, the menu
+    -- first (a parent's level moves its children along), then the catcher
+    -- at the menu's level and the entries above both, close to the window's
+    -- own level.
     local base = owner:GetFrameLevel() + 5
     menu:SetFrameStrata("FULLSCREEN_DIALOG")
+    menu:SetFrameLevel(base)
     menu.catcher:SetFrameStrata("FULLSCREEN_DIALOG")
     menu.catcher:SetFrameLevel(base)
-    menu:SetFrameLevel(base + 1)
     menu.title:SetText(title or "")
     local y = MENU_PAD
     local width = MENU_MIN_W
