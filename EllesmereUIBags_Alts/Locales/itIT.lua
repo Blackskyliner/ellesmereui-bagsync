@@ -146,12 +146,17 @@ L["Index"] = "Indice"
 -- Search syntax help
 L["Search syntax"] = "Sintassi di ricerca"
 L["words"] = "parole"
-L["Name contains every word"] = "Il nome contiene ogni parola"
+L["Name or tooltip contains every word"] = "Il nome o il tooltip contiene ogni parola"
 L["Item ID"] = "ID oggetto"
 L["Quality (name or number)"] = "Qualità (nome o numero)"
 L["Item type or subtype"] = "Tipo o sottotipo di oggetto"
 L["All terms must match"] = "Tutti i termini devono corrispondere"
 L["Currencies match words and numbers only."] = "Le valute corrispondono solo a parole e numeri."
+L["Bind type"] = "Tipo di vincolo"
+L["Bound to a character or the warband"] = "Vincolato a un personaggio o alla brigata"
+L["Bind type and item level"] = "Tipo di vincolo e livello oggetto"
+L["Bind terms with and, or, not"] = "Termini di vincolo con and, or, not"
+L["Bind terms do not mix with words, q: and t:."] = "I termini di vincolo non si combinano con parole, q: e t:."
 
 -- Tooltip layout
 L["Other realms"] = "Altri reami"

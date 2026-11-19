@@ -149,12 +149,17 @@ L["Index"] = "Индекс"
 -- Search syntax help
 L["Search syntax"] = "Синтаксис поиска"
 L["words"] = "слова"
-L["Name contains every word"] = "Название содержит каждое слово"
+L["Name or tooltip contains every word"] = "Название или подсказка содержит каждое слово"
 L["Item ID"] = "ID предмета"
 L["Quality (name or number)"] = "Качество (название или число)"
 L["Item type or subtype"] = "Тип или подтип предмета"
 L["All terms must match"] = "Должны совпасть все условия"
 L["Currencies match words and numbers only."] = "Валюты ищутся только по словам и числам."
+L["Bind type"] = "Тип привязки"
+L["Bound to a character or the warband"] = "Привязано к персонажу или к отряду"
+L["Bind type and item level"] = "Тип привязки и уровень предмета"
+L["Bind terms with and, or, not"] = "Условия привязки с and, or, not"
+L["Bind terms do not mix with words, q: and t:."] = "Условия привязки нельзя сочетать со словами, q: и t:."
 
 -- Tooltip layout
 L["Other realms"] = "Другие миры"

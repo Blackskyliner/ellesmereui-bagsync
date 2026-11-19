@@ -143,12 +143,17 @@ L["inconsistent (rebuilt)"] = "inkonsistent (neu aufgebaut)"
 -- Search syntax help
 L["Search syntax"] = "Suchsyntax"
 L["words"] = "Wörter"
-L["Name contains every word"] = "Name enthält jedes Wort"
+L["Name or tooltip contains every word"] = "Name oder Tooltip enthält jedes Wort"
 L["Item ID"] = "Gegenstands-ID"
 L["Quality (name or number)"] = "Qualität (Name oder Zahl)"
 L["Item type or subtype"] = "Gegenstandstyp oder -untertyp"
 L["All terms must match"] = "Alle Begriffe müssen passen"
 L["Currencies match words and numbers only."] = "Währungen passen nur auf Wörter und Zahlen."
+L["Bind type"] = "Bindungsart"
+L["Bound to a character or the warband"] = "An einen Charakter oder die Kriegsschar gebunden"
+L["Bind type and item level"] = "Bindungsart und Gegenstandsstufe"
+L["Bind terms with and, or, not"] = "Bindungsbegriffe mit and, or, not"
+L["Bind terms do not mix with words, q: and t:."] = "Bindungsbegriffe lassen sich nicht mit Wörtern, q: und t: mischen."
 
 -- Tooltip layout
 L["Other realms"] = "Andere Realms"
