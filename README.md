@@ -177,7 +177,8 @@ items without such a line can still move. If an item belongs to equipment sets
 (bags or worn), the tooltip names them.
 
 **Search.** Words (parts of the name or the tooltip text, like the game's bag
-search), `id:12345` (item ID; a bare number as the
+search; a bound stack's tooltip reads "Soulbound" or "Warbound" instead of
+"Binds when equipped"), `id:12345` (item ID; a bare number as the
 first term is taken as an item ID too), `q:epic` or `q:4` (quality), `t:armor`
 (type/subtype). All terms must match. The search covers characters, the warband
 bank and guild banks and shows at most 300 items. Words and a number also search the

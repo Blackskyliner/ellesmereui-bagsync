@@ -47,6 +47,20 @@ describe("Search by tooltip text", function()
         assert.are.same({}, (ids(ns, "linen stamina")))
     end)
 
+    it("reads a bound stack's binding line as Soulbound, like its tooltip in the browser", function()
+        local bindHelms = function(s) s.bags[0].slots[2].bound = true; s.bags[0].slots[3].bound = true end
+        local _, ns = world(bindHelms)
+        assert.are.same({ 230001, 231000 }, (ids(ns, "equipped")))       -- both helms are bound
+        assert.are.same({ 6948, 230000 }, (ids(ns, "soulbound")))
+        assert.are.same({ 230000 }, (ids(ns, "helm soulbound")))
+        assert.are.same({ 232000 }, (ids(ns, "warbound staff")))
+        -- one free stack keeps the generic line for the item
+        local _, ns2 = world(function(s) s.bags[0].slots[2].bound = true end)
+        assert.are.same({ 230000 }, (ids(ns2, "helm equipped")))
+        assert.are.same({ 230000 }, (ids(ns2, "helm soulbound")))
+        assert.are.same({}, (ids(ns2, "soulbound equipped")))           -- never both on one stack
+    end)
+
     it("reads an item's tooltip once and only for words its name lacks", function()
         local env, ns = world()
         local S = env.__state

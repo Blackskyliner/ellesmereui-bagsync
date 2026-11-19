@@ -265,28 +265,83 @@ end
 --  item that binds when equipped), so words that are not in the name are
 --  looked up there. Built once per item and session: an item's tooltip by ID
 --  does not change, and building it is the expensive part of a search.
+--  The binding line is kept apart: a stored stack that is bound reads
+--  "Soulbound" or "Warbound" there, as its tooltip in the browser and the
+--  game's search of a live bag do, not the item's generic "Binds when
+--  equipped".
 -------------------------------------------------------------------------------
-local tooltipText = {}   -- itemID -> lower-cased text of every tooltip line
+local BINDING_LINE = Enum.TooltipDataLineType.ItemBinding
+local tooltipText = {}   -- itemID -> { rest = lower-cased lines, bind = binding line or nil }
+
+-- colour codes would split words ("|cffffffffBinds" never matches "binds")
+local function Plain(text)
+    return strlower(strgsub(strgsub(text, "|c%x%x%x%x%x%x%x%x", ""), "|r", ""))
+end
 
 local function TooltipText(itemID)
-    local text = tooltipText[itemID]
-    if text then return text end
+    local tip = tooltipText[itemID]
+    if tip then return tip end
     local data = C_TooltipInfo.GetItemByID(itemID)
     local lines = type(data) == "table" and data.lines
-    local parts = {}
-    local function add(t)
-        if type(t) == "string" and not ns.IsSecret(t) and t ~= "" then parts[#parts + 1] = t end
-    end
+    local parts, bind = {}, nil
+    local function usable(t) return type(t) == "string" and not ns.IsSecret(t) and t ~= "" end
     if type(lines) == "table" then
         for _, line in ipairs(lines) do
-            add(line.leftText)
-            add(line.rightText)
+            if line.type == BINDING_LINE and usable(line.leftText) then
+                bind = Plain(line.leftText)
+            else
+                if usable(line.leftText) then parts[#parts + 1] = line.leftText end
+                if usable(line.rightText) then parts[#parts + 1] = line.rightText end
+            end
         end
     end
-    -- colour codes would split words ("|cffffffffBinds" never matches "binds")
-    text = strlower(strgsub(strgsub(table.concat(parts, "\n"), "|c%x%x%x%x%x%x%x%x", ""), "|r", ""))
-    tooltipText[itemID] = text
-    return text
+    tip = { rest = Plain(table.concat(parts, "\n")), bind = bind }
+    tooltipText[itemID] = tip
+    return tip
+end
+
+-- The binding line of a stack in a bound state ("free", "soul", "account").
+local function BindingText(tip, state)
+    if state == "soul" then return strlower(ITEM_SOULBOUND) end
+    if state == "account" then return strlower(ITEM_ACCOUNTBOUND) end
+    return tip.bind
+end
+
+-- itemID -> { [state] = true } over every stored stack ("free", "soul", "account")
+local function BoundStates()
+    local states = {}
+    ns.Index:EachStack(function(enc)
+        local id, _, _, bound = ns.DecodeItem(enc)
+        if id then
+            local set = states[id]
+            if not set then set = {}; states[id] = set end
+            set[bound or "free"] = true
+        end
+    end)
+    return states
+end
+
+-- Every word in the tooltip of at least one stack: words the generic lines
+-- hold, the rest in that stack's binding line.
+local function TooltipMatches(itemID, words, stateSets)
+    local tip = TooltipText(itemID)
+    local missing
+    for i = 1, #words do
+        if not strfind(tip.rest, words[i], 1, true) then
+            missing = missing or {}
+            missing[#missing + 1] = words[i]
+        end
+    end
+    if not missing then return true end
+    for state in pairs(stateSets and stateSets[itemID] or { free = true }) do
+        local bind = BindingText(tip, state)
+        local all = bind ~= nil
+        for i = 1, all and #missing or 0 do
+            if not strfind(bind, missing[i], 1, true) then all = false; break end
+        end
+        if all then return true end
+    end
+    return false
 end
 
 -- Currency name (lower-cased) against the words and the bare number.
@@ -298,8 +353,11 @@ local function NameMatches(q, name)
     return true
 end
 
--- -> matches (bool), pending (true when item data is not cached yet)
-function Search.Matches(q, itemID)
+-- -> matches (bool), pending (true when item data is not cached yet).
+-- stateSets: the bound states of the stacks (BoundStates), or a function
+-- returning them, read when a word needs the tooltip; without it the item
+-- counts as unbound.
+function Search.Matches(q, itemID, stateSets)
     if q.invalid then return false, false end
     if q.itemID and not q.numericToken and itemID ~= q.itemID then return false, false end
     local needName = #q.words > 0 or q.numericToken ~= nil
@@ -319,13 +377,16 @@ function Search.Matches(q, itemID)
         local t = strlower((itemType or "") .. " " .. (itemSubType or ""))
         if not strfind(t, q.typeText, 1, true) then return false, false end
     end
-    local tip
+    local tipWords
     for i = 1, #q.words do
-        local word = q.words[i]
-        if not strfind(name, word, 1, true) then
-            tip = tip or TooltipText(itemID)
-            if not strfind(tip, word, 1, true) then return false, false end
+        if not strfind(name, q.words[i], 1, true) then
+            tipWords = tipWords or {}
+            tipWords[#tipWords + 1] = q.words[i]
         end
+    end
+    if tipWords then
+        if type(stateSets) == "function" then stateSets = stateSets() end
+        if not TooltipMatches(itemID, tipWords, stateSets) then return false, false end
     end
     return true, false
 end
@@ -364,8 +425,14 @@ function Search.Run(q, limit)
         ns.Index:EnsureBuilt()
         RunBind(q.bind, results, pending)
     else
+        -- walked once and only when a word needs a tooltip
+        local stateSets
+        local function states()
+            stateSets = stateSets or BoundStates()
+            return stateSets
+        end
         for itemID in ns.Index:AllItemIDs() do
-            local ok, isPending = Search.Matches(q, itemID)
+            local ok, isPending = Search.Matches(q, itemID, states)
             if ok then
                 results[#results + 1] = Result(itemID)
             elseif isPending then

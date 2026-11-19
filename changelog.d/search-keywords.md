@@ -3,4 +3,5 @@
   optional item level (`boe>=600`, `wue 590-610`) and joined with `and`, `or`,
   `not` and parentheses.
 - **Enhanced:** Search words also match an item's tooltip text, as in the
-  game's bag search: "equipped" finds every item that binds when equipped.
+  game's bag search: "equipped" finds every item that binds when equipped and
+  is not bound yet; a bound stack reads "Soulbound" or "Warbound" there.
