@@ -17,6 +17,42 @@ better, faster or reads better), **Bugfix** (something did not work as intended)
 0.8.5 is the first public release. The versions before it were development
 builds, each tested in the game by the maintainer.
 
+## 0.12.0
+
+- **New:** The browser's search understands the bind keywords of EllesmereUI
+  Bags: `bop`, `boe`, `wue`, `boa`, `soulbound` and `warbound`, with an
+  optional item level (`boe>=600`, `wue 590-610`) and joined with `and`, `or`,
+  `not` and parentheses.
+- **New:** A button beside the browser's search box switches between
+  searching everywhere (the list of every match) and filtering the view shown:
+  bags, bank, mail, currencies and the value list, with items that do not
+  match dimmed or hidden. Options set where the search starts and whether it
+  dims or hides.
+- **New:** The browser's Value tab lists everything you could still sell, one
+  row per item, character and location, with the price source, total value,
+  gain over the vendor and binding; every column sorts. Prices come from
+  Auctionator, Oribos Exchange (region or realm), TradeSkillMaster or the
+  vendor: automatically TSM, then Auctionator's scans, then Oribos Exchange,
+  or one source you pick. Worn gear, auctions and (unless shown) equipment set
+  items stay out; guild banks join only when selected.
+- **New:** Options for the value list: which sources the automatic price
+  uses, whether auction prices lose the auction house's 5% cut, and which
+  TradeSkillMaster price it reads, a custom price string included.
+- **Enhanced:** Search words also match an item's tooltip text, as in the
+  game's bag search: "equipped" finds every item that binds when equipped and
+  is not bound yet; a bound stack reads "Soulbound" or "Warbound" there.
+- **Enhanced:** Text in quotes searches for a phrase: `"binds when equipped"`
+  has to stand in the name or in one tooltip line as typed.
+- **Enhanced:** A search hit whose stacks are all bound shows "Soulbound" or
+  "Warbound" in its tooltip instead of the item's "Binds when equipped".
+- **Enhanced:** Stored items remember when they are warbound until equipped,
+  which can be sold to a vendor only, and which items a character's equipment
+  sets ask for.
+- **Bugfix:** On WoW Forever an empty ammo slot no longer adds an unknown item
+  without a tooltip to every character; stored ones are removed on login.
+- **Bugfix:** The browser's menus work again after the browser was opened
+  from the settings.
+
 ## 0.11.0
 
 - **New:** A "?" beside the browser's search box explains the search syntax on
