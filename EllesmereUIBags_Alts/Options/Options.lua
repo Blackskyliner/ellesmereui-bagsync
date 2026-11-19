@@ -76,6 +76,13 @@ local NEW_SETTINGS = {
     EUIALTS_tooltip_showTabs = true,
     EUIALTS_tooltip_sort = true,
     EUIALTS_tooltip_maxChars = true,
+    EUIALTS_value_oeRegion = true,
+    EUIALTS_value_oeRealm = true,
+    EUIALTS_value_auctionator = true,
+    EUIALTS_value_tsm = true,
+    EUIALTS_value_vendor = true,
+    EUIALTS_value_ahCut = true,
+    EUIALTS_value_tsmPrice = true,
 }
 Options.NEW_SETTINGS = NEW_SETTINGS
 local shownNew = {}
@@ -108,6 +115,52 @@ local function InstallNewLabels()
     end
     ScrollUtil.AddInitializedFrameCallback(list.ScrollBox, MarkNewRow, Options, true)
     EventRegistry:RegisterCallback("SettingsPanel.OnHide", RememberSeen, Options)
+end
+
+-------------------------------------------------------------------------------
+--  Custom TSM price string. Blizzard's settings list has no text field, so
+--  its row is a button that opens a small window of our own with one.
+-------------------------------------------------------------------------------
+local tsmDialog
+
+local function SaveTSMCustom(text)
+    ns.db.settings.value.tsmCustom = text or ""
+    ns.SettingsChanged()
+end
+
+function Options:EditTSMCustom()
+    local W = ns.W
+    if not tsmDialog then
+        local d = W.Window("EllesmereUIBagsAltsTSMPrice", 420, 112)
+        d:SetFrameStrata("FULLSCREEN_DIALOG")
+        d:SetPoint("CENTER")
+        d.title = W.Text(d, 13)
+        d.title:SetPoint("TOPLEFT", 12, -12)
+        d.title:SetText(L["Custom TradeSkillMaster price string"])
+        d.input = W.EditBox(d, 396, 22)
+        d.input:SetPoint("TOPLEFT", 12, -38)
+        if d.input.searchIcon then d.input.searchIcon:Hide() end
+        if d.input.Instructions then d.input.Instructions:SetText("first(DBRecent, DBMarket)") end
+        d.input:SetTextInsets(6, 20, 0, 0)
+        d.input:SetScript("OnEnterPressed", function(box)
+            SaveTSMCustom(box:GetText())
+            d:Hide()
+        end)
+        d.input:SetScript("OnEscapePressed", function() d:Hide() end)
+        d.save = W.Button(d, L["Save"], 100, 22)
+        d.save:SetPoint("BOTTOMRIGHT", -12, 12)
+        d.save:SetScript("OnClick", function()
+            SaveTSMCustom(d.input:GetText())
+            d:Hide()
+        end)
+        d.cancel = W.Button(d, CANCEL or "Cancel", 100, 22)
+        d.cancel:SetPoint("RIGHT", d.save, "LEFT", -6, 0)
+        d.cancel:SetScript("OnClick", function() d:Hide() end)
+        tsmDialog = d
+    end
+    tsmDialog.input:SetText(ns.db.settings.value.tsmCustom or "")
+    tsmDialog:Show()
+    tsmDialog.input:SetFocus()
 end
 
 -------------------------------------------------------------------------------
@@ -201,6 +254,31 @@ function Options:Register()
     Dropdown(category, "ui_moneySymbols", { "ui", "moneySymbols" }, L["Money symbols"], nil, {
         { "text", L["Letters (g, s, c)"] }, { "icons", L["Coin icons"] },
     })
+
+    -- The value list's settings only act inside its browser tab, which the
+    -- player opens on purpose; they start with every source counted and the
+    -- auction house cut taken off, so the list shows what a sale brings.
+    layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(L["Value list"]))
+    for _, source in ipairs(ns.Prices.SOURCES) do
+        Checkbox(category, "value_" .. source, { "value", source }, ns.ValueList.SourceText(ns.ValueList.SOURCE_NAME, source),
+            L["The value list's automatic price uses the sources ticked here: Auctionator's scan when it saw the item, as that is the current market price, otherwise the highest of Oribos Exchange and TradeSkillMaster; the vendor price when it is higher. A price addon counts only while it is installed and loaded."])
+    end
+    Checkbox(category, "value_ahCut", { "value", "ahCut" }, string.format(L["Subtract the auction house cut (%d%%)"], ns.Prices.AH_CUT * 100),
+        L["Auction prices show what reaches you after a sale instead of what the buyer pays."])
+    -- TSM's own price names; they read the same in every language.
+    local tsmChoices = {}
+    for _, choice in ipairs(ns.Prices.TSM_CHOICES) do
+        tsmChoices[#tsmChoices + 1] = { choice, choice == "custom" and L["Custom price string"] or choice }
+    end
+    Dropdown(category, "value_tsmPrice", { "value", "tsmPrice" }, L["TradeSkillMaster price"],
+        L["The TradeSkillMaster price source the value list reads."], tsmChoices)
+    -- Shown while "Custom price string" is chosen; changing the dropdown
+    -- makes the settings list evaluate it again.
+    local custom = CreateSettingsButtonInitializer(L["Custom price string"], L["Edit"], function()
+        Options:EditTSMCustom()
+    end, L["Any TradeSkillMaster price string, such as first(DBRecent, DBMarket)."], true)
+    custom:AddShownPredicate(function() return ns.db.settings.value.tsmPrice == "custom" end)
+    layout:AddInitializer(custom)
 
     layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(L["Data collection"]))
     Checkbox(category, "collect_bags", { "collect", "bags" }, L["Bags"])
