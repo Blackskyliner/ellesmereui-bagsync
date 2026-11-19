@@ -77,6 +77,8 @@ local NEW_SETTINGS = {
     EUIALTS_tooltip_showTabs = true,
     EUIALTS_tooltip_sort = true,
     EUIALTS_tooltip_maxChars = true,
+    EUIALTS_ui_searchScope = true,
+    EUIALTS_ui_searchMiss = true,
     EUIALTS_value_oeRegion = true,
     EUIALTS_value_oeRealm = true,
     EUIALTS_value_auctionator = true,
@@ -273,6 +275,15 @@ function Options:Register()
     })
     Dropdown(category, "ui_moneySymbols", { "ui", "moneySymbols" }, L["Money symbols"], nil, {
         { "text", L["Letters (g, s, c)"] }, { "icons", L["Coin icons"] },
+    })
+    Dropdown(category, "ui_searchScope", { "ui", "searchScope" }, L["Browser search"],
+        L["Where the search box looks when the browser opens; the switch beside it changes it until the next login."], {
+        { "all", L["Everywhere"], L["A list of every match on all characters."] },
+        { "view", L["This view"], L["Filters what the tab shows."] },
+    })
+    Dropdown(category, "ui_searchMiss", { "ui", "searchMiss" }, L["Items the search does not match"],
+        L["What filtering the view does with the rest."], {
+        { "dim", L["Dimmed"] }, { "hide", L["Hidden"] },
     })
 
     -- The value list's settings only act inside its browser tab, which the
