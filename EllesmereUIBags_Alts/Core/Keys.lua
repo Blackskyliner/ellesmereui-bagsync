@@ -202,10 +202,13 @@ local function CompactLink(link)
 end
 ns.CompactLink = CompactLink
 
-local BOUND_MARKER = { soul = "!", account = "~" }
-local MARKER_BOUND = { ["!"] = "soul", ["~"] = "account" }
+-- "wue": warbound until equipped. Such an item still moves between the
+-- warband's characters, but it can be sold to a vendor only, never on the
+-- auction house, which is what the value list needs to know.
+local BOUND_MARKER = { soul = "!", account = "~", wue = "^" }
+local MARKER_BOUND = { ["!"] = "soul", ["~"] = "account", ["^"] = "wue" }
 
--- bound: nil (free) | "soul" | "account"
+-- bound: nil (free) | "soul" | "account" | "wue"
 function ns.EncodeItem(itemID, count, link, bound)
     if not itemID then return nil end
     count = count or 1
@@ -218,7 +221,7 @@ function ns.EncodeItem(itemID, count, link, bound)
     return itemID .. "," .. count
 end
 
--- -> itemID (number), count (number), link (string or nil), bound (nil | "soul" | "account")
+-- -> itemID (number), count (number), link (string or nil), bound (nil | "soul" | "account" | "wue")
 function ns.DecodeItem(enc)
     if type(enc) ~= "string" then return nil end
     local id, count, rest = strmatch(enc, "^(%d+),(%d+),?(.*)$")
@@ -229,11 +232,11 @@ function ns.DecodeItem(enc)
     return tonumber(id), tonumber(count), rest, bound
 end
 
--- Bound state of a live item: nil while it may still move (unbound or
--- "warbound until equipped"), else "soul" or "account" (warbound).
+-- Bound state of a live item: nil when unbound, "wue" while warbound until
+-- equipped, else "soul" or "account" (warbound).
 function ns.BoundState(isBound, itemLocation, itemID)
     if ns.IsSecret(isBound) or not isBound then return nil end
-    if itemLocation and C_Item.IsBoundToAccountUntilEquip(itemLocation) then return nil end
+    if itemLocation and C_Item.IsBoundToAccountUntilEquip(itemLocation) then return "wue" end
     local bindType = select(14, C_Item.GetItemInfo(itemID))
     if bindType == Enum.ItemBind.ToWoWAccount or bindType == Enum.ItemBind.ToBnetAccount then
         return "account"

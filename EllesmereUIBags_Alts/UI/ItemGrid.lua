@@ -37,7 +37,8 @@ local BINDING_LINE = Enum.TooltipDataLineType.ItemBinding
 local function BindingPreCall(tooltip, lineData)
     local info = tooltip.processingInfo
     local bound = info and info.euiAltsBound
-    if not bound or lineData.type ~= BINDING_LINE then return false end
+    -- An item warbound until equipped keeps its own binding line, which says so.
+    if not bound or bound == "wue" or lineData.type ~= BINDING_LINE then return false end
     local text = bound == "account" and ITEM_ACCOUNTBOUND or ITEM_SOULBOUND
     local c = lineData.leftColor
     tooltip:AddLine(text, c and c.r or 1, c and c.g or 1, c and c.b or 1)
