@@ -70,7 +70,7 @@ M.ITEMS = {
     [212345] = { name = "Algari Mana Potion", quality = 1, icon = 5931169, type = "Consumable", subtype = "Potion", equipLoc = "" },
     [19019]  = { name = "Thunderfury, Blessed Blade of the Windseeker", quality = 5, icon = 135349, type = "Weapon", subtype = "One-Handed Swords", equipLoc = "INVTYPE_WEAPON", bindType = 1 },
     [230000] = { name = "Void-Touched Helm", quality = 4, icon = 5925000, type = "Armor", subtype = "Plate", equipLoc = "INVTYPE_HEAD", bindType = 2, ilvl = 600,
-                 tooltip = { { "Head", "Plate" }, { "+120 Stamina" } } },
+                 tooltip = { { "Head", "Plate" }, { "+120 Stamina" }, { "Equip: Increases your armor." } } },
     [230001] = { name = "Drifting Gauntlets", quality = 3, icon = 5925003, type = "Armor", subtype = "Mail", equipLoc = "INVTYPE_HAND", bindType = 2, wue = true, ilvl = 590 },
     [231000] = { name = "Warbound Cloak", quality = 4, icon = 5925001, type = "Armor", subtype = "Cloth", equipLoc = "INVTYPE_CLOAK", bindType = 9 },
     [232000] = { name = "Heirloom Staff", quality = 7, icon = 5925002, type = "Weapon", subtype = "Staves", equipLoc = "INVTYPE_2HWEAPON", bindType = 8 },

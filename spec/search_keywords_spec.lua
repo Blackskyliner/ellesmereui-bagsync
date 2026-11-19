@@ -61,6 +61,42 @@ describe("Search by tooltip text", function()
         assert.are.same({}, (ids(ns2, "soulbound equipped")))           -- never both on one stack
     end)
 
+    it("matches a quoted phrase in the name or in one tooltip line", function()
+        local _, ns = world(function(s) s.bags[0].slots[2].bound = true; s.bags[0].slots[3].bound = true end)
+        assert.are.same({ 230000 }, (ids(ns, '"+120  stamina"')))
+        assert.are.same({}, (ids(ns, '"stamina +120"')))
+        assert.are.same({}, (ids(ns, '"head plate"')))                   -- left and right text apart
+        assert.are.same({ 230000 }, (ids(ns, '"void-touched helm"')))
+        -- the bound helms keep their "Equip:" line, not "Binds when equipped"
+        assert.are.same({ 230000, 230001, 231000 }, (ids(ns, "equip")))
+        assert.are.same({ 230001 }, (ids(ns, '"binds when equipped"')))
+        assert.are.same({ 230001 }, (ids(ns, '"binds when'))) -- unclosed: to the end
+        assert.are.same({ 230001 }, (ids(ns, '"binds when" gauntlets')))     -- a phrase and a word
+    end)
+
+    it("shows Soulbound in a hit's tooltip when every stack is bound", function()
+        local env, ns = world(function(s) s.bags[0].slots[2].bound = true; s.bags[0].slots[3].bound = true end)
+        ns.Browser:OpenSearch("helm")
+        local f = env.EllesmereUIBagsAltsBrowser
+        local row = f.results.items[1]
+        assert.are.equal(230000, row.itemID)
+        row:RunScript("OnEnter")
+        local tt = env.NotGameTooltipEllesmereUIBagsAlts
+        local text = {}
+        for _, l in ipairs(tt.lines) do text[#text + 1] = table.concat(l, " | ") end
+        text = table.concat(text, "\n")
+        assert.truthy(text:find("Soulbound", 1, true), text)
+        assert.falsy(text:find("Binds when equipped", 1, true), text)
+        -- one free stack: the item's own line
+        local env2, ns2 = world(function(s) s.bags[0].slots[2].bound = true end)
+        ns2.Browser:OpenSearch("helm")
+        env2.EllesmereUIBagsAltsBrowser.results.items[1]:RunScript("OnEnter")
+        text = {}
+        for _, l in ipairs(env2.NotGameTooltipEllesmereUIBagsAlts.lines) do text[#text + 1] = table.concat(l, " | ") end
+        assert.truthy(table.concat(text, "\n"):find("Binds when equipped", 1, true))
+        assert.are.same({}, env.__errors)
+    end)
+
     it("reads an item's tooltip once and only for words its name lacks", function()
         local env, ns = world()
         local S = env.__state
@@ -108,6 +144,24 @@ describe("Bind expressions", function()
         assert.is_nil(ns.Search.Parse("(boe").bind)
         assert.is_nil(ns.Search.Parse("not").bind)
         assert.is_not_nil(ns.Search.Parse("  BoE  ").bind)
+    end)
+
+    it("leaves the account bind keywords out of the help on WoW Forever", function()
+        local function examples(ns)
+            local out = {}
+            for _, r in ipairs(ns.Search.HelpLines().rows) do out[#out + 1] = r[1] end
+            return table.concat(out, "\n")
+        end
+        local _, retail = world()
+        local _, fv = world(function(s) s.client = "forever" end)
+        for _, kw in ipairs({ "wue", "boa", "warbound" }) do
+            assert.truthy(examples(retail):find(kw, 1, true), kw)
+            assert.falsy(examples(fv):find(kw, 1, true), kw)
+        end
+        for _, ex in ipairs({ "bop or boe", "soulbound", "boe>=20  bop 10-30", "bop or (boe and not soulbound)" }) do
+            assert.truthy(examples(fv):find(ex, 1, true) or ex == "bop or boe", ex)
+            assert.is_not_nil(fv.Search.Parse(ex).bind, ex)
+        end
     end)
 
     it("waits for item data it does not have and finds no currencies", function()

@@ -178,7 +178,8 @@ items without such a line can still move. If an item belongs to equipment sets
 
 **Search.** Words (parts of the name or the tooltip text, like the game's bag
 search; a bound stack's tooltip reads "Soulbound" or "Warbound" instead of
-"Binds when equipped"), `id:12345` (item ID; a bare number as the
+"Binds when equipped"; `"two words"` in quotes is a phrase that has to stand
+in the name or in one tooltip line), `id:12345` (item ID; a bare number as the
 first term is taken as an item ID too), `q:epic` or `q:4` (quality), `t:armor`
 (type/subtype). All terms must match. The search covers characters, the warband
 bank and guild banks and shows at most 300 items. Words and a number also search the
@@ -192,7 +193,10 @@ The bind keywords of EllesmereUI Bags work too: `bop`, `boe`, `wue`, `boa`,
 `wue 590-610`, `bop 300`), joined with `and`, `or`, `not` (also `&`, `|`, `!`)
 and parentheses, e.g. `(boe or wue) and not warbound`. Such a text matches each
 stored stack by its bind type and bound state; it does not mix with words, `q:`
-and `t:`. Hover the `?` beside the search box for this syntax in the game.
+and `t:`. A hit whose stacks are all bound shows "Soulbound" or "Warbound" in
+its tooltip. On WoW Forever nothing binds to the account, so the help there
+leaves out `wue`, `boa` and `warbound`. Hover the `?` beside the search box for
+this syntax in the game.
 
 **Tooltip counts.** One line per character with the split by location, plus the
 warband bank, guild banks and the total. The current character comes first, set
