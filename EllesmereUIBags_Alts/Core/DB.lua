@@ -21,7 +21,8 @@
 --                 bankAt, equipped = Container, mail = { items = { {e=enc, x=expires} } },
 --                 mailAt, mailIncoming = { {e=enc, x=expires, from=key} }, currency = {[id]=qty},
 --                 mailSold = { {e=enc, money=copper, at=time, x=expires, id=auctionID} },
---                 auctions = { scannedAt, items = { {e=enc, x=expires, id=auctionID, u=unitPrice, p=provisional} } } }
+--                 auctions = { scannedAt, items = { {e=enc, x=expires, id=auctionID, u=unitPrice, p=provisional} } },
+--                 setItemIDs = { [itemID] = "Set A, Set B" }? }   -- items the equipment sets ask for
 -------------------------------------------------------------------------------
 local _, ns = ...
 
@@ -205,6 +206,7 @@ local function SanitizeChar(key, c)
     if type(c.auctions) ~= "table" then c.auctions = {} end
     c.auctions.items = SanitizeMailList(c.auctions.items)
     if type(c.currency) ~= "table" then c.currency = {} end
+    if type(c.setItemIDs) ~= "table" then c.setItemIDs = nil end
     if not c.name and not ns.IsGUIDKey(key) then c.name, c.realm = ns.SplitKey(key) end
     return c
 end

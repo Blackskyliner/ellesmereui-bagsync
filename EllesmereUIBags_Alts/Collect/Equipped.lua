@@ -31,6 +31,9 @@ local function Scan()
             end
         end
     end
+    -- What the sets ask for changes with them, not with the worn gear; it is
+    -- read data, so no event of its own.
+    c.setItemIDs = ns.GetEquipmentSetItemIDs()
     local ammoID, ammoCount, ammoLink = ns.Compat.AmmoStack()
     if ammoID then items[INVSLOT_AMMO] = ns.EncodeItem(ammoID, ammoCount, ammoLink) end
     local holder = { equipped = c.equipped }
