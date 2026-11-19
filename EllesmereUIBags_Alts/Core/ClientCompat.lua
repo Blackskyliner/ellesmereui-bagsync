@@ -30,6 +30,10 @@ Compat.DEFAULT_MONEY_FORMAT = Compat.IS_FOREVER and "gsc" or "g"
 -- Forever characters with the same first name differ only by surname.
 Compat.UNIQUE_FIRST_NAMES = not Compat.IS_FOREVER
 
+-- Forever has no warband and no heirlooms: nothing binds to the account, so
+-- the search help leaves out wue, boa and warbound.
+Compat.HAS_ACCOUNT_BINDING = not Compat.IS_FOREVER
+
 -- Forever has no pet battles; its BattlePetTooltipTemplate (Camelot variant)
 -- lacks the battle stats and the Owned line the private pet tooltip fills.
 Compat.HAS_PET_BATTLES = not Compat.IS_FOREVER
