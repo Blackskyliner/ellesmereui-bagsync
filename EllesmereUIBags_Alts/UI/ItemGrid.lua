@@ -12,6 +12,8 @@ local W = ns.W
 local Ext = _G.EllesmereUIBagsExt
 
 local SLOT, GAP, HEADER_H = 34, 4, 20
+local MISS_ALPHA = 0.25
+ns.SEARCH_MISS_ALPHA = MISS_ALPHA
 -- The stock quality border (IconBorder, 37 px) overhangs the 34 px slot by
 -- 1.5 px per side; inset the grid so the scroll frame never clips it.
 local INSET = 2
@@ -134,6 +136,7 @@ function Grid:Reset()
         local b = self.buttons[i]
         b:Hide()
         b.ref, b.itemID, b.bound, b.sets = nil, nil, nil, nil
+        b:SetAlpha(1)
     end
     for i = 1, self.usedHeaders do self.headers[i]:Hide() end
     self.used, self.usedHeaders = 0, 0
@@ -207,6 +210,8 @@ function Grid:Layout(sections, width)
                 btn:ClearAllPoints()
                 btn:SetPoint("TOPLEFT", self.parent, "TOPLEFT", INSET + col * (SLOT + GAP), -(y + INSET + row * (SLOT + GAP)))
                 self:Paint(btn, enc, section.sets and section.sets[i])
+                -- a stack the search does not match, shown dimmed
+                if section.miss and section.miss[i] then btn:SetAlpha(MISS_ALPHA) end
             end
             local rows = math.ceil(#section.items / columns)
             y = y + INSET + rows * (SLOT + GAP) + 6

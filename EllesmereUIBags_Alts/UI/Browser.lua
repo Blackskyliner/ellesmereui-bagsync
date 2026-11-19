@@ -44,7 +44,13 @@ local function InScope(scope, realm, charKey)
 end
 
 local frame
-local state = { owner = nil, tab = "bags", query = nil, queryText = "" }
+-- scope: the search's scope for this session ("all" | "view"), set by the
+-- header's switch; nil follows the setting ui.searchScope.
+local state = { owner = nil, tab = "bags", query = nil, queryText = "", scope = nil }
+
+local function SearchScope()
+    return state.scope or ns.db.settings.ui.searchScope
+end
 local pendingSearch = {}   -- itemID -> true while waiting for item data
 
 local CHAR_TABS = {
@@ -539,6 +545,23 @@ function Browser:Build()
     end)
     f.searchHelp:SetPoint("RIGHT", f.search, "LEFT", -6, 0)
 
+    -- Where the search looks, for this session: everything (a result list)
+    -- or the view shown. The setting ui.searchScope is where it starts.
+    f.scope = W.Button(f.header, "", 96, 22)
+    f.scope:SetPoint("RIGHT", f.searchHelp, "LEFT", -6, 0)
+    f.scope:SetScript("OnClick", function()
+        state.scope = SearchScope() == "all" and "view" or "all"
+        Browser:Refresh()
+    end)
+    f.scope:SetScript("OnEnter", function(button)
+        local tooltip = W.GetTooltip()
+        tooltip:SetOwner(button, "ANCHOR_BOTTOM")
+        tooltip:AddLine(L["Search scope"], 1, 1, 1)
+        tooltip:AddLine(L["Everywhere: a list of every match on all characters. This view: filters what the tab shows. Click to switch; the options set where it starts."], 1, 0.82, 0, true)
+        tooltip:Show()
+    end)
+    f.scope:SetScript("OnLeave", function() W.GetTooltip():Hide() end)
+
     -- Sidebar
     f.sidebar = W.Panel(f, true)
     f.sidebar:SetPoint("TOPLEFT", PAD, -(W.HEADER_H + PAD))
@@ -655,6 +678,59 @@ function Browser:RequestRefresh()
 end
 
 -------------------------------------------------------------------------------
+--  Search scope: everything (the result list) or the view shown, whose
+--  stacks the search filters in place, dimmed or hidden (ui.searchMiss).
+-------------------------------------------------------------------------------
+-- The filter of the view shown, nil while the search is empty or searches
+-- everything. matches counts what it let through.
+local ViewFilter = {}
+ViewFilter.__index = ViewFilter
+
+local function NewViewFilter()
+    if not state.query or SearchScope() ~= "view" then return nil end
+    return setmetatable({ q = state.query, hide = ns.db.settings.ui.searchMiss == "hide", matches = 0 }, ViewFilter)
+end
+
+function ViewFilter:Stack(enc)
+    local ok, pending = ns.Search.StackMatches(self.q, enc)
+    if pending then
+        local id = ns.DecodeItemIDCount(enc)
+        if id then
+            pendingSearch[id] = true                    -- re-rendered on ITEM_DATA_LOAD_RESULT
+            C_Item.RequestLoadItemDataByID(id)
+        end
+    end
+    if ok then self.matches = self.matches + 1 end
+    return ok
+end
+
+function ViewFilter:Currency(name)
+    local ok = ns.Search.CurrencyMatches(self.q, name)
+    if ok then self.matches = self.matches + 1 end
+    return ok
+end
+ns.ViewFilter = ViewFilter
+
+-- Sections with the stacks the filter does not match marked (dim) or left
+-- out (hide); sections left empty go.
+local function FilterSections(sections, filter)
+    local out = {}
+    for _, section in ipairs(sections) do
+        local items, sets, miss = {}, {}, {}
+        for i, enc in ipairs(section.items) do
+            local ok = filter:Stack(enc)
+            if ok or not filter.hide then
+                items[#items + 1] = enc
+                sets[#items] = section.sets and section.sets[i] or nil
+                if not ok then miss[#items] = true end
+            end
+        end
+        if #items > 0 then out[#out + 1] = { title = section.title, items = items, sets = sets, miss = miss } end
+    end
+    return out
+end
+
+-------------------------------------------------------------------------------
 --  Rendering
 -------------------------------------------------------------------------------
 local function RenderSidebar(f)
@@ -742,18 +818,23 @@ local function RenderSidebar(f)
 end
 
 -- quantities: id -> qty; shared (all-characters view): id -> the single value
--- shown for warband-wide currencies instead of the sum.
-local function RenderCurrencies(f, quantities, width, shared)
+-- shown for warband-wide currencies instead of the sum; filter: the view's
+-- search filter or nil.
+local function RenderCurrencies(f, quantities, width, shared, filter)
     local groups = { bound = {}, transferable = {}, warband = {} }
     local total = 0
     for id, qty in pairs(quantities or {}) do
         local info = C_CurrencyInfo.GetCurrencyInfo(id)
         local kind = CurrencyKind(id, info)
         if kind == "warband" and shared and shared[id] then qty = shared[id] end
-        local list = groups[kind]
-        list[#list + 1] = { id = id, kind = kind, name = (info and info.name) or ("#" .. id),
-                            icon = info and info.iconFileID, qty = qty }
-        total = total + 1
+        local name = (info and info.name) or ("#" .. id)
+        local ok = not filter or filter:Currency(name)
+        if ok or not filter.hide then
+            local list = groups[kind]
+            list[#list + 1] = { id = id, kind = kind, name = name, icon = info and info.iconFileID, qty = qty,
+                                miss = not ok }
+            total = total + 1
+        end
     end
     local y = 0
     local ar, ag, ab = Ext:GetAccentColor()
@@ -776,6 +857,7 @@ local function RenderCurrencies(f, quantities, width, shared)
                 r.icon:SetTexture(data.icon or 134400)
                 r.name:SetText(data.name)
                 r.qty:SetText(FormatQty(data.qty))
+                r:SetAlpha(data.miss and ns.SEARCH_MISS_ALPHA or 1)
                 y = y + ROW_H
             end
             y = y + 6
@@ -832,6 +914,7 @@ local function AcquireResult(f, y, width)
     r:SetPoint("TOPLEFT", 0, -y)
     r:SetWidth(width)
     r.itemID, r.currencyID, r.kind, r.bound = nil, nil, nil, nil
+    r:SetAlpha(1)
     return r
 end
 
@@ -891,9 +974,15 @@ local function RenderResults(f, width)
 end
 
 -- Sold auctions waiting as gold in the mailbox, newest first, as result rows.
-local function RenderSold(f, c, width, y)
-    local list = {}
-    for _, m in ipairs(c.mailSold or {}) do list[#list + 1] = m end
+local function RenderSold(f, c, width, y, filter)
+    local list, miss = {}, {}
+    for _, m in ipairs(c.mailSold or {}) do
+        local ok = not filter or filter:Stack(m.e)
+        if ok or not filter.hide then
+            list[#list + 1] = m
+            miss[m] = not ok
+        end
+    end
     table.sort(list, function(a, b) return (a.at or 0) > (b.at or 0) end)
     if #list == 0 then return y, 0 end
     y = ContentHeader(f, L["Sold (gold waiting in the mailbox)"], y)
@@ -916,6 +1005,7 @@ local function RenderSold(f, c, width, y)
         if color then r.name:SetTextColor(color.r, color.g, color.b) else r.name:SetTextColor(1, 1, 1) end
         r.total:SetText(W.FormatMoney(m.money))
         r.detail:SetText(W.FormatAgo(m.at))
+        if miss[m] then r:SetAlpha(ns.SEARCH_MISS_ALPHA) end
         y = y + RESULT_H
     end
     return y, #list
@@ -992,6 +1082,7 @@ function Browser:Refresh()
         end
     end
     RenderSidebar(f)
+    wipe(pendingSearch)
 
     f.grid:Reset()
     PoolReset(f.results)
@@ -1010,7 +1101,10 @@ function Browser:Refresh()
     -- A bank shows its tabs for every tab key but the value list.
     local tabKey = state.tab
     if isBank and not BANK_TABS[tabKey] then tabKey = "all" end
-    local searching = state.query ~= nil
+    -- searching: the result list over everything; filter: the view's own
+    local searching = state.query ~= nil and SearchScope() == "all"
+    local filter = NewViewFilter()
+    f.scope:SetText(SearchScope() == "all" and L["Everywhere"] or L["This view"])
     local prev
     for _, tab in ipairs(f.tabs) do
         local shown = not searching and (not isBank or BANK_TABS[tab.key] == true)
@@ -1028,8 +1122,9 @@ function Browser:Refresh()
     if searching or tabKey ~= "value" then ns.ValueList:Hide(f) end
     if not searching and tabKey == "value" then
         local footer
-        height, count, footer = ns.ValueList:Render(f, owner, width)
-        if count == 0 then f.empty:SetText(L["Nothing with a price here."]) end
+        height, count, footer = ns.ValueList:Render(f, owner, width, filter)
+        if count == 0 then f.empty:SetText(filter and L["Nothing found."] or L["Nothing with a price here."]) end
+        if filter then footer = footer .. "   " .. string.format(L["%d results"], filter.matches) end
         f.footer:SetText(footer)
     elseif searching then
         local n, pend
@@ -1043,14 +1138,14 @@ function Browser:Refresh()
         if isAll then
             if state.tab == "currency" then
                 local totals, shared = AllCurrencyTotals(scope)
-                height, count = RenderCurrencies(f, totals, width, shared)
+                height, count = RenderCurrencies(f, totals, width, shared, filter)
             else
                 sections = AllSections(scope, state.tab)
             end
         elseif isChar then
             local c = ns.db.chars[owner]
             if state.tab == "currency" then
-                height, count = RenderCurrencies(f, c.currency, width)
+                height, count = RenderCurrencies(f, c.currency, width, nil, filter)
             elseif state.tab == "all" then
                 sections = AllSections({ char = owner }, "all")
             else
@@ -1063,15 +1158,18 @@ function Browser:Refresh()
             sections = g and TabSections(g.tabs) or {}
         end
         if sections then
+            if filter then sections = FilterSections(sections, filter) end
             height = f.grid:Layout(sections, width)
             count = f.grid.used
         end
         if isChar and state.tab == "mail" then
             local sold
-            height, sold = RenderSold(f, ns.db.chars[owner], width, height)
+            height, sold = RenderSold(f, ns.db.chars[owner], width, height, filter)
             count = count + sold
         end
-        if count == 0 then
+        if count == 0 and filter then
+            f.empty:SetText(next(pendingSearch) and L["Searching... (loading item data)"] or L["Nothing found."])
+        elseif count == 0 then
             local hint = L["Nothing stored here yet."]
             if isChar and state.tab == "bank" then
                 hint = L["No bank data yet. Visit a banker with this character."]
@@ -1080,7 +1178,9 @@ function Browser:Refresh()
             end
             f.empty:SetText(hint)
         end
-        f.footer:SetText(FooterFor(owner))
+        local footer = FooterFor(owner)
+        if filter then footer = footer .. "   " .. string.format(L["%d results"], filter.matches) end
+        f.footer:SetText(footer)
     end
     f.scroll.content:SetHeight(math.max(1, height))
 end
@@ -1181,7 +1281,10 @@ function Browser:IsShown()
     return frame ~= nil and frame:IsShown()
 end
 
+-- /alts search and the API ask who holds an item: the result list over
+-- everything, whatever the scope was.
 function Browser:OpenSearch(text)
+    state.scope = "all"
     self:Open()
     frame.search:SetText(text or "")
     self:SetQuery(text or "")

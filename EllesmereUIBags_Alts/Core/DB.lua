@@ -67,6 +67,8 @@ ns.DEFAULTS = {
             browserScale     = 1,
             moneyFormat      = ns.Compat.DEFAULT_MONEY_FORMAT,   -- "g" | "gs" | "gsc": parts of a balance in the browser
             moneySymbols     = "text",   -- "text" | "icons": coloured g/s/c or coin icons after each part
+            searchScope      = "all",    -- "all" | "view": the search box searches everything or filters the view
+            searchMiss       = "dim",    -- "dim" | "hide": what the view filter does with stacks that do not match
         },
         -- The value list (browser tab "Value"): which price sources its
         -- automatic choice compares, the auction house cut, the TSM price and
@@ -104,6 +106,18 @@ local TOOLTIP_CHOICES = {
     detail      = { total = true, text = true, icons = true, compact = true },
     sort        = { count = true, recent = true, name = true },
 }
+local UI_CHOICES = {
+    searchScope = { all = true, view = true },
+    searchMiss  = { dim = true, hide = true },
+}
+
+function ns.NormalizeUISettings(u)
+    local defaults = ns.DEFAULTS.settings.ui
+    for field, valid in pairs(UI_CHOICES) do
+        if not valid[u[field]] then u[field] = defaults[field] end
+    end
+end
+
 local VALUE_CHOICES = {
     source = { auto = true, oeRegion = true, oeRealm = true, auctionator = true, tsm = true, vendor = true },
     sort   = { name = true, char = true, loc = true, source = true, value = true, gain = true, bound = true },
@@ -259,6 +273,7 @@ function ns.InitDB()
     MergeDefaults(db, ns.DEFAULTS)
     ns.NormalizeTooltipSettings(db.settings.tooltip)
     ns.NormalizeValueSettings(db.settings.value)
+    ns.NormalizeUISettings(db.settings.ui)
 
     -- Only the shape here; every stored record is checked by SanitizeData on
     -- activation, so an unused addon does not walk its data at login.
