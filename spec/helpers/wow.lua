@@ -947,9 +947,17 @@ function M.newEnv(state, savedVariables)
             cat.settings[variable] = setting
             return setting
         end,
-        CreateCheckbox = function(cat, setting) table.insert(cat.controls, { kind = "checkbox", setting = setting }) end,
-        CreateDropdown = function(cat, setting, options)
-            table.insert(cat.controls, { kind = "dropdown", setting = setting, options = options() })
+        -- Controls answer like Blizzard's initializers: modify predicates
+        -- (false greys the row out) and a tooltip that may be a function.
+        CreateCheckbox = function(cat, setting, tooltip)
+            local control = env.__initializer({ kind = "checkbox", setting = setting, tooltip = tooltip })
+            table.insert(cat.controls, control)
+            return control
+        end,
+        CreateDropdown = function(cat, setting, options, tooltip)
+            local control = env.__initializer({ kind = "dropdown", setting = setting, options = options(), tooltip = tooltip })
+            table.insert(cat.controls, control)
+            return control
         end,
         CreateSlider = function(cat, setting, options)
             table.insert(cat.controls, { kind = "slider", setting = setting, options = options })
@@ -1004,8 +1012,21 @@ function M.newEnv(state, savedVariables)
     env.__mouseFocus = nil
     env.GetMouseFoci = function() return { env.__mouseFocus } end
     env.CreateSettingsListSectionHeaderInitializer = function(name) return { header = name } end
-    env.CreateSettingsButtonInitializer = function(name, text, click)
-        local init = { button = name, text = text, click = click, shown = {} }
+    function env.__initializer(init)
+        init.modify = init.modify or {}
+        function init:AddModifyPredicate(fn) table.insert(self.modify, fn) end
+        function init:IsEnabled()
+            for _, fn in ipairs(self.modify) do if not fn() then return false end end
+            return true
+        end
+        function init:TooltipText()
+            if type(self.tooltip) == "function" then return self.tooltip() end
+            return self.tooltip
+        end
+        return init
+    end
+    env.CreateSettingsButtonInitializer = function(name, text, click, tooltip)
+        local init = env.__initializer({ button = name, text = text, click = click, tooltip = tooltip, shown = {} })
         function init:AddShownPredicate(fn) table.insert(self.shown, fn) end
         function init:ShouldShow()
             for _, fn in ipairs(self.shown) do if not fn() then return false end end

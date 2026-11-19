@@ -370,6 +370,22 @@ describe("Value list", function()
         assert.are.same({}, env.__errors)
     end)
 
+    it("greys out the options of price addons that are not loaded and says why", function()
+        local env, ns = world(PRICES)
+        env.TSM_API = nil
+        ns.Options:Register()
+        local byVar = {}
+        for _, c in ipairs(env.__settingsCategory.controls) do byVar[c.setting.variable] = c end
+        assert.is_true(byVar.EUIALTS_value_auctionator:IsEnabled())
+        assert.is_false(byVar.EUIALTS_value_tsm:IsEnabled())
+        assert.is_false(byVar.EUIALTS_value_tsmPrice:IsEnabled())
+        assert.is_true(byVar.EUIALTS_value_vendor:IsEnabled())
+        assert.truthy(byVar.EUIALTS_value_tsm:TooltipText():find("TradeSkillMaster is not installed or not loaded", 1, true))
+        assert.falsy(byVar.EUIALTS_value_auctionator:TooltipText():find("not installed", 1, true))
+        env.OEMarketInfo = nil
+        assert.is_false(byVar.EUIALTS_value_oeRegion:IsEnabled())   -- asked again when drawn
+    end)
+
     it("filters the list with the search box instead of searching everything", function()
         local env, ns = world(PRICES)
         open(ns, ns.Browser.ALL_OWNER)

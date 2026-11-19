@@ -28,10 +28,11 @@ local function Proxy(category, variable, path, name, varType)
     return Settings.RegisterProxySetting(category, "EUIALTS_" .. variable, varType, name, defaults[field], get, set)
 end
 
+-- -> setting, initializer (tooltip: text or a function returning it)
 local function Checkbox(category, variable, path, name, tooltip)
     local setting = Proxy(category, variable, path, name, Settings.VarType.Boolean)
-    Settings.CreateCheckbox(category, setting, tooltip)
-    return setting
+    local initializer = Settings.CreateCheckbox(category, setting, tooltip)
+    return setting, initializer
 end
 
 -- choices: { { value, label, tooltip? }, ... }; onEnter(value): hovering an
@@ -49,8 +50,8 @@ local function Dropdown(category, variable, path, name, tooltip, choices, onEnte
         end
         return data
     end
-    Settings.CreateDropdown(category, setting, GetOptions, tooltip)
-    return setting
+    local initializer = Settings.CreateDropdown(category, setting, GetOptions, tooltip)
+    return setting, initializer
 end
 
 local function Slider(category, variable, path, name, tooltip, minValue, maxValue)
@@ -203,6 +204,25 @@ local function ShowPreview(detail)
 end
 Options.ShowPreview = ShowPreview
 
+-------------------------------------------------------------------------------
+--  Price addon options: greyed out while their addon is not loaded, with the
+--  reason in the tooltip. Both are asked when the settings list draws the
+--  row, so an addon loaded after ours counts.
+-------------------------------------------------------------------------------
+local function NeedsAddon(source, text)
+    if source == "vendor" then return text end
+    return function()
+        if ns.Prices.IsAvailable(source) then return text end
+        return text .. "\n\n|cffff6060" .. string.format(L["Disabled: %s is not installed or not loaded."],
+            ns.ValueList.SourceText(ns.ValueList.SOURCE_NAME, source)) .. "|r"
+    end
+end
+
+local function GreyWithoutAddon(initializer, source)
+    if source == "vendor" or not initializer or not initializer.AddModifyPredicate then return end
+    initializer:AddModifyPredicate(function() return ns.Prices.IsAvailable(source) end)
+end
+
 function Options:Register()
     if self.category then return end
     local category, layout = Settings.RegisterVerticalLayoutCategory(L["EllesmereUI Bags: Alts"])
@@ -260,8 +280,10 @@ function Options:Register()
     -- auction house cut taken off, so the list shows what a sale brings.
     layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(L["Value list"]))
     for _, source in ipairs(ns.Prices.SOURCES) do
-        Checkbox(category, "value_" .. source, { "value", source }, ns.ValueList.SourceText(ns.ValueList.SOURCE_NAME, source),
-            L["The value list's automatic price uses the sources ticked here: Auctionator's scan when it saw the item, as that is the current market price, otherwise the highest of Oribos Exchange and TradeSkillMaster; the vendor price when it is higher. A price addon counts only while it is installed and loaded."])
+        local _, init = Checkbox(category, "value_" .. source, { "value", source },
+            ns.ValueList.SourceText(ns.ValueList.SOURCE_NAME, source),
+            NeedsAddon(source, L["The value list's automatic price uses the sources ticked here: Auctionator's scan when it saw the item, as that is the current market price, otherwise the highest of Oribos Exchange and TradeSkillMaster; the vendor price when it is higher. A price addon counts only while it is installed and loaded."]))
+        GreyWithoutAddon(init, source)
     end
     Checkbox(category, "value_ahCut", { "value", "ahCut" }, string.format(L["Subtract the auction house cut (%d%%)"], ns.Prices.AH_CUT * 100),
         L["Auction prices show what reaches you after a sale instead of what the buyer pays."])
@@ -270,14 +292,16 @@ function Options:Register()
     for _, choice in ipairs(ns.Prices.TSM_CHOICES) do
         tsmChoices[#tsmChoices + 1] = { choice, choice == "custom" and L["Custom price string"] or choice }
     end
-    Dropdown(category, "value_tsmPrice", { "value", "tsmPrice" }, L["TradeSkillMaster price"],
-        L["The TradeSkillMaster price source the value list reads."], tsmChoices)
+    local _, tsmInit = Dropdown(category, "value_tsmPrice", { "value", "tsmPrice" }, L["TradeSkillMaster price"],
+        NeedsAddon("tsm", L["The TradeSkillMaster price source the value list reads."]), tsmChoices)
+    GreyWithoutAddon(tsmInit, "tsm")
     -- Shown while "Custom price string" is chosen; changing the dropdown
     -- makes the settings list evaluate it again.
     local custom = CreateSettingsButtonInitializer(L["Custom price string"], L["Edit"], function()
         Options:EditTSMCustom()
-    end, L["Any TradeSkillMaster price string, such as first(DBRecent, DBMarket)."], true)
+    end, NeedsAddon("tsm", L["Any TradeSkillMaster price string, such as first(DBRecent, DBMarket)."]), true)
     custom:AddShownPredicate(function() return ns.db.settings.value.tsmPrice == "custom" end)
+    GreyWithoutAddon(custom, "tsm")
     layout:AddInitializer(custom)
 
     layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(L["Data collection"]))
