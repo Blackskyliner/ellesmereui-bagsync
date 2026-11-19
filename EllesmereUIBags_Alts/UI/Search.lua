@@ -402,6 +402,34 @@ function Search.Matches(q, itemID, stateSets)
     return true, false
 end
 
+-- One stored stack against a query: a bind expression by the stack's own
+-- bind state, other terms by its item, tooltip words read with the stack's
+-- binding line. -> matches, pending (item data not cached yet)
+function Search.StackMatches(q, enc)
+    if q.invalid then return false, false end
+    local id, _, _, bound = ns.DecodeItem(enc)
+    if not id then return false, false end
+    if q.bind then
+        local name, _, _, _, _, _, _, _, _, _, _, _, _, bindType = C_Item.GetItemInfo(id)
+        if not name then return false, true end
+        return StackMatches(q.bind, enc, bindType or Enum.ItemBind.None), false
+    end
+    return Search.Matches(q, id, { [id] = { [bound or "free"] = true } })
+end
+
+-- Can the query match currencies at all? id:, q:, t: and bind expressions
+-- are about items.
+local function SearchesCurrencies(q)
+    return q and not q.invalid and not q.bind and q.quality == nil and not q.typeText
+        and not (q.itemID and not q.numericToken)
+end
+
+-- A currency name against the query (words and a bare number).
+function Search.CurrencyMatches(q, name)
+    if not SearchesCurrencies(q) or type(name) ~= "string" or ns.IsSecret(name) or name == "" then return false end
+    return NameMatches(q, strlower(name))
+end
+
 local function Result(itemID)
     return { itemID = itemID, total = ns.Index:GetTotal(itemID),
              name = C_Item.GetItemInfo(itemID) or ("item:" .. itemID) }
@@ -520,9 +548,7 @@ end
 -- -> { { currencyID, name, info }, ... } sorted by name
 function Search.RunCurrencies(q)
     local out = {}
-    if not q or q.invalid or q.bind or q.quality ~= nil or q.typeText or (q.itemID and not q.numericToken) then
-        return out
-    end
+    if not SearchesCurrencies(q) then return out end
     local seen = {}
     for _, c in pairs(ns.db.chars) do
         for id in pairs(c.currency or {}) do

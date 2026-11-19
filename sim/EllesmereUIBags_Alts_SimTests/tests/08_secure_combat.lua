@@ -52,6 +52,9 @@ local function exerciseEverything()
     -- browser: open, search, switch owners/tabs, close
     SlashCmdList["EUIALTS"]("")
     ns.Browser:SetQuery("id:2589")
+    EllesmereUIBagsAltsBrowser.scope:Click()            -- the view's own search
+    ns.Browser:SetQuery("linen")
+    EllesmereUIBagsAltsBrowser.scope:Click()
     ns.Browser:SetQuery("")
     ns.Browser:Select(ns.WARBAND_OWNER)
     ns.Browser:Select(ns.GetPlayerKey())

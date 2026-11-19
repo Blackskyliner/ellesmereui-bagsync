@@ -187,18 +187,23 @@ local function BankSetNames(m)
     return total == 1 and names or nil
 end
 
--- Prices every stack. -> rows, hidden set stacks, stacks without a price,
--- item IDs still waiting for their data.
-local function Build(selection)
+-- Prices every stack; filter: the view's search filter or nil (stacks it
+-- does not match are marked or left out). -> rows, hidden set stacks, stacks
+-- without a price, item IDs still waiting for their data.
+local function Build(selection, filter)
     ns.Prices.Reset()
     local mode = ns.db.settings.value.source
     local showSets = ns.db.settings.value.showSets
     local rows, setsHidden, unpriced, pending = {}, 0, 0, {}
     for _, m in ipairs(Collect(selection)) do
         m.sets = m.sets or BankSetNames(m)
-        if m.sets and not showSets then
+        local ok = not filter or filter:Stack(ns.EncodeItem(m.id, m.count, m.link, m.bound))
+        m.miss = not ok
+        -- a stack the search leaves out counts nowhere
+        local shown = ok or not filter.hide
+        if shown and m.sets and not showSets then
             setsHidden = setsHidden + 1
-        else
+        elseif shown then
             local name, quality, icon = ItemDisplay(m)
             if not name then pending[#pending + 1] = m.id end
             local unit, source, auction, prices = ns.Prices.Evaluate(m.id, m.link, m.bound, mode)
@@ -515,12 +520,14 @@ function ValueList:Paint(r, m, layout)
         r.title:SetText(m.header)
         r.title:SetTextColor(Ext:GetAccentColor())
         r.title:Show()
+        r:SetAlpha(1)
         r.icon:Hide()
         r.count:SetText("")
         for _, fs in pairs(cells) do fs:SetText("") end
         return
     end
     r.title:Hide()
+    r:SetAlpha(m.miss and ns.SEARCH_MISS_ALPHA or 1)
     r.icon:Show()
     r.icon:SetTexture(m.icon or 134400)
     r.count:SetText(m.count > 1 and BreakUpLargeNumbers(m.count) or "")
@@ -553,8 +560,9 @@ local function Selection(owner)
 end
 ValueList.Selection = Selection
 
--- Shows the list for an owner. -> content height, row count, footer text
-function ValueList:Render(f, owner, width)
+-- Shows the list for an owner, filtered by the view's search filter (or
+-- nil). -> content height, row count, footer text
+function ValueList:Render(f, owner, width, filter)
     self:Build(f)
     self.browser = f
     self.width = width
@@ -579,7 +587,12 @@ function ValueList:Render(f, owner, width)
         h.label:SetText(L[col.label] .. arrow)
     end
 
-    local rows, setsHidden, unpriced, pending = Build(Selection(owner))
+    local rows, setsHidden, unpriced, pending = Build(Selection(owner), filter)
+    if filter then
+        -- the footer counts the rows the search matched, not every stack
+        filter.matches = 0
+        for _, m in ipairs(rows) do if not m.miss then filter.matches = filter.matches + 1 end end
+    end
     wipe(self.pending)
     for i = 1, math.min(#pending, MAX_REQUESTS) do
         self.pending[pending[i]] = true

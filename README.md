@@ -220,6 +220,15 @@ per-character amounts. `id:`, `q:` and `t:` filter items only. Every item hit
 lists its holders with an icon per location (bags, bank, equipped, mail,
 auctions, warband bank, guild bank).
 
+**Search scope.** The button beside the search box picks where it looks:
+"Everywhere" lists every match on all characters as above, "This view"
+filters what the tab shows (bags, bank, mail, currencies, the value list),
+with the same syntax and EllesmereUI Bags' bind keywords, and counts the
+matches in the footer. Stacks that do not match are dimmed or hidden (option
+"Items the search does not match"). The option "Browser search" sets where it
+starts (default: everywhere, as before); the button changes it until the next
+login. `/alts search` and the API always list every match.
+
 The bind keywords of EllesmereUI Bags work too: `bop`, `boe`, `wue`, `boa`,
 `soulbound` and `warbound`, each with an optional item level (`boe>=600`,
 `wue 590-610`, `bop 300`), joined with `and`, `or`, `not` (also `&`, `|`, `!`)
