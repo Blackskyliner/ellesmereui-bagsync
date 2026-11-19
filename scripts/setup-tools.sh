@@ -41,8 +41,8 @@ mkdir -p "$T/src" "$T/vendor"
 # grows with every commit; EllesmereUI changes almost daily. ELLESMEREUI_REV=latest
 # takes EllesmereUI's newest commit instead (.github/workflows/upstream.yml).
 # Both clients build from the same revision, each in its own checkout.
-WOW_UI_SIM_REV=29c9f17dc5b68829f11d7c94840627d3c725db15
-WOW_UI_SIM_FOREVER_REV=29c9f17dc5b68829f11d7c94840627d3c725db15
+WOW_UI_SIM_REV=c3e40aa1593d49e464fb9ed3fc82254383497df7
+WOW_UI_SIM_FOREVER_REV=c3e40aa1593d49e464fb9ed3fc82254383497df7
 # Blizzard's UI source (Gethe/wow-ui-source) at the client builds the
 # simulator pins (its data/blizzard-ui-builds/<profile>.json, checked below):
 # the simulator only runs the Blizzard UI of that build, and the API check
@@ -51,13 +51,7 @@ GETHE_RETAIL_REV=297d7aaaa736f346b3e036f38ee088eaf7f8c07f  # 12.1.5.70783
 GETHE_FOREVER_REV=aff0d8cd53bf4d9ef1c1dd2786b94461a276fb16 # 1.60.1.70707
 # Fixes the suite needs before upstream has them: scripts/patches/<checkout>/
 # holds them as git patches, each naming its upstream pull request, applied on
-# top of the pin. scripts/patches/wow-ui-sim-forever links to wow-ui-sim's,
-# as both checkouts sit at the same revision; it becomes a directory of its
-# own when the pins part.
-# wow-ui-sim 0001: a MaskTexture with slice margins was stretched whole, so
-# EllesmereUI's rounded tooltip corners blurred the whole tooltip; masked
-# quads are split at the mask's slice lines
-# (https://github.com/Osso/wow-ui-sim/pull/65).
+# top of the pin. The pins above need none.
 # The Forever profile reads selected spell data of client build 1.60.1.70685,
 # which wow-cli generates from Blizzard's CDN; the checksum is that of the file
 # the pinned wow-cli generates (its selection of spell IDs grows with the
