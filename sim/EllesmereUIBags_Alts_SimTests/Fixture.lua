@@ -103,7 +103,7 @@ local STUB_OE = function(item, result)
     end
     return result
 end
-local STUB_AUCTIONATOR = { API = { v1 = {
+local STUB_AUCTIONATOR = { Database = { GetItemCount = function() return 2 end }, API = { v1 = {
     GetAuctionPriceByItemID = function(_, id) local p = PriceOf(id) return p and p.auctionator end,
     GetAuctionPriceByItemLink = function(_, link) local p = PriceOf(link) return p and p.auctionator end,
     GetAuctionAgeByItemID = function(_, id) local p = PriceOf(id) return p and p.age end,
