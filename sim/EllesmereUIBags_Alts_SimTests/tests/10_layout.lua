@@ -158,9 +158,21 @@ simtest("the sidebar's context menu holds its title and entries", function()
         row:Click("RightButton")
         local menu = _G.EllesmereUIBagsAltsMenu
         assertTrue(menu:IsVisible())
-        -- above the browser, which a click outside the menu must not reach
-        assertTrue(menu:GetFrameStrata() == "FULLSCREEN_DIALOG")
-        assertTrue(menu.catcher:GetFrameStrata() == "DIALOG")
+        -- above the browser, which a click outside the menu must not reach,
+        -- and the catcher below the entries, also after the browser was
+        -- raised above the settings (its strata reaches every child)
+        local function layered()
+            assertTrue(menu:GetFrameStrata() == "FULLSCREEN_DIALOG")
+            assertTrue(menu.catcher:GetFrameStrata() == "FULLSCREEN_DIALOG")
+            for _, entry in ipairs(menu.entries) do
+                if entry:IsVisible() then assertTrue(entry:GetFrameLevel() > menu.catcher:GetFrameLevel()) end
+            end
+        end
+        layered()
+        menu.catcher:Click()
+        ns.Browser:RaiseAboveSettings()
+        row:Click("RightButton")
+        layered()
         local box = Lay.Rect(menu)
         local parts = { { "title", Lay.TextRect(menu.title) } }
         for i, entry in ipairs(menu.entries) do
