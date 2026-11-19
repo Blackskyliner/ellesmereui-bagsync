@@ -42,6 +42,9 @@ Version 0.11.0, by Blackskyliner.
   bank and your guild banks, with tabs for bags, bank, equipped, mail, auctions and
   currencies. An **Everything** tab merges all locations of a character, and the
   **All characters** entry and every realm header merge everything you own.
+- **Value list**: a sortable list of everything you could still sell, priced by
+  Oribos Exchange (region or realm), Auctionator, TradeSkillMaster or the vendor,
+  automatically or by one source you pick.
 - **Search** across all characters and all stored currencies.
 - **Currencies** grouped into character-bound, transferable and warband-wide, with
   a tooltip that shows who holds how much.
@@ -50,7 +53,8 @@ Version 0.11.0, by Blackskyliner.
   amount until you open the mailbox. The auctions footer shows the value of all
   active auctions.
 - **Bound state and equipment sets**: stored items remember whether they are
-  soulbound or warbound, and which equipment sets they belong to.
+  soulbound, warbound or warbound until equipped, and which equipment sets they
+  belong to.
 - **A button in the EllesmereUI bag header** (opt-in) that opens the browser.
 - **English plus ten translations**, the same set as EllesmereUI.
 
@@ -140,7 +144,7 @@ installs EllesmereUI as the dependency. By hand:
 
 **Browser.** On the left the characters grouped by realm, then the warband bank
 and the guild banks. At the top the tabs Everything, Bags, Bank, Equipped, Mail,
-Auctions and Currency. Hover shows the item tooltip, shift-click links an item
+Auctions, Currency and Value. Hover shows the item tooltip, shift-click links an item
 in chat, ctrl-click opens the dressing room. The tooltip is the browser's own
 frame, so addons that add lines to item tooltips (prices and the like) show
 there only if they serve such frames: Auctionator and addons built on
@@ -170,6 +174,34 @@ remembered account-wide, so offline characters sort correctly too. Hovering a
 currency shows Blizzard's currency tooltip plus every character's amount and, when
 more than one character holds it, the total; warband-wide currencies show their one
 shared amount. Overviews add currencies up; warband-wide ones count once.
+
+**Value list.** The Value tab lists the stacks of the selected entry that could
+still be sold, one row per item, character and location: icon with the amount,
+name, character, location, price source, total value, the gain over selling to
+a vendor and the binding. Click a column header to sort by it, click again to
+reverse. It covers bags, bank, mail and the warband bank; worn gear is in use
+and auctions are already for sale, so neither counts. "All characters" includes
+the warband bank, a realm only its characters; a guild bank or the warband bank
+is listed when you select it. Items of an equipment set are hidden until you
+press "Show equipment sets", then they follow as a group of their own; in the
+bank a soulbound item counts as a set item when a set asks for it and the
+character has just that one.
+
+The button at the top picks the price. "Automatic" takes the first of the
+sources ticked in the options that has a price for the item: TradeSkillMaster,
+then Auctionator's scans, then the higher Oribos Exchange median, which is a
+few days old; the vendor price when it is higher.
+Or choose one source. Prices come from the addons you have installed: Oribos
+Exchange (region or realm median), Auctionator (with the days since it last
+saw the item) and TradeSkillMaster (price source chosen in the options, by
+default `first(DBMarket, DBRegionMarketAvg)`, or a custom price string), plus
+the vendor price. Soulbound, warbound and warbound-until-equipped items sell to
+vendors only, so only the vendor price counts for them. With "Subtract the
+auction house cut (5%)" on (the default) auction prices show what reaches you
+after a sale; the deposit is not counted, as it comes back with the sale.
+Stacks without any price are left out and counted in the footer, next to the
+total value. Hovering a row lists the price of every installed source, or why
+there is none (no Auctionator scan yet, not in its scans, no TSM price string).
 
 **Bound state and sets.** A stored item that is bound shows "Soulbound" or
 "Warbound" in the browser tooltip instead of the generic "Binds when equipped";
@@ -270,6 +302,9 @@ cannot read the new format.
 - Amounts are gross; the AH fee is only taken by the mail. For auctions not posted
   through this addon the price comes from the list, and for commodities it is taken
   as the unit price.
+- The value list reads prices only from Oribos Exchange, Auctionator and
+  TradeSkillMaster, and only while they are loaded. Items of equipment sets are
+  recognised in the bags and worn; set items in the bank count as free.
 - EllesmereUI has no public API for option pages of other addons, so the options
   live in Blizzard's settings (Options -> AddOns), which EllesmereUI's skin module
   styles.
@@ -317,7 +352,14 @@ and [BugSack](https://www.curseforge.com/wow/addons/bugsack), then enter
     turned off in the options it leaves the bag header.
 12. **Without EUI's skin module (optional):** disable EllesmereUIBlizzardSkin. The
     addon keeps working with its plain look; the item slots keep EUI Bags' look.
-13. **WoW Forever:** repeat steps 1 to 6 there. The browser groups the characters
+13. **Value list:** with Oribos Exchange, Auctionator or TradeSkillMaster
+    installed, open the Value tab of "All characters". Rows show a source and a
+    value, and hovering one lists every installed source. Sort by each column.
+    Pick a single source with the button, also
+    after opening the browser from the settings; untick a source in the
+    options and check that "Automatic" no longer uses it. A soulbound item shows "Vendor", an item
+    of an equipment set shows only after "Show equipment sets".
+14. **WoW Forever:** repeat steps 1 to 6 there. The browser groups the characters
     by realm type and lists no warband bank. Put a key on the keyring, equip ammo
     as a hunter and put a bag into a bank bag slot: each shows up in the browser
     and in the tooltip counts.
@@ -377,7 +419,8 @@ EllesmereUIBags_Alts/   the addon
                         currency, guild bank
   Index/                runtime item index
   Tooltip/              tooltip counts
-  UI/                   browser, item grid, search, widgets, header button
+  Value/                price sources for the value list
+  UI/                   browser, item grid, value list, search, widgets, header button
   Options/              settings page, slash commands, first run
   Locales/              translations
   media/                addon icon (drawn by scripts/make-icon.py)

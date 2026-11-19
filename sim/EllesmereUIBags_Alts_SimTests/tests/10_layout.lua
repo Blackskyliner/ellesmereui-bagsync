@@ -5,13 +5,13 @@ local Lay = EUIAltsLayout
 
 local Fixture = EUIAltsSimFixture
 local VIEWS = {
-    { owner = Fixture.MAIN, tabs = { "all", "bags", "bank", "equipped", "mail", "auctions", "currency" } },
-    { owner = Fixture.SECOND, tabs = { "bags", "bank" } },          -- empty bank: hint text
-    { owner = "*all", tabs = { "all", "bags", "bank", "mail", "auctions", "currency" } },
-    { owner = Fixture.REALM, tabs = { "all", "currency" } },
-    { owner = Fixture.GUILD },
+    { owner = Fixture.MAIN, tabs = { "all", "bags", "bank", "equipped", "mail", "auctions", "currency", "value" } },
+    { owner = Fixture.SECOND, tabs = { "bags", "bank", "value" } },  -- empty bank: hint text
+    { owner = "*all", tabs = { "all", "bags", "bank", "mail", "auctions", "currency", "value" } },
+    { owner = Fixture.REALM, tabs = { "all", "currency", "value" } },
+    { owner = Fixture.GUILD, tabs = { "all", "value" } },
 }
-if ns.Compat.HAS_WARBAND_BANK then VIEWS[#VIEWS + 1] = { owner = "#warband" } end
+if ns.Compat.HAS_WARBAND_BANK then VIEWS[#VIEWS + 1] = { owner = "#warband", tabs = { "all", "value" } } end
 local SEARCHES = { "n", "valor", "zzzz" }
 -- The title row matches EllesmereUI Bags' bag header (HEADER_H = 35, inset
 -- 1 px, EllesmereUIBags.lua CreateHeader); everything in it must fit it.
@@ -79,7 +79,31 @@ local function check(where)
             local r = f.currencies.items[i]
             Lay.AssertNone(Lay.Overlaps({ { "name", Lay.TextRect(r.name) }, { "qty", Lay.TextRect(r.qty) } }), "currency row " .. i)
         end
-        -- 8. no frame pinned far above the window (other windows must cover it)
+        -- 8. value list: toolbar and column heads inside the content panel and
+        --    apart, every drawn row's cells apart
+        local value = ns.ValueList.frame
+        if value and value:IsVisible() then
+            local bar = {}
+            bar[#bar + 1] = { "source", Lay.Rect(value.source) }
+            bar[#bar + 1] = { "sets", Lay.Rect(value.sets) }
+            for _, col in ipairs(ns.ValueList.COLUMNS) do
+                bar[#bar + 1] = { "head " .. col.key, Lay.Rect(value.heads[col.key]) }
+            end
+            for _, item in ipairs(bar) do
+                if not Lay.Inside(item[2], content) then error(Lay.Describe(item[1], item[2]) .. " outside " .. Lay.Describe("content", content)) end
+            end
+            Lay.AssertNone(Lay.Overlaps(bar), "value list toolbar")
+            for i, row in ipairs(ns.ValueList.pool) do
+                if row:IsVisible() and row.data and not row.data.header then
+                    local cells = { { "icon", Lay.Rect(row.icon) } }
+                    for _, col in ipairs(ns.ValueList.COLUMNS) do
+                        cells[#cells + 1] = { col.key, Lay.TextRect(row.cells[col.key]) }
+                    end
+                    Lay.AssertNone(Lay.Overlaps(cells), "value row " .. i)
+                end
+            end
+        end
+        -- 9. no frame pinned far above the window (other windows must cover it)
         Lay.AssertNone(Lay.LevelOutliers(f, 20), "frame level")
     end)
     if not ok then error(where .. ": " .. tostring(err), 0) end
@@ -134,9 +158,21 @@ simtest("the sidebar's context menu holds its title and entries", function()
         row:Click("RightButton")
         local menu = _G.EllesmereUIBagsAltsMenu
         assertTrue(menu:IsVisible())
-        -- above the browser, which a click outside the menu must not reach
-        assertTrue(menu:GetFrameStrata() == "FULLSCREEN_DIALOG")
-        assertTrue(menu.catcher:GetFrameStrata() == "DIALOG")
+        -- above the browser, which a click outside the menu must not reach,
+        -- and the catcher below the entries, also after the browser was
+        -- raised above the settings (its strata reaches every child)
+        local function layered()
+            assertTrue(menu:GetFrameStrata() == "FULLSCREEN_DIALOG")
+            assertTrue(menu.catcher:GetFrameStrata() == "FULLSCREEN_DIALOG")
+            for _, entry in ipairs(menu.entries) do
+                if entry:IsVisible() then assertTrue(entry:GetFrameLevel() > menu.catcher:GetFrameLevel()) end
+            end
+        end
+        layered()
+        menu.catcher:Click()
+        ns.Browser:RaiseAboveSettings()
+        row:Click("RightButton")
+        layered()
         local box = Lay.Rect(menu)
         local parts = { { "title", Lay.TextRect(menu.title) } }
         for i, entry in ipairs(menu.entries) do

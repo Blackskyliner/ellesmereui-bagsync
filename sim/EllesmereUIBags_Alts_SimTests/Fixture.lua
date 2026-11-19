@@ -81,6 +81,35 @@ end
 -- installed that line stands in when the simulator gives none (a post call
 -- runs before Blizzard shows the tooltip and cannot be removed again). The
 -- simulator's data carries no id either; the getter's argument names it.
+-- Price addons for the value list: Oribos Exchange and Auctionator as their
+-- globals look to another addon, with prices for the fixture's items (copper
+-- per unit). Installed only while the fixture is, and only where no real
+-- one is loaded.
+local PRICES = {
+    [LINEN] = { region = 2500, realm = 2200, auctionator = 2400, age = 1 },
+    [WOOL] = { region = 4000, realm = 4500 },
+    [ORE] = { region = 30000, realm = 28000, auctionator = 31000, age = 3 },
+    [POTION] = { region = 150000, realm = 140000 },
+}
+local function PriceOf(item)
+    return PRICES[tonumber(item) or tonumber(type(item) == "string" and item:match("item:(%d+)") or nil)]
+end
+local STUB_OE = function(item, result)
+    if item == 0 then return true end
+    if type(result) == "table" then
+        wipe(result)
+        local p = PriceOf(item)
+        if p then result.region, result.market = p.region, p.realm end
+    end
+    return result
+end
+local STUB_AUCTIONATOR = { Database = { GetItemCount = function() return 2 end }, API = { v1 = {
+    GetAuctionPriceByItemID = function(_, id) local p = PriceOf(id) return p and p.auctionator end,
+    GetAuctionPriceByItemLink = function(_, link) local p = PriceOf(link) return p and p.auctionator end,
+    GetAuctionAgeByItemID = function(_, id) local p = PriceOf(id) return p and p.age end,
+    GetAuctionAgeByItemLink = function(_, link) local p = PriceOf(link) return p and p.age end,
+} } }
+
 local currencyNameHooked
 local function HookCurrencyName()
     if currencyNameHooked then return end
@@ -113,8 +142,8 @@ end
 
 local function enc(id, count) return id .. "," .. (count or 1) end
 
-local function container(size, items, name)
-    return { size = size, items = ns.PackItems(items), name = name }
+local function container(size, items, name, sets)
+    return { size = size, items = ns.PackItems(items), name = name, sets = sets }
 end
 
 local function chars(now)
@@ -124,7 +153,7 @@ local function chars(now)
             money = 123456789, lastSeen = now - 5400, bankAt = now - 9000,
             bags = {
                 [0] = container(20, { [1] = enc(HEARTH), [2] = enc(LINEN, 200), [3] = enc(POTION, 20),
-                                      [4] = enc(THUNDERFURY), [5] = enc(WOOL, 57) }),
+                                      [4] = enc(THUNDERFURY), [5] = enc(WOOL, 57) }, nil, { [3] = "Raid" }),
                 [1] = container(36, { [1] = enc(ORE, 1000), [2] = enc(LINEN, 55) }),
             },
             bank = { [6] = container(98, { [1] = enc(WOOL, 400), [2] = enc(POTION, 60) }, "Consumables") },
@@ -165,7 +194,7 @@ local function foreverChars(now)
             money = 1234567, lastSeen = now - 5400, bankAt = now - 9000,
             bags = {
                 [0] = container(16, { [1] = enc(HEARTH), [2] = enc(LINEN, 20), [3] = enc(POTION, 5),
-                                      [4] = enc(THUNDERFURY), [5] = enc(WOOL, 57) }),
+                                      [4] = enc(THUNDERFURY), [5] = enc(WOOL, 57) }, nil, { [3] = "Raid" }),
                 [1] = container(14, { [1] = enc(ORE, 40), [2] = enc(LINEN, 15) }),
                 [Enum.BagIndex.Keyring] = container(12, { [1] = enc(KEY) }),
             },
@@ -213,6 +242,8 @@ function EUIAltsSimFixture.Install()
     end
     HookCurrencyName()
     HookItemName()
+    if OEMarketInfo == nil then OEMarketInfo, saved.oe = STUB_OE, true end
+    if Auctionator == nil then Auctionator, saved.auctionator = STUB_AUCTIONATOR, true end
     local now = time()
     if FOREVER then
         for k, v in pairs(foreverChars(now)) do db.chars[k] = v end
@@ -249,6 +280,8 @@ function EUIAltsSimFixture.Uninstall()
     db.warband, db.guilds, db.currencyMeta = saved.warband, saved.guilds, saved.currencyMeta
     C_Item.GetItemInfoInstant, C_Item.GetItemInfo = saved.infoInstant, saved.info
     C_Item.GetItemQualityByID = saved.quality
+    if saved.oe then OEMarketInfo = nil end
+    if saved.auctionator then Auctionator = nil end
     saved = nil
     ns.Index:Invalidate()
     ns.Browser:RequestRefresh()

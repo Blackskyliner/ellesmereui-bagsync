@@ -37,7 +37,8 @@ local BINDING_LINE = Enum.TooltipDataLineType.ItemBinding
 local function BindingPreCall(tooltip, lineData)
     local info = tooltip.processingInfo
     local bound = info and info.euiAltsBound
-    if not bound or lineData.type ~= BINDING_LINE then return false end
+    -- An item warbound until equipped keeps its own binding line, which says so.
+    if not bound or bound == "wue" or lineData.type ~= BINDING_LINE then return false end
     local text = bound == "account" and ITEM_ACCOUNTBOUND or ITEM_SOULBOUND
     local c = lineData.leftColor
     tooltip:AddLine(text, c and c.r or 1, c and c.g or 1, c and c.b or 1)
@@ -51,26 +52,35 @@ local function SetsPostCall(tooltip)
     if sets then
         tooltip:AddLine(string.format(ns.L["Equipment sets: %s"], "|cffffffff" .. sets .. "|r"), 1, 0.82, 0, true)
     end
+    if info and info.euiAltsExtra then info.euiAltsExtra(tooltip, info.euiAltsExtraArg) end
     ns.AddOwnerLines(tooltip)
 end
 
-local function Button_OnEnter(self)
-    if not self.ref then return end
+-- Tooltip of a stored stack on one of the browser's frames. ref: link or
+-- "item:<id>"; extra(tooltip, extraArg): more lines before the owners.
+function ns.ShowStoredItemTooltip(owner, ref, bound, sets, itemID, extra, extraArg)
+    if not ref then return end
     local tooltip = W.GetTooltip()
-    tooltip:SetOwner(self, "ANCHOR_RIGHT")
-    if self.ref:find("battlepet:", 1, true) and W.ShowPetTooltip(self, self.ref) then
+    tooltip:SetOwner(owner, "ANCHOR_RIGHT")
+    if ref:find("battlepet:", 1, true) and W.ShowPetTooltip(owner, ref) then
         tooltip:Hide()
         return
     end
     tooltip:ProcessInfo({
         getterName = "GetHyperlink",
-        getterArgs = { self.ref },
+        getterArgs = { ref },
         linePreCall = BindingPreCall,
         tooltipPostCall = SetsPostCall,
-        euiAltsBound = self.bound,
-        euiAltsSets = self.sets,
-        euiAltsOwners = self.itemID,
+        euiAltsBound = bound,
+        euiAltsSets = sets,
+        euiAltsOwners = itemID,
+        euiAltsExtra = extra,
+        euiAltsExtraArg = extraArg,
     })
+end
+
+local function Button_OnEnter(self)
+    ns.ShowStoredItemTooltip(self, self.ref, self.bound, self.sets, self.itemID)
 end
 
 local function Button_OnLeave()
@@ -83,6 +93,7 @@ local function Button_OnClick(self)
     local link = ResolveLink(self.ref)
     if link then HandleModifiedItemClick(link) end
 end
+ns.ResolveItemLink = ResolveLink
 
 function ns.NewItemGrid(parent)
     local g = setmetatable({ parent = parent, buttons = {}, headers = {}, used = 0, usedHeaders = 0,

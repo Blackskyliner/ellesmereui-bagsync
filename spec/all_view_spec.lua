@@ -114,7 +114,7 @@ describe("All characters view", function()
         local f = env.EllesmereUIBagsAltsBrowser
         local shown = {}
         for _, tab in ipairs(f.tabs) do if tab:IsShown() then shown[#shown + 1] = tab.key end end
-        assert.are.same({ "all", "bags", "bank", "equipped", "mail", "auctions", "currency" }, shown)
+        assert.are.same({ "all", "bags", "bank", "equipped", "mail", "auctions", "currency", "value" }, shown)
         ns.Browser:SelectTab("bags")
         assert.are.equal(30, counts(f)["item:2589"])    -- bags only: no bank
         assert.is_nil(counts(f)["item:190396"])
@@ -203,7 +203,7 @@ describe("Everything tab of a character", function()
         local f = env.EllesmereUIBagsAltsBrowser
         local shown = {}
         for _, tab in ipairs(f.tabs) do if tab:IsShown() then shown[#shown + 1] = tab.key end end
-        assert.are.same({ "all", "bags", "bank", "equipped", "mail", "auctions", "currency" }, shown)
+        assert.are.same({ "all", "bags", "bank", "equipped", "mail", "auctions", "currency", "value" }, shown)
         local c = counts(f)
         assert.are.equal(25, c["item:2589"])            -- bags 20 + bank 5, not Bob or Carol
         assert.are.equal(1, c[HELM_REF])

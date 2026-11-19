@@ -28,6 +28,8 @@ describe("Bound state", function()
         local _, ns = wow.boot(wow.defaultState())
         assert.are.equal("6948,1,!", ns.EncodeItem(6948, 1, nil, "soul"))
         assert.are.equal("232000,1,~", ns.EncodeItem(232000, 1, nil, "account"))
+        assert.are.equal("231000,1,^", ns.EncodeItem(231000, 1, nil, "wue"))
+        assert.are.same({ 231000, 1, nil, "wue" }, { ns.DecodeItem("231000,1,^") })
         local core = "item:230000::::::::80:66::13:1:10256"         -- stored: the link's item: core
         local enc = ns.EncodeItem(230000, 1, HELM_LINK, "soul")
         assert.are.equal("230000,1,!" .. core, enc)
@@ -44,7 +46,7 @@ describe("Bound state", function()
         wow.putItem(s, 0, 2, 230000, 1, HELM_LINK)          -- BoE, never equipped -> free
         wow.putItem(s, 0, 3, 232000, 1)                      -- warbound (ToBnetAccount)
         s.bags[0].slots[3].bound = true
-        wow.putItem(s, 0, 4, 231000, 1)                      -- warbound until equipped: still movable
+        wow.putItem(s, 0, 4, 231000, 1)                      -- warbound until equipped: vendor only
         s.bags[0].slots[4].bound = true
         s.bags[0].slots[4].wue = true
         local _, ns = wow.boot(s)
@@ -52,7 +54,7 @@ describe("Bound state", function()
         assert.are.equal("soul", select(4, ns.DecodeItem(items[1])))
         assert.is_nil(select(4, ns.DecodeItem(items[2])))
         assert.are.equal("account", select(4, ns.DecodeItem(items[3])))
-        assert.is_nil(select(4, ns.DecodeItem(items[4])))
+        assert.are.equal("wue", select(4, ns.DecodeItem(items[4])))
         ns.Index:EnsureBuilt()
         assert.are.equal(2, ns.Index:GetTotal(230000))      -- counts are unaffected by the marker
     end)

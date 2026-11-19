@@ -53,6 +53,31 @@ function ns.GetEquipmentSetLookup()
     return lookup
 end
 
+-- itemID -> names of the sets that ask for it. A set names the item each
+-- slot wants; a soulbound item lying where the set's locations do not reach
+-- (the bank) is still that set's item when the character has just one.
+function ns.GetEquipmentSetItemIDs()
+    local out
+    local ids = C_EquipmentSet.GetEquipmentSetIDs()
+    if type(ids) ~= "table" then return nil end
+    for _, setID in ipairs(ids) do
+        local name = C_EquipmentSet.GetEquipmentSetInfo(setID)
+        local itemIDs = C_EquipmentSet.GetItemIDs(setID)
+        if type(name) == "string" and type(itemIDs) == "table" then
+            local seen = {}
+            for _, itemID in pairs(itemIDs) do
+                -- 0/1 mark empty and ignored slots, not items
+                if type(itemID) == "number" and itemID > 1 and not seen[itemID] then
+                    seen[itemID] = true
+                    out = out or {}
+                    out[itemID] = out[itemID] and (out[itemID] .. ", " .. name) or name
+                end
+            end
+        end
+    end
+    return out
+end
+
 -- -> Container or nil; second return true when the data was secret (retry later).
 -- withSets: also record equipment set membership (character bags).
 function ns.ScanContainer(bagID, withSets)

@@ -195,6 +195,9 @@ local function TermMatches(n)
         match = bound == "soul"
     elseif k == "warbound" then
         match = bound == "account"
+    elseif bound == "wue" then
+        -- Recorded as warbound until equipped: not bound yet, and no BoE.
+        match = k == "wue"
     elseif bound then
         -- BoE and WuE both mean "not bound yet".
         match = false

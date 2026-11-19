@@ -101,8 +101,9 @@ end
 -------------------------------------------------------------------------------
 function Compat.AmmoStack()
     if type(UnitUsesAmmo) ~= "function" then return nil end
+    -- An empty ammo slot reports item 0 (and a count of 1), not nil.
     local id = GetInventoryItemID("player", INVSLOT_AMMO)
-    if not id or ns.IsSecret(id) then return nil end
+    if not id or ns.IsSecret(id) or id <= 0 then return nil end
     local count = GetInventoryItemCount("player", INVSLOT_AMMO)
     if not count or ns.IsSecret(count) or count <= 0 then return nil end
     return id, count, GetInventoryItemLink("player", INVSLOT_AMMO)
