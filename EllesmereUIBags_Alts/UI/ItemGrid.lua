@@ -43,6 +43,7 @@ local function BindingPreCall(tooltip, lineData)
     tooltip:AddLine(text, c and c.r or 1, c and c.g or 1, c and c.b or 1)
     return true   -- consumed: the generic binding line is not added
 end
+ns.BindingPreCall = BindingPreCall   -- the search's result rows show it too
 
 local function SetsPostCall(tooltip)
     local info = tooltip.processingInfo

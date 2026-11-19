@@ -176,15 +176,27 @@ shared amount. Overviews add currencies up; warband-wide ones count once.
 items without such a line can still move. If an item belongs to equipment sets
 (bags or worn), the tooltip names them.
 
-**Search.** Words (parts of the name), `id:12345` (item ID; a bare number as the
+**Search.** Words (parts of the name or the tooltip text, like the game's bag
+search; a bound stack's tooltip reads "Soulbound" or "Warbound" instead of
+"Binds when equipped"; `"two words"` in quotes is a phrase that has to stand
+in the name or in one tooltip line), `id:12345` (item ID; a bare number as the
 first term is taken as an item ID too), `q:epic` or `q:4` (quality), `t:armor`
 (type/subtype). All terms must match. The search covers characters, the warband
 bank and guild banks and shows at most 300 items. Words and a number also search the
 names of stored currencies; those hits come first, with the total and the
 per-character amounts. `id:`, `q:` and `t:` filter items only. Every item hit
 lists its holders with an icon per location (bags, bank, equipped, mail,
-auctions, warband bank, guild bank). Hover the `?` beside the search box for this
-syntax in the game.
+auctions, warband bank, guild bank).
+
+The bind keywords of EllesmereUI Bags work too: `bop`, `boe`, `wue`, `boa`,
+`soulbound` and `warbound`, each with an optional item level (`boe>=600`,
+`wue 590-610`, `bop 300`), joined with `and`, `or`, `not` (also `&`, `|`, `!`)
+and parentheses, e.g. `(boe or wue) and not warbound`. Such a text matches each
+stored stack by its bind type and bound state; it does not mix with words, `q:`
+and `t:`. A hit whose stacks are all bound shows "Soulbound" or "Warbound" in
+its tooltip. On WoW Forever nothing binds to the account, so the help there
+leaves out `wue`, `boa` and `warbound`. Hover the `?` beside the search box for
+this syntax in the game.
 
 **Tooltip counts.** One line per character with the split by location, plus the
 warband bank, guild banks and the total. The current character comes first, set

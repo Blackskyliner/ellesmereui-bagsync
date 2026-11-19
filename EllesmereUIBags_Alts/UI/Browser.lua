@@ -425,7 +425,9 @@ local function CreateResultRow(parent)
         tooltip:ProcessInfo({
             getterName = "GetHyperlink",
             getterArgs = { "item:" .. self.itemID },
+            linePreCall = ns.BindingPreCall,
             tooltipPostCall = ns.AddOwnerLines,
+            euiAltsBound = self.bound,
             euiAltsOwners = self.itemID,
         })
     end)
@@ -823,7 +825,7 @@ local function AcquireResult(f, y, width)
     r:ClearAllPoints()
     r:SetPoint("TOPLEFT", 0, -y)
     r:SetWidth(width)
-    r.itemID, r.currencyID, r.kind = nil, nil, nil
+    r.itemID, r.currencyID, r.kind, r.bound = nil, nil, nil, nil
     return r
 end
 
@@ -868,7 +870,7 @@ local function RenderResults(f, width)
     end
     for _, res in ipairs(results) do
         local r = AcquireResult(f, y, width)
-        r.itemID = res.itemID
+        r.itemID, r.bound = res.itemID, res.bound
         local _, _, _, _, icon = C_Item.GetItemInfoInstant(res.itemID)
         r.icon:SetTexture(icon or 134400)
         local quality = C_Item.GetItemQualityByID(res.itemID)

@@ -1,0 +1,11 @@
+- **New:** The browser's search understands the bind keywords of EllesmereUI
+  Bags: `bop`, `boe`, `wue`, `boa`, `soulbound` and `warbound`, with an
+  optional item level (`boe>=600`, `wue 590-610`) and joined with `and`, `or`,
+  `not` and parentheses.
+- **Enhanced:** Search words also match an item's tooltip text, as in the
+  game's bag search: "equipped" finds every item that binds when equipped and
+  is not bound yet; a bound stack reads "Soulbound" or "Warbound" there.
+- **Enhanced:** Text in quotes searches for a phrase: `"binds when equipped"`
+  has to stand in the name or in one tooltip line as typed.
+- **Enhanced:** A search hit whose stacks are all bound shows "Soulbound" or
+  "Warbound" in its tooltip instead of the item's "Binds when equipped".

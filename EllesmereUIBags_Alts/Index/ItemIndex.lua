@@ -74,33 +74,30 @@ local function Accumulate(data, owner, loc, items, sign, touched)
     end
 end
 
-local function AccumulateMap(data, owner, loc, map, sign)
-    if type(map) ~= "table" then return end
-    for _, container in pairs(map) do
-        if type(container) == "table" then
-            Accumulate(data, owner, loc, container.items, sign)
+-- Calls visit(owner, loc, items) for every stored item collection.
+local function EachCollection(db, visit)
+    local function eachIn(owner, loc, map)
+        if type(map) ~= "table" then return end
+        for _, container in pairs(map) do
+            if type(container) == "table" and container.items then visit(owner, loc, container.items) end
         end
     end
+    for key, c in pairs(db.chars) do
+        eachIn(key, "bags", c.bags)
+        eachIn(key, "bank", c.bank)
+        if c.equipped and c.equipped.items then visit(key, "equipped", c.equipped.items) end
+        if c.mail and c.mail.items then visit(key, "mail", c.mail.items) end
+        if c.mailIncoming then visit(key, "mail", c.mailIncoming) end
+        if c.auctions and c.auctions.items then visit(key, "auctions", c.auctions.items) end
+    end
+    if db.warband then eachIn(ns.WARBAND_OWNER, "warband", db.warband.bank) end
+    for key, g in pairs(db.guilds) do eachIn(ns.GuildOwner(key), "guild", g.tabs) end
 end
 
 function Index:Build()
     local data = {}
-    local db = ns.db
-    if db then
-        for key, c in pairs(db.chars) do
-            AccumulateMap(data, key, "bags", c.bags, 1)
-            AccumulateMap(data, key, "bank", c.bank, 1)
-            if c.equipped then Accumulate(data, key, "equipped", c.equipped.items, 1) end
-            if c.mail then Accumulate(data, key, "mail", c.mail.items, 1) end
-            Accumulate(data, key, "mail", c.mailIncoming, 1)
-            if c.auctions then Accumulate(data, key, "auctions", c.auctions.items, 1) end
-        end
-        if db.warband then
-            AccumulateMap(data, ns.WARBAND_OWNER, "warband", db.warband.bank, 1)
-        end
-        for key, g in pairs(db.guilds) do
-            AccumulateMap(data, ns.GuildOwner(key), "guild", g.tabs, 1)
-        end
+    if ns.db then
+        EachCollection(ns.db, function(owner, loc, items) Accumulate(data, owner, loc, items, 1) end)
     end
     self.data = data
     self.built = true
@@ -147,6 +144,18 @@ end
 function Index:AllItemIDs()
     self:EnsureBuilt()
     return pairs(self.data)
+end
+
+-- Calls fn(enc) for every stored stack. The index keeps counts only, so the
+-- searches that look at a stack's own state (bound, item level) walk the
+-- saved data instead.
+function Index:EachStack(fn)
+    if not ns.db then return end
+    EachCollection(ns.db, function(_, _, items)
+        for enc in Stacks(items) do
+            if type(enc) == "string" then fn(enc) end
+        end
+    end)
 end
 
 ns.On("DATA_RESET", Index, function() Index:Invalidate() end)
