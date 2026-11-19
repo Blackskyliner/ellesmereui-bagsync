@@ -51,6 +51,7 @@ UI\Widgets.lua
 UI\ItemGrid.lua
 UI\Search.lua
 UI\Browser.lua
+UI\ValueList.lua
 UI\HeaderButton.lua
 Options\Options.lua
 Core\SelfTest.lua

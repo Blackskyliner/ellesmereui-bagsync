@@ -55,7 +55,12 @@ local CHAR_TABS = {
     { key = "mail",     label = "Mail" },
     { key = "auctions", label = "Auctions" },
     { key = "currency", label = "Currency" },
+    { key = "value",    label = "Value" },
 }
+
+-- The warband bank and guild banks have one view of their own (their tabs,
+-- under "Everything") and the value list.
+local BANK_TABS = { all = true, value = true }
 
 local BAG_TITLES = {
     [0] = "Backpack", [1] = "Bag 1", [2] = "Bag 2", [3] = "Bag 3", [4] = "Bag 4", [5] = "Reagent Bag",
@@ -575,7 +580,8 @@ function Browser:Build()
         ns.RegisterEvent(Browser, "ITEM_DATA_LOAD_RESULT", function(_, _, itemID, success)
             if not success then return end
             if frame.grid then frame.grid:OnItemLoaded(itemID) end
-            if pendingSearch[itemID] then
+            local listed = ns.ValueList:OnItemLoaded(itemID)
+            if pendingSearch[itemID] or listed then
                 pendingSearch[itemID] = nil
                 Browser:RequestRefresh()
             end
@@ -1000,12 +1006,18 @@ function Browser:Refresh()
     local scope = AggregateScope(owner)
     local isAll = scope ~= nil
     local isChar = not isAll and owner ~= ns.WARBAND_OWNER and owner:sub(1, 1) ~= "@"
-    local searching = state.query ~= nil
+    local isBank = not isAll and not isChar
+    -- A bank shows its tabs for every tab key but the value list.
+    local tabKey = state.tab
+    if isBank and not BANK_TABS[tabKey] then tabKey = "all" end
+    -- The search box filters the value list in place; elsewhere it searches
+    -- everything.
+    local searching = state.query ~= nil and tabKey ~= "value"
     local prev
     for _, tab in ipairs(f.tabs) do
-        local shown = (isChar or isAll) and not searching
+        local shown = not searching and (not isBank or BANK_TABS[tab.key] == true)
         tab:SetShown(shown)
-        tab:SetSelected(tab.key == state.tab)
+        tab:SetSelected(tab.key == tabKey)
         if shown then
             tab:ClearAllPoints()
             if prev then tab:SetPoint("LEFT", prev, "RIGHT", 2, 0)
@@ -1015,7 +1027,15 @@ function Browser:Refresh()
     end
 
     local height, count = 0, 0
-    if searching then
+    if searching or tabKey ~= "value" then ns.ValueList:Hide(f) end
+    if not searching and tabKey == "value" then
+        local footer
+        height, count, footer = ns.ValueList:Render(f, owner, width, state.query)
+        if count == 0 then
+            f.empty:SetText(state.query and L["Nothing found."] or L["Nothing with a price here."])
+        end
+        f.footer:SetText(footer)
+    elseif searching then
         local n, pend
         height, n, pend = RenderResults(f, width)
         if n == 0 then
