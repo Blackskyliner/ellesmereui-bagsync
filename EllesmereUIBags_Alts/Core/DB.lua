@@ -155,11 +155,12 @@ ns.MergeDefaults = MergeDefaults
 
 -- Drops anything that is not shaped like our data instead of erroring later.
 -- Re-encodes a stored stack (item links shortened to their "item:" core);
--- nil when it does not decode.
+-- nil when it does not decode. Item 0 is no item: databases written on WoW
+-- Forever hold it for an empty ammo slot.
 local function Recode(enc)
     if type(enc) ~= "string" then return nil end
     local id, count, link, bound = ns.DecodeItem(enc)
-    if not id then return nil end
+    if not id or id <= 0 then return nil end
     return ns.EncodeItem(id, count, link, bound)
 end
 

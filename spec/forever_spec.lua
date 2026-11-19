@@ -183,6 +183,20 @@ describe("Ammo slot (Forever)", function()
         assert.are.equal(200, env.EllesmereUIBagsAlts.GetItemCount(2589))
     end)
 
+    it("stores nothing for an empty ammo slot, which reports item 0, and drops such a stack on load", function()
+        local state = forever()
+        state.equipped[0] = { id = 0, count = 1 }              -- what the client answers for an empty slot
+        state.equipped[16] = { id = 19019, link = wow.itemLink(19019) }
+        local env, ns = wow.boot(state)
+        assert.is_nil(wow.items(ns.GetPlayerChar().equipped)[0])
+        wow.setItem(ns.GetPlayerChar().equipped, 0, "0,1")       -- written before this was handled
+        local _, ns2 = wow.relog(env, { name = "Bob" })
+        local alice
+        for key, c in pairs(ns2.db.chars) do if c.name ~= "Bob" and c.equipped then alice = ns2.db.chars[key] end end
+        assert.is_nil(wow.items(alice.equipped)[0])
+        assert.truthy(wow.items(alice.equipped)[16])
+    end)
+
     it("is no slot on retail", function()
         local state = wow.defaultState()
         state.equipped[0] = { id = 2589, count = 200, link = wow.itemLink(2589) }
