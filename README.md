@@ -44,7 +44,7 @@ Version 0.11.0, by Blackskyliner.
   **All characters** entry and every realm header merge everything you own.
 - **Value list**: a sortable list of everything you could still sell, priced by
   Oribos Exchange (region or realm), Auctionator, TradeSkillMaster or the vendor,
-  automatically by the highest price or by one source you pick.
+  automatically or by one source you pick.
 - **Search** across all characters and all stored currencies.
 - **Currencies** grouped into character-bound, transferable and warband-wide, with
   a tooltip that shows who holds how much.
@@ -183,19 +183,26 @@ reverse. It covers bags, bank, mail and the warband bank; worn gear is in use
 and auctions are already for sale, so neither counts. "All characters" includes
 the warband bank, a realm only its characters; a guild bank or the warband bank
 is listed when you select it. Items of an equipment set are hidden until you
-press "Show equipment sets", then they follow as a group of their own.
+press "Show equipment sets", then they follow as a group of their own; in the
+bank a soulbound item counts as a set item when a set asks for it and the
+character has just that one. The search box filters the list in place, with
+the same syntax as the search, EllesmereUI Bags' bind keywords included.
 
-The button at the top picks the price: "Automatic" takes the highest price of
-the sources ticked in the options, or choose one source. Prices come from the
-addons you have installed: Oribos Exchange (region or realm median), Auctionator
-(with the days since it last saw the item) and TradeSkillMaster (price source
-chosen in the options, by default `first(DBMarket, DBRegionMarketAvg)`), plus
+The button at the top picks the price. "Automatic" uses the sources ticked in
+the options: Auctionator's price when its scans saw the item, as that is the
+current market price, otherwise the highest of Oribos Exchange and
+TradeSkillMaster, which only estimate it; the vendor price when it is higher.
+Or choose one source. Prices come from the addons you have installed: Oribos
+Exchange (region or realm median), Auctionator (with the days since it last
+saw the item) and TradeSkillMaster (price source chosen in the options, by
+default `first(DBMarket, DBRegionMarketAvg)`, or a custom price string), plus
 the vendor price. Soulbound, warbound and warbound-until-equipped items sell to
 vendors only, so only the vendor price counts for them. With "Subtract the
 auction house cut (5%)" on (the default) auction prices show what reaches you
 after a sale; the deposit is not counted, as it comes back with the sale.
 Stacks without any price are left out and counted in the footer, next to the
-total value. Hovering a row lists every source's price.
+total value. Hovering a row lists the price of every installed source, or why
+there is none (no Auctionator scan yet, not in its scans, no TSM price string).
 
 **Bound state and sets.** A stored item that is bound shows "Soulbound" or
 "Warbound" in the browser tooltip instead of the generic "Binds when equipped";
@@ -348,9 +355,10 @@ and [BugSack](https://www.curseforge.com/wow/addons/bugsack), then enter
     addon keeps working with its plain look; the item slots keep EUI Bags' look.
 13. **Value list:** with Oribos Exchange, Auctionator or TradeSkillMaster
     installed, open the Value tab of "All characters". Rows show a source and a
-    value, and hovering one lists every source. Sort by each column. Pick a
-    single source with the button; untick a source in the options and check
-    that "Automatic" no longer uses it. A soulbound item shows "Vendor", an item
+    value, and hovering one lists every installed source. Sort by each column
+    and type in the search box. Pick a single source with the button, also
+    after opening the browser from the settings; untick a source in the
+    options and check that "Automatic" no longer uses it. A soulbound item shows "Vendor", an item
     of an equipment set shows only after "Show equipment sets".
 14. **WoW Forever:** repeat steps 1 to 6 there. The browser groups the characters
     by realm type and lists no warband bank. Put a key on the keyring, equip ammo
