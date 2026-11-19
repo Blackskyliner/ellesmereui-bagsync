@@ -69,7 +69,9 @@ M.ITEMS = {
     [190396] = { name = "Serevite Ore", quality = 1, icon = 4555563, type = "Tradeskill", subtype = "Metal & Stone", equipLoc = "" },
     [212345] = { name = "Algari Mana Potion", quality = 1, icon = 5931169, type = "Consumable", subtype = "Potion", equipLoc = "" },
     [19019]  = { name = "Thunderfury, Blessed Blade of the Windseeker", quality = 5, icon = 135349, type = "Weapon", subtype = "One-Handed Swords", equipLoc = "INVTYPE_WEAPON", bindType = 1 },
-    [230000] = { name = "Void-Touched Helm", quality = 4, icon = 5925000, type = "Armor", subtype = "Plate", equipLoc = "INVTYPE_HEAD", bindType = 2 },
+    [230000] = { name = "Void-Touched Helm", quality = 4, icon = 5925000, type = "Armor", subtype = "Plate", equipLoc = "INVTYPE_HEAD", bindType = 2, ilvl = 600,
+                 tooltip = { { "Head", "Plate" }, { "+120 Stamina" } } },
+    [230001] = { name = "Drifting Gauntlets", quality = 3, icon = 5925003, type = "Armor", subtype = "Mail", equipLoc = "INVTYPE_HAND", bindType = 2, wue = true, ilvl = 590 },
     [231000] = { name = "Warbound Cloak", quality = 4, icon = 5925001, type = "Armor", subtype = "Cloth", equipLoc = "INVTYPE_CLOAK", bindType = 9 },
     [232000] = { name = "Heirloom Staff", quality = 7, icon = 5925002, type = "Weapon", subtype = "Staves", equipLoc = "INVTYPE_2HWEAPON", bindType = 8 },
     [82800]  = { name = "Pet Cage", quality = 1, icon = 132599, type = "Miscellaneous", subtype = "Companion Pets", equipLoc = "" },
@@ -598,6 +600,17 @@ function M.newEnv(state, savedVariables)
             local it = loc.bagID and S.bags[loc.bagID] and S.bags[loc.bagID].slots[loc.slotIndex]
             return it and it.wue or false
         end,
+        -- info.wue: an item the game reports as OnEquip that is warbound until equipped
+        IsItemBindToAccountUntilEquip = function(ref)
+            local _, info = infoFor(ref)
+            return info ~= nil and info.wue == true
+        end,
+        -- S.itemLevels[ref]: the level of one stored link, else the item's info.ilvl
+        GetDetailedItemLevelInfo = function(ref)
+            local _, info = infoFor(ref)
+            local lvl = S.itemLevels and S.itemLevels[tostring(ref)]
+            return lvl or (info and info.ilvl)
+        end,
         GetItemQualityByID = function(ref)
             local id, info = infoFor(ref)
             if S.uncachedItems and S.uncachedItems[id] and not S.loadedItems[id] then return nil end
@@ -619,6 +632,22 @@ function M.newEnv(state, savedVariables)
             end
             for _, it in pairs(S.equipped) do if it.id == id then n = n + 1 end end
             return n
+        end,
+    }
+
+    -- Item tooltips: name, binding and the item's extra info.tooltip lines.
+    S.tooltipCalls = 0
+    env.C_TooltipInfo = {
+        GetItemByID = function(id)
+            S.tooltipCalls = S.tooltipCalls + 1
+            local item = M.ITEMS[id]
+            if not item then return nil end
+            local lines = { { type = 22, leftText = item.name } }
+            if BIND_TEXT[item.bindType] then
+                lines[#lines + 1] = { type = 20, leftText = "|cffffffff" .. BIND_TEXT[item.bindType] .. "|r" }
+            end
+            for _, l in ipairs(item.tooltip or {}) do lines[#lines + 1] = { type = 0, leftText = l[1], rightText = l[2] } end
+            return { type = 0, id = id, lines = lines }
         end,
     }
 

@@ -35,6 +35,36 @@ simtest("search finds items across characters", function()
     ns.Browser:SetQuery("")
 end)
 
+simtest("search words match the client's tooltip text of an item", function()
+    -- a stored item and a word of its tooltip that its name lacks (the
+    -- simulator has tooltips for few items)
+    local itemID, word
+    for id in ns.Index:AllItemIDs() do
+        local data, name = C_TooltipInfo.GetItemByID(id), C_Item.GetItemInfo(id)
+        for i = 2, #(name and data and data.lines or {}) do
+            local text = (data.lines[i].leftText or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):lower()
+            for w in text:gmatch("%a%a%a%a+") do
+                if not word and not name:lower():find(w, 1, true) then itemID, word = id, w end
+            end
+        end
+    end
+    assertNotNil(word)
+    local found = false
+    for _, r in ipairs((ns.Search.Run(ns.Search.Parse(word)))) do found = found or r.itemID == itemID end
+    assertTrue(found)
+end)
+
+simtest("bind expressions run against the client's item data", function()
+    local q = ns.Search.Parse("(bop or boe or wue or boa) and not (soulbound | warbound) or boe>=1")
+    assertNotNil(q.bind)
+    ns.Browser:SetQuery("not bop")
+    local f = _G.EllesmereUIBagsAltsBrowser
+    local found = false
+    for i = 1, f.results.used do found = found or f.results.items[i].itemID == 2589 end
+    assertTrue(found)                          -- Linen Cloth does not bind
+    ns.Browser:SetQuery("")
+end)
+
 simtest("browser closes via slash toggle and stops listening for item data", function()
     SlashCmdList["EUIALTS"]("")
     assertTrue(not _G.EllesmereUIBagsAltsBrowser:IsShown())

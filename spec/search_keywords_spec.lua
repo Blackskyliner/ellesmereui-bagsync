@@ -1,0 +1,123 @@
+-- The browser search beyond item names: tooltip text and the bind expressions
+-- EllesmereUI Bags adds to the game's search.
+local wow = require("wow")
+
+-- Alice holds:
+--   Hearthstone (BoP, soulbound), Void-Touched Helm (BoE, two stacks: one at
+--   600, one at 610 with an enchant), Drifting Gauntlets (WuE, reported as
+--   OnEquip), Warbound Cloak (warbound until equipped, bind type 9), Heirloom
+--   Staff (bound to the warband), Linen Cloth (no binding).
+local HELM_610 = "item:230000:7000::::::::80:::::"
+local function world(stateHook)
+    local s = wow.defaultState()
+    wow.putItem(s, 0, 1, 6948, 1)
+    s.bags[0].slots[1].bound = true
+    wow.putItem(s, 0, 2, 230000, 1)
+    wow.putItem(s, 0, 3, 230000, 1, wow.itemLink(230000, HELM_610))
+    wow.putItem(s, 0, 4, 230001, 1)
+    wow.putItem(s, 0, 5, 231000, 1)
+    wow.putItem(s, 0, 6, 232000, 1)
+    s.bags[0].slots[6].bound = true
+    wow.putItem(s, 0, 7, 2589, 20)
+    s.itemLevels = { [HELM_610] = 610 }
+    if stateHook then stateHook(s) end
+    return wow.boot(s)
+end
+
+local function ids(ns, text)
+    local results, pending = ns.Search.Run(ns.Search.Parse(text))
+    local out = {}
+    for i, r in ipairs(results) do out[i] = r.itemID end
+    table.sort(out)
+    return out, pending
+end
+
+describe("Search by tooltip text", function()
+    it("finds a word that only the tooltip holds, like the game's bag search", function()
+        local _, ns = world()
+        -- "Binds when equipped", "Warbound until equipped"
+        assert.are.same({ 230000, 230001, 231000 }, (ids(ns, "equipped")))
+        assert.are.same({ 230000 }, (ids(ns, "stamina")))
+        assert.are.same({ 230000 }, (ids(ns, "plate")))                  -- right-hand text too
+    end)
+
+    it("needs every word in the name or the tooltip", function()
+        local _, ns = world()
+        assert.are.same({ 230000 }, (ids(ns, "helm stamina")))
+        assert.are.same({}, (ids(ns, "linen stamina")))
+    end)
+
+    it("reads an item's tooltip once and only for words its name lacks", function()
+        local env, ns = world()
+        local S = env.__state
+        S.tooltipCalls = 0
+        ids(ns, "hearthstone")                 -- every item but the Hearthstone
+        assert.are.equal(5, S.tooltipCalls)
+        ids(ns, "hearthstone")
+        assert.are.equal(5, S.tooltipCalls)
+        ids(ns, "stamina")                     -- the Hearthstone is new
+        assert.are.equal(6, S.tooltipCalls)
+    end)
+end)
+
+describe("Bind expressions", function()
+    it("matches each keyword by bind type and bound state", function()
+        local _, ns = world()
+        assert.are.same({ 6948 }, (ids(ns, "bop")))
+        assert.are.same({ 230000 }, (ids(ns, "boe")))
+        assert.are.same({ 230001, 231000 }, (ids(ns, "wue")))           -- bind type 9 and the OnEquip one
+        assert.are.same({ 6948 }, (ids(ns, "soulbound")))
+        assert.are.same({ 232000 }, (ids(ns, "warbound")))
+        assert.are.same({ 6948, 230000, 230001, 231000 }, (ids(ns, "BOP or BoE or wue")))
+    end)
+
+    it("filters by the item level of each stack", function()
+        local _, ns = world()
+        assert.are.same({ 230000 }, (ids(ns, "boe=610")))
+        assert.are.same({ 230000 }, (ids(ns, "boe 600")))
+        assert.are.same({}, (ids(ns, "boe>610")))
+        assert.are.same({ 230000 }, (ids(ns, "boe 605-615")))
+        assert.are.same({ 230001 }, (ids(ns, "wue<=595")))
+    end)
+
+    it("joins terms with and, or, not, symbols and parentheses", function()
+        local _, ns = world()
+        assert.are.same({ 230000, 230001, 231000 }, (ids(ns, "(boe | wue) & !warbound")))
+        assert.are.same({ 230001, 231000 }, (ids(ns, "wue not soulbound")))   -- side by side means and
+        assert.are.same({}, (ids(ns, "bop and boe")))
+    end)
+
+    it("leaves other texts to the word search", function()
+        local _, ns = world()
+        assert.is_nil(ns.Search.Parse("boe helm").bind)
+        assert.is_nil(ns.Search.Parse("boe and").bind)
+        assert.is_nil(ns.Search.Parse("(boe").bind)
+        assert.is_nil(ns.Search.Parse("not").bind)
+        assert.is_not_nil(ns.Search.Parse("  BoE  ").bind)
+    end)
+
+    it("waits for item data it does not have and finds no currencies", function()
+        local _, ns = world(function(s) s.uncachedItems = { [6948] = true } end)
+        local found, pending = ids(ns, "bop")
+        assert.are.same({}, found)
+        assert.are.same({ 6948 }, pending)
+        assert.are.same({}, ns.Search.RunCurrencies(ns.Search.Parse("bop")))
+    end)
+
+    it("shows in the browser and its help", function()
+        local env, ns = world()
+        ns.Browser:OpenSearch("soulbound")
+        local f = env.EllesmereUIBagsAltsBrowser
+        assert.are.equal(1, f.results.used)
+        assert.are.equal(6948, f.results.items[1].itemID)
+        local rows = {}
+        for _, r in ipairs(ns.Search.HelpLines().rows) do rows[#rows + 1] = r[1] end
+        rows = table.concat(rows, "\n")
+        for _, example in ipairs({ "bop  boe  wue  boa", "boe>=600", "bop or (boe and not wue)" }) do
+            assert.truthy(rows:find(example, 1, true), example)
+            local example1 = example:gsub("  ", " or ")
+            assert.is_not_nil(ns.Search.Parse(example1).bind, example1)
+        end
+        assert.are.same({}, env.__errors)
+    end)
+end)
