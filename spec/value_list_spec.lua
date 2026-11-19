@@ -399,26 +399,6 @@ describe("Value list", function()
         assert.is_false(byVar.EUIALTS_value_oeRegion:IsEnabled())   -- asked again when drawn
     end)
 
-    it("filters the list with the search box instead of searching everything", function()
-        local env, ns = world(PRICES)
-        open(ns, ns.Browser.ALL_OWNER)
-        ns.Browser:SetQuery("wool")
-        local f = env.EllesmereUIBagsAltsBrowser
-        assert.are.same({ "Player-1-Alice bank 2592" }, keys(ns.ValueList.rows))
-        assert.is_true(ns.ValueList.frame:IsShown())
-        assert.are.equal(0, f.results.used)                    -- no global search results
-        local shown = 0
-        for _, tab in ipairs(f.tabs) do if tab:IsShown() then shown = shown + 1 end end
-        assert.are.equal(8, shown)
-        ns.Browser:SetQuery("zzzz")
-        assert.are.equal(0, #ns.ValueList.rows)
-        assert.are.equal("Nothing found.", f.empty.text)
-        ns.Browser:SetQuery("")
-        ns.Browser:SelectTab("bags")
-        ns.Browser:SetQuery("wool")
-        assert.is_true(f.results.used > 0)                     -- other tabs: the global search
-    end)
-
     it("the source menu keeps its entries above the click catcher after the browser was raised", function()
         local env, ns = world(PRICES)
         open(ns, "Player-1-Alice")
@@ -439,15 +419,6 @@ describe("Value list", function()
         end
         menu.entries[3]:RunScript("OnClick")                  -- Oribos Exchange (realm)
         assert.are.equal("oeRealm", ns.db.settings.value.source)
-    end)
-
-    it("filters by EllesmereUI Bags' bind expressions per stack", function()
-        local _, ns = world(PRICES)
-        open(ns, ns.Browser.ALL_OWNER)
-        ns.Browser:SetQuery("wue")
-        assert.are.same({ "Player-1-Bob bags 231000" }, keys(ns.ValueList.rows))   -- recorded as warbound until equipped
-        ns.Browser:SetQuery("boe")
-        assert.are.same({ "Player-1-Alice bags 230000" }, keys(ns.ValueList.rows))
     end)
 
     it("keeps working when a price addon errors or is missing", function()

@@ -1010,9 +1010,7 @@ function Browser:Refresh()
     -- A bank shows its tabs for every tab key but the value list.
     local tabKey = state.tab
     if isBank and not BANK_TABS[tabKey] then tabKey = "all" end
-    -- The search box filters the value list in place; elsewhere it searches
-    -- everything.
-    local searching = state.query ~= nil and tabKey ~= "value"
+    local searching = state.query ~= nil
     local prev
     for _, tab in ipairs(f.tabs) do
         local shown = not searching and (not isBank or BANK_TABS[tab.key] == true)
@@ -1030,10 +1028,8 @@ function Browser:Refresh()
     if searching or tabKey ~= "value" then ns.ValueList:Hide(f) end
     if not searching and tabKey == "value" then
         local footer
-        height, count, footer = ns.ValueList:Render(f, owner, width, state.query)
-        if count == 0 then
-            f.empty:SetText(state.query and L["Nothing found."] or L["Nothing with a price here."])
-        end
+        height, count, footer = ns.ValueList:Render(f, owner, width)
+        if count == 0 then f.empty:SetText(L["Nothing with a price here."]) end
         f.footer:SetText(footer)
     elseif searching then
         local n, pend

@@ -187,25 +187,18 @@ local function BankSetNames(m)
     return total == 1 and names or nil
 end
 
--- Prices every stack (only those the search query matches, if any).
--- -> rows, hidden set stacks, stacks without a price, item IDs still waiting
--- for their data.
-local function Build(selection, query)
+-- Prices every stack. -> rows, hidden set stacks, stacks without a price,
+-- item IDs still waiting for their data.
+local function Build(selection)
     ns.Prices.Reset()
     local mode = ns.db.settings.value.source
     local showSets = ns.db.settings.value.showSets
     local rows, setsHidden, unpriced, pending = {}, 0, 0, {}
     for _, m in ipairs(Collect(selection)) do
-        local match, waiting = true, false
-        if query then
-            match, waiting = ns.Search.StackMatches(query, ns.EncodeItem(m.id, m.count, m.link, m.bound))
-        end
-        if waiting then pending[#pending + 1] = m.id end
         m.sets = m.sets or BankSetNames(m)
-        -- A stack the search filters out counts nowhere, not even as hidden.
-        if match and m.sets and not showSets then
+        if m.sets and not showSets then
             setsHidden = setsHidden + 1
-        elseif match then
+        else
             local name, quality, icon = ItemDisplay(m)
             if not name then pending[#pending + 1] = m.id end
             local unit, source, auction, prices = ns.Prices.Evaluate(m.id, m.link, m.bound, mode)
@@ -560,9 +553,8 @@ local function Selection(owner)
 end
 ValueList.Selection = Selection
 
--- Shows the list for an owner, filtered by a parsed search query (or nil).
--- -> content height, row count, footer text
-function ValueList:Render(f, owner, width, query)
+-- Shows the list for an owner. -> content height, row count, footer text
+function ValueList:Render(f, owner, width)
     self:Build(f)
     self.browser = f
     self.width = width
@@ -587,7 +579,7 @@ function ValueList:Render(f, owner, width, query)
         h.label:SetText(L[col.label] .. arrow)
     end
 
-    local rows, setsHidden, unpriced, pending = Build(Selection(owner), query)
+    local rows, setsHidden, unpriced, pending = Build(Selection(owner))
     wipe(self.pending)
     for i = 1, math.min(#pending, MAX_REQUESTS) do
         self.pending[pending[i]] = true
