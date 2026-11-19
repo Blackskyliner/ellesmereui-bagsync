@@ -7,6 +7,7 @@
 --
 --  Syntax (terms are AND-ed, case-insensitive):
 --      words            item name or tooltip text contains every word
+--      "two words"      a phrase: in the name or in one tooltip line as typed
 --      12345 / id:12345 exact itemID
 --      q:epic / q:4     quality (english keyword, localized name or number)
 --      t:armor          item type or subtype contains the text
@@ -240,6 +241,13 @@ function Search.Parse(text)
     local bind = ParseBind(text)
     if bind then return { words = {}, bind = bind } end
     local q = { words = {} }
+    -- "quoted text" is one word with its spaces: it has to stand in the name
+    -- or in one tooltip line as typed; an unclosed quote runs to the end
+    text = strgsub(text, '"([^"]*)"?', function(phrase)
+        phrase = strgsub(strgsub(strgsub(phrase, "^%s+", ""), "%s+$", ""), "%s+", " ")
+        if phrase ~= "" then q.words[#q.words + 1] = phrase end
+        return " "
+    end)
     for token in text:gmatch("%S+") do
         local key, value = strmatch(token, "^(%a+):(.+)$")
         if key == "id" and tonumber(value) then
@@ -416,17 +424,18 @@ local function RunBind(expr, results, pending)
     end)
 end
 
--- -> results = { { itemID, total, name }, ... } (sorted by name), pendingIDs = { id, ... }
+-- -> results = { { itemID, total, name, bound }, ... } (sorted by name), pendingIDs = { id, ... }
+-- bound: "soul" or "account" when every stored stack of the item is bound so
 function Search.Run(q, limit)
     local results, pending = {}, {}
     if not q then return results, pending end
     limit = limit or 500
+    local stateSets
     if q.bind then
         ns.Index:EnsureBuilt()
         RunBind(q.bind, results, pending)
     else
         -- walked once and only when a word needs a tooltip
-        local stateSets
         local function states()
             stateSets = stateSets or BoundStates()
             return stateSets
@@ -445,6 +454,15 @@ function Search.Run(q, limit)
         return a.itemID < b.itemID
     end)
     for i = #results, limit + 1, -1 do results[i] = nil end
+    if #results > 0 then
+        -- the state every stack of a hit shares, for its tooltip
+        stateSets = stateSets or BoundStates()
+        for _, r in ipairs(results) do
+            local set = stateSets[r.itemID]
+            local only = set and next(set)
+            if only and only ~= "free" and next(set, only) == nil then r.bound = only end
+        end
+    end
     return results, pending
 end
 
@@ -461,24 +479,39 @@ function Search.HelpLines()
     local L = ns.L
     local quality = ExampleWord(_G.ITEM_QUALITY4_DESC, "epic")
     local itemType = ExampleWord(C_Item.GetItemClassInfo(Enum.ItemClass.Armor), "armor")
-    return {
-        title = L["Search syntax"],
-        rows = {
-            { L["words"], L["Name or tooltip contains every word"] },
-            { "12345  id:12345", L["Item ID"] },
-            { "q:" .. quality .. "  q:4", L["Quality (name or number)"] },
-            { "t:" .. itemType, L["Item type or subtype"] },
-            { "q:" .. quality .. " t:" .. itemType, L["All terms must match"] },
+    local bindRows
+    if ns.Compat.HAS_ACCOUNT_BINDING then
+        bindRows = {
             { "bop  boe  wue  boa", L["Bind type"] },
             { "soulbound  warbound", L["Bound to a character or the warband"] },
             { "boe>=600  wue 590-610", L["Bind type and item level"] },
             { "bop or (boe and not wue)", L["Bind terms with and, or, not"] },
+        }
+    else
+        bindRows = {
+            { "bop  boe", L["Bind type"] },
+            { "soulbound", L["Bound to a character"] },
+            { "boe>=20  bop 10-30", L["Bind type and item level"] },
+            { "bop or (boe and not soulbound)", L["Bind terms with and, or, not"] },
+        }
+    end
+    local help = {
+        title = L["Search syntax"],
+        rows = {
+            { L["words"], L["Name or tooltip contains every word"] },
+            { '"' .. L["two words"] .. '"', L["Phrase in the name or one tooltip line"] },
+            { "12345  id:12345", L["Item ID"] },
+            { "q:" .. quality .. "  q:4", L["Quality (name or number)"] },
+            { "t:" .. itemType, L["Item type or subtype"] },
+            { "q:" .. quality .. " t:" .. itemType, L["All terms must match"] },
         },
         notes = {
             L["Currencies match words and numbers only."],
             L["Bind terms do not mix with words, q: and t:."],
         },
     }
+    for _, row in ipairs(bindRows) do help.rows[#help.rows + 1] = row end
+    return help
 end
 
 -- -> { { currencyID, name, info }, ... } sorted by name
