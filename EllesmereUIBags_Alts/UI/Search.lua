@@ -195,6 +195,9 @@ local function TermMatches(n)
         match = bound == "soul"
     elseif k == "warbound" then
         match = bound == "account"
+    elseif bound == "wue" then
+        -- Recorded as warbound until equipped: not bound yet, and no BoE.
+        match = k == "wue"
     elseif bound then
         -- BoE and WuE both mean "not bound yet".
         match = false
@@ -397,6 +400,21 @@ function Search.Matches(q, itemID, stateSets)
         if not TooltipMatches(itemID, tipWords, stateSets) then return false, false end
     end
     return true, false
+end
+
+-- One stored stack against a query: a bind expression by the stack's own
+-- bind state, other terms by its item, tooltip words read with the stack's
+-- binding line. -> matches, pending (item data not cached yet)
+function Search.StackMatches(q, enc)
+    if q.invalid then return false, false end
+    local id, _, _, bound = ns.DecodeItem(enc)
+    if not id then return false, false end
+    if q.bind then
+        local name, _, _, _, _, _, _, _, _, _, _, _, _, bindType = C_Item.GetItemInfo(id)
+        if not name then return false, true end
+        return StackMatches(q.bind, enc, bindType or Enum.ItemBind.None), false
+    end
+    return Search.Matches(q, id, { [id] = { [bound or "free"] = true } })
 end
 
 local function Result(itemID)
