@@ -282,7 +282,7 @@ function Options:Register()
     for _, source in ipairs(ns.Prices.SOURCES) do
         local _, init = Checkbox(category, "value_" .. source, { "value", source },
             ns.ValueList.SourceText(ns.ValueList.SOURCE_NAME, source),
-            NeedsAddon(source, L["The value list's automatic price uses the sources ticked here: Auctionator's scan when it saw the item, as that is the current market price, otherwise the highest of Oribos Exchange and TradeSkillMaster; the vendor price when it is higher. A price addon counts only while it is installed and loaded."]))
+            NeedsAddon(source, L["The value list's automatic price takes the first of the sources ticked here that has a price: TradeSkillMaster, then Auctionator's scans, then the higher Oribos Exchange median; the vendor price when it is higher. A price addon counts only while it is installed and loaded."]))
         GreyWithoutAddon(init, source)
     end
     Checkbox(category, "value_ahCut", { "value", "ahCut" }, string.format(L["Subtract the auction house cut (%d%%)"], ns.Prices.AH_CUT * 100),

@@ -2,8 +2,8 @@
   row per item, character and location, with the price source, total value,
   gain over the vendor and binding; every column sorts and the search box
   filters it. Prices come from Auctionator, Oribos Exchange (region or realm),
-  TradeSkillMaster or the vendor: automatically Auctionator's scan where it saw
-  the item, else the highest estimate, or one source you pick. Worn gear,
+  TradeSkillMaster or the vendor: automatically TSM, then Auctionator's scans,
+  then Oribos Exchange, or one source you pick. Worn gear,
   auctions and (unless shown) equipment set items stay out; guild banks join
   only when selected.
 - **New:** Options for the value list: which sources the automatic price

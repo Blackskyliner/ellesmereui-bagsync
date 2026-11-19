@@ -148,8 +148,9 @@ describe("Value list", function()
         assert.are.same({}, env.__errors)
     end)
 
-    it("prices each stack by the highest source after the auction house cut", function()
+    it("prices each stack after the auction house cut", function()
         local env, ns = world(PRICES)
+        ns.db.settings.value.tsm = false                      -- Auctionator's turn
         local rows = open(ns, "Player-1-Alice")
         local linen = find(rows, "Player-1-Alice", "bags", 2589)
         assert.are.equal("auctionator", linen.source)
@@ -164,6 +165,7 @@ describe("Value list", function()
 
     it("shows buyer prices when the cut option is off", function()
         local _, ns = world(PRICES)
+        ns.db.settings.value.tsm = false
         ns.db.settings.value.ahCut = false
         local linen = find(open(ns, "Player-1-Alice"), "Player-1-Alice", "bags", 2589)
         assert.are.equal(120, linen.unit)
@@ -172,7 +174,7 @@ describe("Value list", function()
     it("compares only the sources the options tick, and one source when chosen", function()
         local env, ns = world(PRICES)
         local v = ns.db.settings.value
-        v.auctionator = false
+        v.auctionator, v.tsm = false, false
         local linen = find(open(ns, "Player-1-Alice"), "Player-1-Alice", "bags", 2589)
         assert.are.equal("oeRegion", linen.source)
         assert.are.equal(95, linen.unit)
@@ -289,6 +291,7 @@ describe("Value list", function()
 
     it("shows every source's price in the row tooltip", function()
         local env, ns = world(PRICES)
+        ns.db.settings.value.tsm = false
         open(ns, "Player-1-Alice")
         local row
         for _, r in ipairs(ns.ValueList.pool) do
@@ -307,17 +310,27 @@ describe("Value list", function()
         assert.are.same({}, env.__errors)
     end)
 
-    it("prefers Auctionator's scan over Oribos Exchange and TSM, which only estimate", function()
+    it("takes TSM first, then Auctionator's scans, then the higher Oribos Exchange median", function()
         local _, ns = world(PRICES)
-        local ore = find(open(ns, ns.Browser.ALL_OWNER), "#warband", "warband", 190396)
-        assert.are.equal("auctionator", ore.source)            -- 900, though TSM says 1200
-        assert.are.equal(855, ore.unit)
-        local wool = find(ns.ValueList.rows, "Player-1-Alice", "bank", 2592)
-        assert.are.equal("oeRealm", wool.source)               -- not in the scans: highest estimate
-        ns.db.settings.value.auctionator = false
+        local v = ns.db.settings.value
+        local function ore() return find(ns.ValueList.rows, "#warband", "warband", 190396) end
+        open(ns, ns.Browser.ALL_OWNER)
+        assert.are.equal("tsm", ore().source)
+        assert.are.equal(1140, ore().unit)                      -- 1200 - 5%
+        v.tsm = false
         ns.Browser:Refresh()
-        ore = find(ns.ValueList.rows, "#warband", "warband", 190396)
-        assert.are.equal("tsm", ore.source)
+        assert.are.equal("auctionator", ore().source)          -- 900, though OE says 1100
+        assert.are.equal(855, ore().unit)
+        assert.are.equal("oeRealm", find(ns.ValueList.rows, "Player-1-Alice", "bank", 2592).source)   -- not in the scans
+        v.auctionator = false
+        ns.Browser:Refresh()
+        assert.are.equal("oeRealm", ore().source)
+        -- an item TSM has no price for goes on to Auctionator
+        v.tsm, v.auctionator = true, true
+        PRICES[190396].tsm = nil
+        ns.Browser:Refresh()
+        PRICES[190396].tsm = 1200
+        assert.are.equal("auctionator", ore().source)
     end)
 
     it("says when Auctionator has no scan yet or did not see the item, and leaves out missing addons", function()

@@ -196,18 +196,20 @@ function Prices.Applies(source, bound)
     return not AUCTION[source] or bound == nil
 end
 
--- The auction price the automatic choice takes among the ticked sources:
--- Auctionator's, when its scans saw the item, as that is the current market;
--- otherwise the highest of Oribos Exchange and TSM, which only estimate it.
+-- The auction price the automatic choice takes among the ticked sources,
+-- the first that has one: TSM (its price string, from its own scans and
+-- data), then Auctionator's scans, then the higher Oribos Exchange median,
+-- which is a few days old and the furthest from the current market.
 -- -> net unit, source (or nil)
-local FALLBACK = { "oeRegion", "oeRealm", "tsm" }
+local PREFERRED = { "tsm", "auctionator" }
+local FALLBACK = { "oeRegion", "oeRealm" }
 
 local function AutoAuction(p, bound)
     if bound ~= nil then return nil end
     local enabled = ns.db.settings.value
-    if enabled.auctionator then
-        local net = Prices.Net("auctionator", p.auctionator)
-        if net then return net, "auctionator" end
+    for _, source in ipairs(PREFERRED) do
+        local net = enabled[source] and Prices.Net(source, p[source])
+        if net then return net, source end
     end
     local unit, from
     for _, source in ipairs(FALLBACK) do

@@ -188,10 +188,10 @@ bank a soulbound item counts as a set item when a set asks for it and the
 character has just that one. The search box filters the list in place, with
 the same syntax as the search, EllesmereUI Bags' bind keywords included.
 
-The button at the top picks the price. "Automatic" uses the sources ticked in
-the options: Auctionator's price when its scans saw the item, as that is the
-current market price, otherwise the highest of Oribos Exchange and
-TradeSkillMaster, which only estimate it; the vendor price when it is higher.
+The button at the top picks the price. "Automatic" takes the first of the
+sources ticked in the options that has a price for the item: TradeSkillMaster,
+then Auctionator's scans, then the higher Oribos Exchange median, which is a
+few days old; the vendor price when it is higher.
 Or choose one source. Prices come from the addons you have installed: Oribos
 Exchange (region or realm median), Auctionator (with the days since it last
 saw the item) and TradeSkillMaster (price source chosen in the options, by
