@@ -412,6 +412,15 @@ describe("Value list", function()
         assert.are.equal("oeRealm", ns.db.settings.value.source)
     end)
 
+    it("filters by EllesmereUI Bags' bind expressions per stack", function()
+        local _, ns = world(PRICES)
+        open(ns, ns.Browser.ALL_OWNER)
+        ns.Browser:SetQuery("wue")
+        assert.are.same({ "Player-1-Bob bags 231000" }, keys(ns.ValueList.rows))   -- recorded as warbound until equipped
+        ns.Browser:SetQuery("boe")
+        assert.are.same({ "Player-1-Alice bags 230000" }, keys(ns.ValueList.rows))
+    end)
+
     it("keeps working when a price addon errors or is missing", function()
         local env, ns = world(PRICES, { oeThrows = true })
         env.TSM_API = nil

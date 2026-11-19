@@ -197,7 +197,9 @@ local function Build(selection, query)
     local rows, setsHidden, unpriced, pending = {}, 0, 0, {}
     for _, m in ipairs(Collect(selection)) do
         local match, waiting = true, false
-        if query then match, waiting = ns.Search.Matches(query, m.id) end
+        if query then
+            match, waiting = ns.Search.StackMatches(query, ns.EncodeItem(m.id, m.count, m.link, m.bound))
+        end
         if waiting then pending[#pending + 1] = m.id end
         m.sets = m.sets or BankSetNames(m)
         -- A stack the search filters out counts nowhere, not even as hidden.
