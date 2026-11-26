@@ -5,12 +5,10 @@ SimGapSignatures = {
     retail = {
         ["C_AuctionHouse.GetOwnedAuctions"] = { "table" },
         ["C_PetJournal.GetOwnedBattlePetString"] = false,
-        ["C_PlayerInteractionManager.IsInteractingWithNpcOfType"] = { "boolean" },
     },
     forever = {
         ["C_AuctionHouse.GetOwnedAuctions"] = { "table" },
         ["C_Bank.CanViewBank"] = { "boolean" },
         ["C_CurrencyInfo.GetCurrencyIDFromLink"] = { "number" },
-        ["C_PlayerInteractionManager.IsInteractingWithNpcOfType"] = { "boolean" },
     },
 }

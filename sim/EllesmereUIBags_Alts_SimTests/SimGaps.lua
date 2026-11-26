@@ -72,8 +72,6 @@ end
 -- the fixture's character owns none of the species.
 Gap("C_PetJournal.GetOwnedBattlePetString", "retail", function() return nil end)
 
--- Both: PlayerInteractionManagerDocumentation.lua: no NPC window is open.
-Gap("C_PlayerInteractionManager.IsInteractingWithNpcOfType", "both", function() return false end)
 -- AuctionHouseDocumentation.lua: the character has no auctions.
 Gap("C_AuctionHouse.GetOwnedAuctions", "both", function() return {} end)
 

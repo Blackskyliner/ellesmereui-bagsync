@@ -41,8 +41,8 @@ mkdir -p "$T/src" "$T/vendor"
 # grows with every commit; EllesmereUI changes almost daily. ELLESMEREUI_REV=latest
 # takes EllesmereUI's newest commit instead (.github/workflows/upstream.yml).
 # Both clients build from the same revision, each in its own checkout.
-WOW_UI_SIM_REV=c3e40aa1593d49e464fb9ed3fc82254383497df7
-WOW_UI_SIM_FOREVER_REV=c3e40aa1593d49e464fb9ed3fc82254383497df7
+WOW_UI_SIM_REV=91efa26a33c90fb76cc5c0dba0bed5e2279e9583
+WOW_UI_SIM_FOREVER_REV=91efa26a33c90fb76cc5c0dba0bed5e2279e9583
 # Blizzard's UI source (Gethe/wow-ui-source) at the client builds the
 # simulator pins (its data/blizzard-ui-builds/<profile>.json, checked below):
 # the simulator only runs the Blizzard UI of that build, and the API check
