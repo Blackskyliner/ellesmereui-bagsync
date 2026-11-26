@@ -57,7 +57,7 @@ GETHE_FOREVER_REV=aff0d8cd53bf4d9ef1c1dd2786b94461a276fb16 # 1.60.1.70707
 # the pinned wow-cli generates (its selection of spell IDs grows with the
 # simulator, so a pin move can change it).
 FOREVER_SPELLS_SHA256=baafb9369a8214a5d793fba12cadec875f7f4a0c4ff8e569d6faac21b2bcac7b
-ELLESMEREUI_REV="${ELLESMEREUI_REV:-da4f4a183574c41127fcbfebe416944af4a3974b}"
+ELLESMEREUI_REV="${ELLESMEREUI_REV:-7586e8b6d1cb9bc9841a58c67a9533ee98eb72f1}"
 
 case "$(uname -s)" in Darwin) LUA_TARGET=macosx ;; *) LUA_TARGET=linux ;; esac
 # Lua's sources from lua.org, else from the mirror at PUC-Rio (another host):
