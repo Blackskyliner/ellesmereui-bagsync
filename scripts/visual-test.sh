@@ -73,7 +73,10 @@ export WOW_SIM_NO_SOUND=1
 # Text in Blizzard's fonts (FRIZQT__, ARIALN) falls back to the first system
 # font without a WoW install, a different one per operating system; EUI's
 # default font stands in for them on every machine (WOW_SIM_FALLBACK_FONT).
-export WOW_SIM_FALLBACK_FONT="$EUI/media/fonts/Expressway.TTF"
+# The simulator warns and keeps the system font when the file is missing,
+# so a renamed font would only show up as renders that differ per machine.
+export WOW_SIM_FALLBACK_FONT="$EUI/media/fonts/EUI Highway.ttf"
+[ -f "$WOW_SIM_FALLBACK_FONT" ] || { echo "missing fallback font: $WOW_SIM_FALLBACK_FONT" >&2; exit 1; }
 # Blizzard's textures (icons, atlases, frame art): the files pinned in the
 # client's lock (sim/visual/blizzard-art.lock.json, blizzard-art-forever.lock.json),
 # fetched from Blizzard's CDN into a minimal WoW install in .tools that holds
