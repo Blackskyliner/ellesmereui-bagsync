@@ -342,7 +342,8 @@ def main():
         ("EllesmereUIDB.chars roster",
          r'local chars = db\.chars\s+if type\(chars\) ~= "table" then chars = \{\}; db\.chars = chars end', eui),
         ("roster entry name and realm",
-         r"c\.name = EllesmereUI\.WithSurname\(first, Plain\(surname\), true\)[\s\S]*c\.realm = Plain\(EllesmereUI\.RealmGroupName\(\)\) or c\.realm", eui),
+         r"local function RosterName\(\)[\s\S]*?return first and EllesmereUI\.WithSurname\(first, Plain\(surname\), true\)"
+         r"[\s\S]*c\.name = RosterName\(\) or c\.name\s+c\.realm = Plain\(EllesmereUI\.RealmGroupName\(\)\) or c\.realm", eui),
         ("roster entry .gold = { money, updated }",
          r'local e = EUI\.CharData\("gold", true\)[\s\S]*e\.money, e\.updated = money, time\(\)', eui),
         ("goldLedger.chars and characterGold moved into the roster",
